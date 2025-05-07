@@ -1,4 +1,4 @@
-import { Calendar, Clock, FileText, Users, Download, Archive, PlusCircle, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Calendar, Clock, FileText, Users, Download, Archive, PlusCircle, AlertTriangle, CheckCircle2, MapPin } from 'lucide-react'; // Added MapPin here
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { useEvents, useDeadlines } from '@/hooks';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, parseISO, isPast, isToday } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Event, Deadline } from '@/types'; // Assicurati che Deadline sia esportato da types
+import { Event, Deadline } from '@/types'; 
 
 const Index = () => {
   const { events, loading: eventsLoading, updateEventStatus } = useEvents();
@@ -14,16 +14,14 @@ const Index = () => {
   const navigate = useNavigate();
 
   const getEventProgress = (event: Event): number => {
-    // Semplice calcolo di progresso basato su quante scadenze chiave sono completate
-    // Questo è un esempio, puoi renderlo più sofisticato
-    const totalTasks = 5; // es. richiesta docenti, discenti, avvio, registri, feedback
+    const totalTasks = 5; 
     let completedTasks = 0;
     if (event.completed_tasks?.includes('richiesta_docenti_fatta')) completedTasks++;
     if (event.completed_tasks?.includes('richiesta_discenti_fatta')) completedTasks++;
     if (event.completed_tasks?.includes('avvio_corso_fatto')) completedTasks++;
     if (event.completed_tasks?.includes('registri_gestiti')) completedTasks++;
     if (event.completed_tasks?.includes('feedback_raccolto')) completedTasks++;
-    return (completedTasks / totalTasks) * 100;
+    return totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
   };
   
   const getDaysRemaining = (dateString: string): number => {
@@ -35,10 +33,12 @@ const Index = () => {
     if (!event) return;
 
     const updatedTasks = [...(event.completed_tasks || []), taskType];
-    // Qui dovresti chiamare una funzione in useEvents per aggiornare `completed_tasks` nel DB
-    // Per ora, simuliamo l'aggiornamento e facciamo un re-fetch o aggiornamento locale
     console.log(`Simulazione aggiornamento task ${taskType} per evento ${eventId}`);
-    // await updateEventTasks(eventId, updatedTasks); // Funzione da implementare in useEvents
+    // Placeholder: In a real app, you'd call a function like:
+    // await updateEventTasks(eventId, updatedTasks); 
+    // For now, this function doesn't exist in useEvents, so this is a client-side simulation.
+    // To make this persistent, you'd need to add `updateEventTasks` to `useEvents`
+    // and update the `completed_tasks` field in your Supabase 'events' table.
   };
 
 
@@ -46,14 +46,12 @@ const Index = () => {
     return <div className="flex justify-center items-center min-h-screen"><p>Caricamento dashboard...</p></div>;
   }
   
-  // Filtra eventi attivi (non archiviati)
   const activeEvents = events.filter(event => event.status !== 'archiviato');
-  const archivedEvents = events.filter(event => event.status === 'archiviato');
+  // const archivedEvents = events.filter(event => event.status === 'archiviato'); // Not used yet
 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-sky-100">
-      {/* Navbar */}
       <nav className="bg-blue-800 text-white p-4 shadow-lg sticky top-0 z-50">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold flex items-center">
@@ -74,7 +72,6 @@ const Index = () => {
         </div>
       </nav>
 
-      {/* Main Content */}
       <main className="container mx-auto p-6">
         <div className="mb-8">
           <Button size="lg" className="bg-orange-500 hover:bg-orange-600 text-white shadow-md" onClick={() => navigate('/nuovo-evento')}>
@@ -82,14 +79,13 @@ const Index = () => {
           </Button>
         </div>
 
-        {/* Sezione Scadenze Imminenti */}
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-blue-700 mb-4 flex items-center">
             <AlertTriangle className="mr-3 h-7 w-7 text-red-500" /> Scadenze Urgenti
           </h2>
           {deadlines.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {deadlines.slice(0, 6).map(deadline => ( // Mostra max 6 scadenze urgenti
+              {deadlines.slice(0, 6).map(deadline => ( 
                 <Card key={`${deadline.eventId}-${deadline.type}`} className={`shadow-lg hover:shadow-xl transition-shadow border-l-4 ${
                   isToday(deadline.date) ? 'border-red-500' : isPast(deadline.date) ? 'border-red-700' : 'border-yellow-500'
                 }`}>
@@ -119,7 +115,6 @@ const Index = () => {
           )}
         </section>
         
-        {/* Sezione Eventi in Corso/Prossimi */}
         <section>
           <h2 className="text-2xl font-semibold text-blue-700 mb-4 flex items-center">
             <Calendar className="mr-3 h-7 w-7" /> Eventi Attivi
