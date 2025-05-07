@@ -8,21 +8,30 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    // Correctly get the subscription object
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
+        console.log('LoginPage: User session found, navigating to /');
         navigate('/');
+      } else {
+        console.log('LoginPage: No user session, staying on login.');
       }
     });
 
-    // Controlla se c'è già una sessione all'avvio
+    // Check initial session state
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
+        console.log('LoginPage (initial check): User session found, navigating to /');
         navigate('/');
+      } else {
+        console.log('LoginPage (initial check): No user session.');
       }
     });
     
+    // Cleanup function
     return () => {
-      authListener?.unsubscribe();
+      subscription?.unsubscribe();
+      console.log('LoginPage: Unsubscribed from auth state changes.');
     };
   }, [navigate]);
 
@@ -41,7 +50,7 @@ const LoginPage = () => {
         <Auth
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
-          providers={['google', 'github']} // Esempio, puoi rimuoverli o cambiarli
+          providers={['google', 'github']} 
           theme="light"
           localization={{
             variables: {
