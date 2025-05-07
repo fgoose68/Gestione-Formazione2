@@ -1,4 +1,4 @@
-import { Calendar, Clock, FileText, Users, Archive, PlusCircle, AlertTriangle, CheckCircle2, MapPin } from 'lucide-react';
+import { Calendar, Clock, FileText, Users, Download, Archive, PlusCircle, AlertTriangle, CheckCircle2, MapPin } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { useEvents, useDeadlines } from '@/hooks';
 import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, parseISO, isPast, isToday } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Event } from '@/types'; // Assicurati che Event sia importato
+import { Event, Deadline } from '@/types'; 
 
 const Index = () => {
   const { events, loading: eventsLoading, updateEventStatus } = useEvents();
@@ -33,8 +33,11 @@ const Index = () => {
     if (!event) return;
     console.log(`Simulazione aggiornamento task ${taskType} per evento ${eventId}`);
     // Qui dovresti implementare la logica per aggiornare event.completed_tasks
-    // e persistere questo cambiamento nel database tramite una funzione in useEvents.
-    // Esempio: await updateEventCompletedTasks(eventId, [...(event.completed_tasks || []), taskType]);
+    // e poi chiamare una funzione in useEvents per salvare l'evento aggiornato su Supabase.
+    // Esempio:
+    // const updatedCompletedTasks = [...(event.completed_tasks || []), taskType];
+    // await updateEvent(event.id, { completed_tasks: updatedCompletedTasks });
+    // La funzione updateEvent andrebbe aggiunta a useEvents.ts
   };
 
   if (eventsLoading) {
@@ -159,4 +162,4 @@ const Index = () => {
   );
 };
 
-export default Index; // Assicura l'export di default
+export default Index;
