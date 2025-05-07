@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { showError, showSuccess, showLoading, dismissToast } from '@/utils/toast';
-import supabase from '@/integrations/supabase/client';
+import { Event } from '@/types';
 
-export const useDeadlines = (events) => {
-  const [deadlines, setDeadlines] = useState([]);
+export const useDeadlines = (events: Event[]) => {
+  const [deadlines, setDeadlines] = useState<any[]>([]);
 
-  const calculateDeadlines = (event) => {
+  const calculateDeadlines = (event: Event) => {
     const deadlines = [];
     const startDate = new Date(event.start_date);
     
@@ -39,6 +39,12 @@ export const useDeadlines = (events) => {
     return deadlines;
   };
 
+  const isSameDay = (date1: Date, date2: Date) => {
+    return date1.getDate() === date2.getDate() && 
+           date1.getMonth() === date2.getMonth() && 
+           date1.getFullYear() === date2.getFullYear();
+  };
+
   const checkDeadlines = () => {
     const allDeadlines = events.flatMap(event => calculateDeadlines(event));
     const today = new Date();
@@ -47,7 +53,7 @@ export const useDeadlines = (events) => {
     const upcoming = allDeadlines.filter(d => d.date >= today);
     
     // Ordina per data
-    upcoming.sort((a, b) => a.date - b.date);
+    upcoming.sort((a, b) => a.date.getTime() - b.date.getTime());
     
     setDeadlines(upcoming);
 
@@ -57,12 +63,6 @@ export const useDeadlines = (events) => {
         showLoading(`Scadenza: ${deadline.message}`);
       }
     });
-  };
-
-  const isSameDay = (date1, date2) => {
-    return date1.getDate() === date2.getDate() && 
-           date1.getMonth() === date2.getMonth() && 
-           date1.getFullYear() === date2.getFullYear();
   };
 
   useEffect(() => {
