@@ -12,7 +12,6 @@ export const useEvents = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        // Potrebbe essere utile reindirizzare al login o mostrare un messaggio
         setEvents([]);
         return;
       }
@@ -28,7 +27,7 @@ export const useEvents = () => {
     } catch (error: any) {
       showError(`Errore nel caricamento eventi: ${error.message}`);
       console.error("Errore fetchEvents:", error);
-      setEvents([]); // Assicura che events sia sempre un array
+      setEvents([]);
     } finally {
       setLoading(false);
     }
@@ -48,14 +47,14 @@ export const useEvents = () => {
         .insert({
           ...eventData,
           user_id: user.id,
-          status: 'in_preparazione', // Default status
+          status: 'in_preparazione',
         })
         .select()
         .single();
 
       if (error) throw error;
       showSuccess('Evento creato con successo!');
-      await fetchEvents(); // Ricarica gli eventi dopo l'aggiunta
+      await fetchEvents();
       return data as Event;
     } catch (error: any) {
       showError(`Errore nel salvataggio evento: ${error.message}`);
@@ -78,7 +77,7 @@ export const useEvents = () => {
 
       if (error) throw error;
       showSuccess('Stato evento aggiornato!');
-      await fetchEvents(); // Ricarica per riflettere il cambiamento
+      await fetchEvents();
       return data as Event;
     } catch (error: any) {
       showError(`Errore aggiornamento stato: ${error.message}`);
@@ -88,9 +87,7 @@ export const useEvents = () => {
     }
   };
 
-
   useEffect(() => {
-    // Listener per l'autenticazione
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
         fetchEvents();
@@ -99,7 +96,6 @@ export const useEvents = () => {
       }
     });
 
-    // Chiamata iniziale se l'utente è già loggato
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         fetchEvents();
