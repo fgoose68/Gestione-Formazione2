@@ -18,9 +18,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/nuovo-evento" element={<NewEvent />} />
-          <Route path="/calendario" element={<CalendarPage />} />
-          <Route path="*" element={<NotFound />} />
+          {/* Altre rotte */}
         </Routes>
       </BrowserRouter>
     </TooltipProvider>
