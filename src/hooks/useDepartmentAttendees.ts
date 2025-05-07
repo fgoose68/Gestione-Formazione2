@@ -21,19 +21,33 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
   const [loading, setLoading] = useState(false);
   const [initialDataLoaded, setInitialDataLoaded] = useState(false);
 
+  const calculateExpected = (attendee: Partial<DepartmentAttendee>): number => {
+    return (
+      (attendee.officers || 0) +
+      (attendee.inspectors || 0) +
+      (attendee.superintendents || 0) +
+      (attendee.militari || 0)
+    );
+  };
+
   const initializeAttendees = useCallback(async (currentUserId: string) => {
     if (!eventId) return;
-    const initialAttendees: DepartmentAttendee[] = DEFAULT_DEPARTMENTS.map(name => ({
-      event_id: eventId,
-      department_name: name,
-      officers: 0,
-      inspectors: 0,
-      superintendents: 0,
-      militari: 0,
-      expected: 0,
-      actual: 0,
-      user_id: currentUserId,
-    }));
+    const initialAttendees: DepartmentAttendee[] = DEFAULT_DEPARTMENTS.map(name => {
+      const baseAttendee = {
+        event_id: eventId,
+        department_name: name,
+        officers: 0,
+        inspectors: 0,
+        superintendents: 0,
+        militari: 0,
+        actual: 0,
+        user_id: currentUserId,
+      };
+      return {
+        ...baseAttendee,
+        expected: calculateExpected(baseAttendee),
+      };
+    });
     setAttendees(initialAttendees);
   }, [eventId]);
 
@@ -57,25 +71,22 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Mappa i dati esistenti e assicurati che tutti i reparti di default siano presenti
         const fetchedAttendeesMap = new Map(data.map(item => [item.department_name, item]));
         const combinedAttendees = DEFAULT_DEPARTMENTS.map(name => {
           const existing = fetchedAttendeesMap.get(name);
-          return existing ? { ...existing, event_id: eventId, user_id: user.id } : {
+          if (existing) {
+            return { ...existing, event_id: eventId, user_id: user.id, expected: calculateExpected(existing) };
+          }
+          const newAttendeeBase = {
             event_id: eventId,
             department_name: name,
-            officers: 0,
-            inspectors: 0,
-            superintendents: 0,
-            militari: 0,
-            expected: 0,
-            actual: 0,
+            officers: 0, inspectors: 0, superintendents: 0, militari: 0, actual: 0,
             user_id: user.id,
           };
+          return { ...newAttendeeBase, expected: calculateExpected(newAttendeeBase) };
         });
         setAttendees(combinedAttendees);
       } else {
-        // Se non ci sono dati, inizializza con i default
         await initializeAttendees(user.id);
       }
       setInitialDataLoaded(true);
@@ -83,7 +94,7 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
       showError(`Errore caricamento discenti per reparto: ${err.message}`);
       console.error("Errore fetchAttendees:", err);
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) await initializeAttendees(user.id); // Fallback all'inizializzazione
+      if (user) await initializeAttendees(user.id);
       setInitialDataLoaded(true);
     } finally {
       setLoading(false);
@@ -100,25 +111,23 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
         return;
       }
 
-      // Prepara i dati per l'upsert, assicurandoti che user_id sia presente
       const upsertData = attendees.map(att => ({
-        ...att,
-        event_id: eventId, // Assicura che event_id sia corretto
-        user_id: user.id,  // Assicura che user_id sia corretto
+        ...att, // id sarà gestito da upsert se presente
+        event_id: eventId,
+        user_id: user.id,
+        expected: calculateExpected(att), // Assicura che 'expected' sia sempre aggiornato prima del salvataggio
       }));
       
-      console.log("Dati inviati per upsert:", upsertData);
-
       const { error } = await supabase
         .from('department_attendees')
-        .upsert(upsertData, { onConflict: 'event_id, department_name', ignoreDuplicates: false });
+        .upsert(upsertData, { 
+          onConflict: 'event_id,department_name,user_id', // Aggiornato onConflict
+          ignoreDuplicates: false 
+        });
 
-      if (error) {
-        console.error("Errore Supabase durante upsert:", error);
-        throw error;
-      }
+      if (error) throw error;
       showSuccess("Dati discenti per reparto salvati con successo!");
-      await fetchAttendees(); // Ricarica per avere ID e dati aggiornati
+      await fetchAttendees();
     } catch (err: any) {
       showError(`Errore salvataggio discenti per reparto: ${err.message}`);
       console.error("Errore saveAttendees:", err);
@@ -126,20 +135,30 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
       setLoading(false);
     }
   };
+  
+  const updateAttendeeField = (departmentName: string, field: keyof Omit<DepartmentAttendee, 'id' | 'event_id' | 'department_name' | 'user_id' | 'expected'>, value: number) => {
+    setAttendees(prev =>
+      prev.map(att => {
+        if (att.department_name === departmentName) {
+          const updatedAtt = { ...att, [field]: Math.max(0, value) };
+          // Ricalcola 'expected' ogni volta che uno dei suoi componenti cambia
+          updatedAtt.expected = calculateExpected(updatedAtt);
+          return updatedAtt;
+        }
+        return att;
+      })
+    );
+  };
+
 
   useEffect(() => {
     if (eventId && !initialDataLoaded) {
       fetchAttendees();
+    } else if (!eventId) {
+        setAttendees([]);
+        setInitialDataLoaded(false);
     }
   }, [eventId, fetchAttendees, initialDataLoaded]);
-
-  const updateAttendeeField = (departmentName: string, field: keyof DepartmentAttendee, value: number) => {
-    setAttendees(prev =>
-      prev.map(att =>
-        att.department_name === departmentName ? { ...att, [field]: Math.max(0, value) } : att // Assicura che il valore non sia negativo
-      )
-    );
-  };
 
   return { attendees, loading, saveAttendees, fetchAttendees, updateAttendeeField, setAttendees, initialDataLoaded };
 };
