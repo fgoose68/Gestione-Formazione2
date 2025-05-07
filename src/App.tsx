@@ -1,12 +1,12 @@
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/toolbar";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import NewEvent from "./pages/NewEvent";
-import CalendarPage from "./pages/CalendarPage";
+import Index from "@/pages/Index";
+import NotFound from "@/pages/NotFound";
+import NewEvent from "@/pages/NewEvent";
+import CalendarPage from "@/pages/CalendarPage";
 
 const queryClient = new QueryClient();
 
