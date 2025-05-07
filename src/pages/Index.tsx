@@ -1,4 +1,4 @@
-import { Calendar, Clock, FileText, Users, Download, Archive, PlusCircle, AlertTriangle, CheckCircle2, MapPin } from 'lucide-react';
+import { Calendar, Clock, FileText, Users, Download, Archive, PlusCircle, AlertTriangle, CheckCircle2, MapPin } from 'lucide-react'; // Added MapPin here
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -31,20 +31,24 @@ const Index = () => {
   const handleMarkAsCompleted = async (eventId: string, taskType: string) => {
     const event = events.find(e => e.id === eventId);
     if (!event) return;
+
+    const updatedTasks = [...(event.completed_tasks || []), taskType];
     console.log(`Simulazione aggiornamento task ${taskType} per evento ${eventId}`);
-    // Qui dovresti implementare la logica per aggiornare event.completed_tasks
-    // e poi chiamare una funzione in useEvents per salvare l'evento aggiornato su Supabase.
-    // Esempio:
-    // const updatedCompletedTasks = [...(event.completed_tasks || []), taskType];
-    // await updateEvent(event.id, { completed_tasks: updatedCompletedTasks });
-    // La funzione updateEvent andrebbe aggiunta a useEvents.ts
+    // Placeholder: In a real app, you'd call a function like:
+    // await updateEventTasks(eventId, updatedTasks); 
+    // For now, this function doesn't exist in useEvents, so this is a client-side simulation.
+    // To make this persistent, you'd need to add `updateEventTasks` to `useEvents`
+    // and update the `completed_tasks` field in your Supabase 'events' table.
   };
+
 
   if (eventsLoading) {
     return <div className="flex justify-center items-center min-h-screen"><p>Caricamento dashboard...</p></div>;
   }
   
   const activeEvents = events.filter(event => event.status !== 'archiviato');
+  // const archivedEvents = events.filter(event => event.status === 'archiviato'); // Not used yet
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 to-sky-100">

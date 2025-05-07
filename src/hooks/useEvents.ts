@@ -6,23 +6,16 @@ import { Event } from '@/types';
 export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(false); // Guard for concurrent fetches
 
   const fetchEvents = useCallback(async () => {
-    if (isFetching) {
-      console.log('useEvents: fetchEvents already in progress, skipping.');
-      return;
-    }
     console.log('useEvents: fetchEvents called');
     setLoading(true);
-    setIsFetching(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log('useEvents: No user found, clearing events.');
         setEvents([]);
-        // setLoading(false); // setLoading will be handled in finally
-        // setIsFetching(false); // setIsFetching will be handled in finally
+        setLoading(false); // Ensure loading is set to false
         return;
       }
       console.log('useEvents: User found, fetching events for user_id:', user.id);
@@ -44,13 +37,12 @@ export const useEvents = () => {
       setEvents([]);
     } finally {
       setLoading(false);
-      setIsFetching(false);
-      console.log('useEvents: fetchEvents finished');
+      console.log('useEvents: fetchEvents finished, loading set to false');
     }
-  }, [isFetching]); // Added isFetching to useCallback dependencies
+  }, []);
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status'>) => {
-    setLoading(true); // Keep outer loading for the specific action
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -70,7 +62,7 @@ export const useEvents = () => {
 
       if (error) throw error;
       showSuccess('Evento creato con successo!');
-      await fetchEvents(); // This will now be guarded
+      await fetchEvents();
       return data as Event;
     } catch (error: any) {
       showError(`Errore nel salvataggio evento: ${error.message}`);
@@ -82,7 +74,7 @@ export const useEvents = () => {
   };
   
   const updateEventStatus = async (eventId: string, status: Event['status']) => {
-    setLoading(true); // Keep outer loading for the specific action
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('events')
@@ -93,7 +85,7 @@ export const useEvents = () => {
 
       if (error) throw error;
       showSuccess('Stato evento aggiornato!');
-      await fetchEvents(); // This will now be guarded
+      await fetchEvents();
       return data as Event;
     } catch (error: any) {
       showError(`Errore aggiornamento stato: ${error.message}`);
@@ -105,31 +97,35 @@ export const useEvents = () => {
 
   useEffect(() => {
     console.log('useEvents: useEffect for auth state change triggered');
+    // Correctly get the subscription object
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('useEvents: Auth state changed, event:', event);
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        console.log('useEvents: SIGNED_IN or INITIAL_SESSION, attempting to fetch events.');
-        if (session) {
-          fetchEvents();
-        } else {
-          // No session on INITIAL_SESSION or error during SIGNED_IN
-          setEvents([]);
-        }
+        console.log('useEvents: SIGNED_IN or INITIAL_SESSION, fetching events.');
+        if (session) fetchEvents(); // Fetch events only if there's a session
+        else setEvents([]); // Clear events if no session
       } else if (event === 'SIGNED_OUT') {
         console.log('useEvents: SIGNED_OUT, clearing events.');
         setEvents([]);
       }
     });
 
-    // The explicit supabase.auth.getSession() call here was redundant
-    // because onAuthStateChange fires an 'INITIAL_SESSION' event on subscription.
-    // Removing it prevents a double fetch on initial load.
+    // Initial check for session and fetch events
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('useEvents (initial check): Session state:', session ? 'Exists' : 'Null');
+      if (session) {
+        fetchEvents();
+      } else {
+        setEvents([]); // Ensure events are cleared if no initial session
+      }
+    });
 
+    // Cleanup function
     return () => {
       subscription?.unsubscribe();
       console.log('useEvents: Unsubscribed from auth state changes.');
     };
-  }, [fetchEvents]);
+  }, [fetchEvents]); // fetchEvents is memoized with useCallback
 
   return { events, loading, addEvent, fetchEvents, updateEventStatus };
 };

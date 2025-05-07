@@ -3,13 +3,13 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
-import Index from "@/pages/Index"; // L'import sembra corretto
+import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import NewEvent from "@/pages/NewEvent";
 import CalendarPage from "@/pages/CalendarPage";
 import ArchivePage from "@/pages/ArchivePage";
 import EventDetailPage from "@/pages/EventDetailPage";
-import EditEventPage from "@/pages/EditEventPage";
+import EditEventPage from "@/pages/EditEventPage"; // Importa la pagina di modifica
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import LoginPage from "@/pages/LoginPage"; 
@@ -35,8 +35,6 @@ const ProtectedRoute = () => {
   return session ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
-const queryClient = new QueryClient(); // Definisci queryClient prima di usarlo in App
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -51,7 +49,7 @@ const App = () => (
             <Route path="/calendario" element={<CalendarPage />} />
             <Route path="/archivio" element={<ArchivePage />} />
             <Route path="/evento/:id" element={<EventDetailPage />} />
-            <Route path="/evento/:id/modifica" element={<EditEventPage />} />
+            <Route path="/evento/:id/modifica" element={<EditEventPage />} /> {/* Nuova rotta */}
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -60,4 +58,5 @@ const App = () => (
   </QueryClientProvider>
 );
 
+const queryClient = new QueryClient();
 export default App;
