@@ -8,7 +8,8 @@ import NotFound from "@/pages/NotFound";
 import NewEvent from "@/pages/NewEvent";
 import CalendarPage from "@/pages/CalendarPage";
 import ArchivePage from "@/pages/ArchivePage";
-import EventDetailPage from "@/pages/EventDetailPage"; // Importa la nuova pagina Dettaglio Evento
+import EventDetailPage from "@/pages/EventDetailPage";
+import EditEventPage from "@/pages/EditEventPage"; // Importa la pagina di modifica
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import LoginPage from "@/pages/LoginPage"; 
@@ -18,43 +19,21 @@ const ProtectedRoute = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log('ProtectedRoute: useEffect triggered');
     const getSession = async () => {
-      console.log('ProtectedRoute: Getting initial session...');
-      const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-      if (error) {
-        console.error('ProtectedRoute: Error getting session:', error);
-      }
-      console.log('ProtectedRoute: Initial session:', currentSession ? 'Exists' : 'Null');
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       setSession(currentSession);
       setLoading(false);
     };
-
     getSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      console.log('ProtectedRoute: Auth state changed, event:', _event, 'new session:', newSession ? 'Exists' : 'Null');
       setSession(newSession);
-      if (_event === 'PASSWORD_RECOVERY') {
-        console.log('ProtectedRoute: Password recovery event detected.');
-      }
     });
-
-    return () => {
-      subscription?.unsubscribe();
-      console.log('ProtectedRoute: Unsubscribed from auth state changes.');
-    };
+    return () => subscription?.unsubscribe();
   }, []);
 
-  if (loading) {
-    console.log('ProtectedRoute: Loading session...');
-    return <div>Caricamento sessione...</div>;
-  }
-
-  console.log('ProtectedRoute: Rendering - session:', session ? 'Exists' : 'Null');
+  if (loading) return <div>Caricamento sessione...</div>;
   return session ? <Outlet /> : <Navigate to="/login" replace />;
 };
-
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -69,7 +48,8 @@ const App = () => (
             <Route path="/nuovo-evento" element={<NewEvent />} />
             <Route path="/calendario" element={<CalendarPage />} />
             <Route path="/archivio" element={<ArchivePage />} />
-            <Route path="/evento/:id" element={<EventDetailPage />} /> {/* Usa il nuovo componente */}
+            <Route path="/evento/:id" element={<EventDetailPage />} />
+            <Route path="/evento/:id/modifica" element={<EditEventPage />} /> {/* Nuova rotta */}
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
@@ -79,5 +59,4 @@ const App = () => (
 );
 
 const queryClient = new QueryClient();
-
 export default App;

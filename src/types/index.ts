@@ -6,12 +6,11 @@ export interface Event {
   end_date: string;   // ISO string
   location?: string;
   teachers: string[];
-  students: string[];
+  students: string[]; // Questo potrebbe diventare obsoleto o usato per un elenco generale
   status: 'in_preparazione' | 'completato' | 'archiviato';
   user_id: string;
   created_at: string; // ISO string
-  // Campi aggiuntivi per la gestione delle scadenze lato client, se necessario
-  completed_tasks?: string[]; // es. ['richiesta_docenti_fatta', 'richiesta_discenti_fatta']
+  completed_tasks?: string[];
 }
 
 export interface Deadline {
@@ -21,4 +20,18 @@ export interface Deadline {
   eventId: string;
   completed: boolean;
   eventTitle: string;
+}
+
+export interface DepartmentAttendee {
+  id?: string; // Opzionale perché potrebbe non esserci all'inizio
+  event_id: string;
+  department_name: string;
+  officers: number;
+  inspectors: number;
+  superintendents: number;
+  militari: number; // Per App./Fin.
+  expected: number;
+  actual: number;
+  user_id?: string; // Opzionale perché il client potrebbe non averlo subito
+  // `absent` sarà calcolato dinamicamente
 }
