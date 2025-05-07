@@ -1,17 +1,27 @@
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar as CalendarIconUI } from "@/components/ui/calendar"; // Rinominato per evitare conflitto
+import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { format } from "date-fns";
 import { it } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+import { Home } from "lucide-react"; // Importa l'icona Home
 
 const CalendarPage = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const navigate = useNavigate();
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="text-2xl font-bold text-blue-800 mb-6">Calendario Eventi Formativi</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold text-blue-800">Calendario Eventi Formativi</h1>
+        <Button variant="outline" onClick={() => navigate('/')}>
+          <Home className="mr-2 h-4 w-4" />
+          Torna alla Dashboard
+        </Button>
+      </div>
       
       <div className="bg-white rounded-lg shadow-md p-6">
-        <Calendar
+        <CalendarIconUI
           mode="single"
           selected={date}
           onSelect={setDate}
@@ -19,8 +29,8 @@ const CalendarPage = () => {
           locale={it}
           modifiers={{
             events: [
-              new Date(2023, 9, 15), // 15 Ottobre 2023
-              new Date(2023, 9, 25), // 25 Ottobre 2023
+              new Date(2023, 9, 15), 
+              new Date(2023, 9, 25), 
             ]
           }}
           modifiersStyles={{

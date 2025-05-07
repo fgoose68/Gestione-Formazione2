@@ -7,12 +7,14 @@ import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import NewEvent from "@/pages/NewEvent";
 import CalendarPage from "@/pages/CalendarPage";
+import ArchivePage from "@/pages/ArchivePage"; // Importa la nuova pagina Archivio
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import LoginPage from "@/pages/LoginPage"; 
 
-const ArchivePage = () => <div className="p-6"><h1 className="text-2xl">Archivio Eventi</h1><p>Qui verranno mostrati gli eventi archiviati.</p></div>;
+// Placeholder per Dettaglio Evento
 const EventDetailPage = () => <div className="p-6"><h1 className="text-2xl">Dettaglio Evento</h1><p>Dettagli specifici dell'evento.</p></div>;
+
 
 const ProtectedRoute = () => {
   const [session, setSession] = useState<any>(null);
@@ -33,7 +35,6 @@ const ProtectedRoute = () => {
 
     getSession();
 
-    // Correctly get the subscription object
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       console.log('ProtectedRoute: Auth state changed, event:', _event, 'new session:', newSession ? 'Exists' : 'Null');
       setSession(newSession);
@@ -42,7 +43,6 @@ const ProtectedRoute = () => {
       }
     });
 
-    // Cleanup function
     return () => {
       subscription?.unsubscribe();
       console.log('ProtectedRoute: Unsubscribed from auth state changes.');
@@ -71,7 +71,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/nuovo-evento" element={<NewEvent />} />
             <Route path="/calendario" element={<CalendarPage />} />
-            <Route path="/archivio" element={<ArchivePage />} />
+            <Route path="/archivio" element={<ArchivePage />} /> {/* Usa il nuovo componente */}
             <Route path="/evento/:id" element={<EventDetailPage />} />
           </Route>
           <Route path="*" element={<NotFound />} />
