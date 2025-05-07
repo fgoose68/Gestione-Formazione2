@@ -7,9 +7,9 @@ import Index from "@/pages/Index";
 import NotFound from "@/pages/NotFound";
 import NewEvent from "@/pages/NewEvent";
 import CalendarPage from "@/pages/CalendarPage";
-import { supabase } from "@/integrations/supabase/client"; // Importa supabase
+import { supabase } from "@/integrations/supabase/client"; // Corrected import path
 import { useEffect, useState } from "react";
-import LoginPage from "@/pages/LoginPage"; // Pagina da creare
+import LoginPage from "@/pages/LoginPage"; 
 
 // Placeholder per pagina Archivio e Dettaglio Evento
 const ArchivePage = () => <div className="p-6"><h1 className="text-2xl">Archivio Eventi</h1><p>Qui verranno mostrati gli eventi archiviati.</p></div>;
@@ -71,6 +71,6 @@ const App = () => (
   </QueryClientProvider>
 );
 
-const queryClient = new QueryClient(); // queryClient deve essere definito prima di App
+const queryClient = new QueryClient();
 
 export default App;
