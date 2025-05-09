@@ -16,12 +16,12 @@ const NewEvent = () => {
   const { addEvent, loading } = useEvents();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState({ // Definita come formData
     title: '',
     description: '',
     location: '',
-    teachersRaw: '', // Per input testuale
-    studentsRaw: ''  // Per input testuale
+    teachersRaw: '', 
+    studentsRaw: ''  
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -30,7 +30,8 @@ const NewEvent = () => {
   };
 
   const handleSubmit = async () => {
-    if (!formData.title) {
+    // Utilizzo di formData qui
+    if (!formData.title) { 
       showError('Il titolo del corso è obbligatorio.');
       return;
     }
@@ -39,19 +40,20 @@ const NewEvent = () => {
       return;
     }
 
+    // E qui
     const newEventData = {
       title: formData.title,
       description: formData.description,
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
       location: formData.location,
-      teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t), // Array di stringhe
-      students: formData.studentsRaw.split('\n').map(s => s.trim()).filter(s => s)  // Array di stringhe
+      teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t), 
+      students: formData.studentsRaw.split('\n').map(s => s.trim()).filter(s => s)  
     };
 
     const result = await addEvent(newEventData);
     if (result) {
-      navigate('/'); // Torna alla dashboard dopo la creazione
+      navigate('/'); 
     }
   };
 
