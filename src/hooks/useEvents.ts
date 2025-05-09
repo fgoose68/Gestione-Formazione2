@@ -1,29 +1,21 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { showError, showSuccess } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Event } from '@/types';
 
-type UpdatableEventData = Partial<Omit<Event, 'id' | 'user_id' | 'created_at' | 'status' | 'completed_tasks'>>;
-
 export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(false); // For general loading state of events list
-  // const [isFetching, setIsFetching] = useState(false); // Replaced by isFetchingRef
-  const isFetchingRef = useRef(false); // To prevent concurrent fetchEvents calls
+  const [loading, setLoading] = useState(false);
 
   const fetchEvents = useCallback(async () => {
-    if (isFetchingRef.current) {
-      console.log('useEvents: fetchEvents already in progress (ref check), skipping.');
-      return;
-    }
     console.log('useEvents: fetchEvents called');
-    isFetchingRef.current = true;
-    setLoading(true); 
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         console.log('useEvents: No user found, clearing events.');
         setEvents([]);
+        setLoading(false); // Ensure loading is set to false
         return;
       }
       console.log('useEvents: User found, fetching events for user_id:', user.id);
@@ -45,14 +37,12 @@ export const useEvents = () => {
       setEvents([]);
     } finally {
       setLoading(false);
-      isFetchingRef.current = false;
-      console.log('useEvents: fetchEvents finished');
+      console.log('useEvents: fetchEvents finished, loading set to false');
     }
-  }, []); // Empty dependency array makes fetchEvents stable
+  }, []);
 
-  const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status' | 'completed_tasks'>) => {
-    // setLoading(true); // Action-specific loading, can be handled by a different state if needed
-                      // or rely on fetchEvents's loading state if UI reflects general list loading
+  const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status'>) => {
+    setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -79,46 +69,12 @@ export const useEvents = () => {
       console.error("useEvents: Errore addEvent:", error);
       return null;
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
   
-  const updateEvent = async (eventId: string, eventData: UpdatableEventData) => {
-    // setLoading(true); // Action-specific loading
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        showError('Utente non autenticato.');
-        return null;
-      }
-      const dataToUpdate = { ...eventData };
-      if ('user_id' in dataToUpdate) delete (dataToUpdate as any).user_id;
-      if ('id' in dataToUpdate) delete (dataToUpdate as any).id;
-      if ('created_at' in dataToUpdate) delete (dataToUpdate as any).created_at;
-
-      const { data, error } = await supabase
-        .from('events')
-        .update(dataToUpdate)
-        .eq('id', eventId)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      showSuccess('Evento aggiornato con successo!');
-      await fetchEvents();
-      return data as Event;
-    } catch (error: any) {
-      showError(`Errore nell'aggiornamento dell'evento: ${error.message}`);
-      console.error("useEvents: Errore updateEvent:", error);
-      return null;
-    } finally {
-      // setLoading(false);
-    }
-  };
-
   const updateEventStatus = async (eventId: string, status: Event['status']) => {
-    // setLoading(true); // Action-specific loading
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('events')
@@ -135,30 +91,41 @@ export const useEvents = () => {
       showError(`Errore aggiornamento stato: ${error.message}`);
       return null;
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log('useEvents: Subscribing to onAuthStateChange.');
+    console.log('useEvents: useEffect for auth state change triggered');
+    // Correctly get the subscription object
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('useEvents: Auth state changed, event:', event);
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        if (session) {
-          fetchEvents(); // fetchEvents is now stable
-        } else {
-          setEvents([]);
-        }
+        console.log('useEvents: SIGNED_IN or INITIAL_SESSION, fetching events.');
+        if (session) fetchEvents(); // Fetch events only if there's a session
+        else setEvents([]); // Clear events if no session
       } else if (event === 'SIGNED_OUT') {
+        console.log('useEvents: SIGNED_OUT, clearing events.');
         setEvents([]);
       }
     });
 
-    return () => {
-      console.log('useEvents: Unsubscribing from onAuthStateChange.');
-      subscription?.unsubscribe();
-    };
-  }, [fetchEvents]); // fetchEvents is stable, so this effect runs once per component lifecycle using the hook
+    // Initial check for session and fetch events
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('useEvents (initial check): Session state:', session ? 'Exists' : 'Null');
+      if (session) {
+        fetchEvents();
+      } else {
+        setEvents([]); // Ensure events are cleared if no initial session
+      }
+    });
 
-  return { events, loading, addEvent, fetchEvents, updateEventStatus, updateEvent };
+    // Cleanup function
+    return () => {
+      subscription?.unsubscribe();
+      console.log('useEvents: Unsubscribed from auth state changes.');
+    };
+  }, [fetchEvents]); // fetchEvents is memoized with useCallback
+
+  return { events, loading, addEvent, fetchEvents, updateEventStatus };
 };

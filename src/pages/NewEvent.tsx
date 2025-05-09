@@ -1,30 +1,27 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, MapPin, User, Users, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useEvent } from '@/hooks/useEvent'; // Assicurati che questo hook esista e la funzione addEvent sia corretta
-import { format } from 'date-fns';
-import { it } from 'date-fns/locale'; // Importa il locale italiano per date-fns
+import { Calendar } from '@/components/ui/calendar'; // Shadcn Calendar
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useState } from 'react';
 import { DateRange } from 'react-day-picker';
+import { useNavigate } from 'react-router-dom';
+import { useEvents } from '@/hooks';
+import { format } from 'date-fns';
+import { it } from 'date-fns/locale';
+import { showError } from '@/utils/toast';
 
 const NewEvent = () => {
-  // Assicurati che useEvent() restituisca addEvent e loading
-  const { addEvent, loading } = useEvent(); 
+  const { addEvent, loading } = useEvents();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     location: '',
-    type: 'centralizzato' as 'centralizzato' | 'periferico' | 'iniziativa' | 'e-learning',
-    teachers: '', 
-    students: ''
+    teachersRaw: '', // Per input testuale
+    studentsRaw: ''  // Per input testuale
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -32,114 +29,76 @@ const NewEvent = () => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleTypeChange = (value: 'centralizzato' | 'periferico' | 'iniziativa' | 'e-learning') => {
-    setFormData(prev => ({ ...prev, type: value }));
-  };
-
   const handleSubmit = async () => {
-    // Validazione del titolo
-    if (!formData.title.trim()) { // Usa trim per evitare titoli vuoti composti da soli spazi
-      alert('Il titolo del corso è obbligatorio');
+    if (!formData.title) {
+      showError('Il titolo del corso è obbligatorio.');
       return;
     }
-    // Validazione dell'intervallo di date
     if (!dateRange?.from || !dateRange?.to) {
-      alert('Seleziona un intervallo di date valido');
+      showError('Seleziona un intervallo di date valido.');
       return;
     }
 
-    // Creazione dell'oggetto newEvent con i dati dal form
-    const newEvent = {
-      title: formData.title.trim(), // Pulisci il titolo
-      description: formData.description.trim(), // Pulisci la descrizione
+    const newEventData = {
+      title: formData.title,
+      description: formData.description,
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
-      location: formData.location.trim(), // CORREZIONE DEFINITIVA: formData.location
-      type: formData.type,
-      // Converte le stringhe di docenti e studenti in array di stringhe, rimuovendo elementi vuoti
-      teachers: formData.teachers.split(',').map(t => t.trim()).filter(Boolean),
-      students: formData.students.split('\n').map(s => s.trim()).filter(Boolean)
+      location: formData.location,
+      teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t), // Array di stringhe
+      students: formData.studentsRaw.split('\n').map(s => s.trim()).filter(s => s)  // Array di stringhe
     };
 
-    try {
-      const result = await addEvent(newEvent); 
-      if (result) {
-        navigate('/'); // Reindirizza alla homepage o a una pagina di successo
-      }
-      // Non è necessario un else qui se addEvent gestisce già gli errori con toast/alert
-    } catch (error) {
-      console.error("Errore durante la creazione dell'evento:", error);
-      alert("Si è verificato un errore durante la creazione dell'evento. Controlla la console per i dettagli.");
+    const result = await addEvent(newEventData);
+    if (result) {
+      navigate('/'); // Torna alla dashboard dopo la creazione
     }
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Crea Nuovo Evento</h1>
+    <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-lg shadow-xl p-8 max-w-3xl mx-auto">
+        <h1 className="text-3xl font-bold text-blue-800 mb-8 border-b pb-4">Crea Nuovo Evento Formativo</h1>
         
-        <div className="space-y-4">
+        <div className="space-y-6">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del corso *</label>
-            <Input
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              placeholder="Es. Sicurezza sul lavoro"
-            />
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso *</label>
+            <Input id="title" name="title" placeholder="Es: Sicurezza sul Lavoro Avanzato" value={formData.title} onChange={handleInputChange} className="text-lg"/>
           </div>
-
+          
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
-            <Textarea
-              id="description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              rows={3}
-              placeholder="Descrizione dettagliata del corso"
-            />
+            <Textarea id="description" name="description" placeholder="Dettagli del corso, obiettivi, argomenti trattati..." value={formData.description} onChange={handleInputChange} rows={4} />
           </div>
 
           <div>
-            <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Tipo di corso *</label>
-            <Select 
-              value={formData.type}
-              onValueChange={handleTypeChange}
-            >
-              <SelectTrigger id="type" className="w-full">
-                <SelectValue placeholder="Seleziona tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="centralizzato">Centralizzato</SelectItem>
-                <SelectItem value="periferico">Periferico</SelectItem>
-                <SelectItem value="iniziativa">Iniziativa</SelectItem>
-                <SelectItem value="e-learning">E-Learning</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <label htmlFor="dateRange" className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date e Orari *</label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-start text-left font-normal" id="dateRange">
+                <Button
+                  variant={"outline"}
+                  className={`w-full justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateRange?.from ? (
                     dateRange.to ? (
-                      `${format(dateRange.from, 'PPP', { locale: it })} - ${format(dateRange.to, 'PPP', { locale: it })}`
+                      <>
+                        {format(dateRange.from, "PPP", { locale: it })} -{" "}
+                        {format(dateRange.to, "PPP", { locale: it })}
+                      </>
                     ) : (
-                      format(dateRange.from, 'PPP', { locale: it })
+                      format(dateRange.from, "PPP", { locale: it })
                     )
                   ) : (
                     <span>Seleziona le date</span>
                   )}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
+              <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
+                  initialFocus
                   mode="range"
+                  defaultMonth={dateRange?.from}
                   selected={dateRange}
                   onSelect={setDateRange}
                   numberOfMonths={2}
@@ -148,49 +107,29 @@ const NewEvent = () => {
               </PopoverContent>
             </Popover>
           </div>
-
+          
           <div>
             <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo</label>
-            <Input
-              id="location"
-              name="location"
-              value={formData.location}
-              onChange={handleInputChange}
-              placeholder="Indirizzo o online"
-            />
+            <Input id="location" name="location" placeholder="Indirizzo o 'Online'" value={formData.location} onChange={handleInputChange} />
           </div>
-
+          
           <div>
-            <label htmlFor="teachers" className="block text-sm font-medium text-gray-700 mb-1">Docenti</label>
-            <Textarea
-              id="teachers"
-              name="teachers"
-              value={formData.teachers}
-              onChange={handleInputChange}
-              placeholder="Nome Cognome 1, Nome Cognome 2 (separati da virgola)"
-              rows={2}
-            />
+            <label htmlFor="teachersRaw" className="block text-sm font-medium text-gray-700 mb-1">Docenti</label>
+            <Input id="teachersRaw" name="teachersRaw" placeholder="Mario Rossi, Luigi Verdi (separati da virgola)" value={formData.teachersRaw} onChange={handleInputChange} />
           </div>
-
+          
           <div>
-            <label htmlFor="students" className="block text-sm font-medium text-gray-700 mb-1">Discenti</label>
-            <Textarea
-              id="students"
-              name="students"
-              value={formData.students}
-              onChange={handleInputChange}
-              placeholder="Nome Cognome 1 (uno per riga)&#10;Nome Cognome 2"
-              rows={3}
-            />
+            <label htmlFor="studentsRaw" className="block text-sm font-medium text-gray-700 mb-1">Discenti Previsti</label>
+            <Textarea id="studentsRaw" name="studentsRaw" placeholder="Nome Cognome 1 (uno per riga)&#10;Nome Cognome 2" value={formData.studentsRaw} onChange={handleInputChange} rows={5} />
           </div>
         </div>
-
-        <div className="mt-6 flex justify-end space-x-2">
+        
+        <div className="mt-10 flex justify-end space-x-3">
           <Button variant="outline" onClick={() => navigate('/')} disabled={loading}>
             Annulla
           </Button>
-          <Button onClick={handleSubmit} disabled={loading} className="bg-orange-500 hover:bg-orange-600 text-white">
-            {loading ? 'Salvataggio...' : 'Crea Evento'}
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSubmit} disabled={loading}>
+            {loading ? 'Salvataggio...' : 'Salva Evento'}
           </Button>
         </div>
       </div>
