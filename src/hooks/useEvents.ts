@@ -1,24 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { showError, showSuccess } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Event } from '@/types';
 
-// Definiamo un tipo per i dati aggiornabili dell'evento
 type UpdatableEventData = Partial<Omit<Event, 'id' | 'user_id' | 'created_at' | 'status' | 'completed_tasks'>>;
 
 export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [isFetching, setIsFetching] = useState(false);
+  const [loading, setLoading] = useState(false); // For general loading state of events list
+  // const [isFetching, setIsFetching] = useState(false); // Replaced by isFetchingRef
+  const isFetchingRef = useRef(false); // To prevent concurrent fetchEvents calls
 
   const fetchEvents = useCallback(async () => {
-    if (isFetching) {
-      console.log('useEvents: fetchEvents already in progress, skipping.');
+    if (isFetchingRef.current) {
+      console.log('useEvents: fetchEvents already in progress (ref check), skipping.');
       return;
     }
     console.log('useEvents: fetchEvents called');
-    setLoading(true);
-    setIsFetching(true);
+    isFetchingRef.current = true;
+    setLoading(true); 
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -45,13 +45,14 @@ export const useEvents = () => {
       setEvents([]);
     } finally {
       setLoading(false);
-      setIsFetching(false);
+      isFetchingRef.current = false;
       console.log('useEvents: fetchEvents finished');
     }
-  }, [isFetching]);
+  }, []); // Empty dependency array makes fetchEvents stable
 
   const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status' | 'completed_tasks'>) => {
-    setLoading(true);
+    // setLoading(true); // Action-specific loading, can be handled by a different state if needed
+                      // or rely on fetchEvents's loading state if UI reflects general list loading
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -64,7 +65,7 @@ export const useEvents = () => {
         .insert({
           ...eventData,
           user_id: user.id,
-          status: 'in_preparazione', // Default status for new events
+          status: 'in_preparazione',
         })
         .select()
         .single();
@@ -78,55 +79,46 @@ export const useEvents = () => {
       console.error("useEvents: Errore addEvent:", error);
       return null;
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
   
   const updateEvent = async (eventId: string, eventData: UpdatableEventData) => {
-    setLoading(true);
+    // setLoading(true); // Action-specific loading
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         showError('Utente non autenticato.');
         return null;
       }
-
-      // Assicurati che user_id non sia sovrascritto se presente in eventData
       const dataToUpdate = { ...eventData };
-      if ('user_id' in dataToUpdate) {
-        delete (dataToUpdate as any).user_id;
-      }
-      if ('id' in dataToUpdate) {
-        delete (dataToUpdate as any).id;
-      }
-       if ('created_at' in dataToUpdate) {
-        delete (dataToUpdate as any).created_at;
-      }
-
+      if ('user_id' in dataToUpdate) delete (dataToUpdate as any).user_id;
+      if ('id' in dataToUpdate) delete (dataToUpdate as any).id;
+      if ('created_at' in dataToUpdate) delete (dataToUpdate as any).created_at;
 
       const { data, error } = await supabase
         .from('events')
         .update(dataToUpdate)
         .eq('id', eventId)
-        .eq('user_id', user.id) // Aggiungi controllo user_id per sicurezza
+        .eq('user_id', user.id)
         .select()
         .single();
 
       if (error) throw error;
       showSuccess('Evento aggiornato con successo!');
-      await fetchEvents(); // Ricarica gli eventi per riflettere le modifiche
+      await fetchEvents();
       return data as Event;
     } catch (error: any) {
       showError(`Errore nell'aggiornamento dell'evento: ${error.message}`);
       console.error("useEvents: Errore updateEvent:", error);
       return null;
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
   const updateEventStatus = async (eventId: string, status: Event['status']) => {
-    setLoading(true);
+    // setLoading(true); // Action-specific loading
     try {
       const { data, error } = await supabase
         .from('events')
@@ -143,32 +135,30 @@ export const useEvents = () => {
       showError(`Errore aggiornamento stato: ${error.message}`);
       return null;
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   };
 
   useEffect(() => {
-    console.log('useEvents: useEffect for auth state change triggered');
+    console.log('useEvents: Subscribing to onAuthStateChange.');
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log('useEvents: Auth state changed, event:', event);
       if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
-        console.log('useEvents: SIGNED_IN or INITIAL_SESSION, attempting to fetch events.');
         if (session) {
-          fetchEvents();
+          fetchEvents(); // fetchEvents is now stable
         } else {
           setEvents([]);
         }
       } else if (event === 'SIGNED_OUT') {
-        console.log('useEvents: SIGNED_OUT, clearing events.');
         setEvents([]);
       }
     });
 
     return () => {
+      console.log('useEvents: Unsubscribing from onAuthStateChange.');
       subscription?.unsubscribe();
-      console.log('useEvents: Unsubscribed from auth state changes.');
     };
-  }, [fetchEvents]);
+  }, [fetchEvents]); // fetchEvents is stable, so this effect runs once per component lifecycle using the hook
 
   return { events, loading, addEvent, fetchEvents, updateEventStatus, updateEvent };
 };
