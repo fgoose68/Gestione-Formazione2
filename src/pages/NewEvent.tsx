@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar as CalendarIcon } from 'liquor-icons';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateRange } from 'react-day-picker';
 import { useEvent } from '@/hooks/useEvent';
+import { format } from 'date-fns';
 
 const NewEvent = () => {
   const { addEvent, loading } = useEvent();
@@ -90,7 +92,7 @@ const NewEvent = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-start text-left font-normal">
@@ -123,12 +125,12 @@ const NewEvent = () => {
           </div>
           
           <div>
-            <label html="teachersRaw" className="block text-sm font-medium text-gray-700 mb-1">Docenti</label>
+            <label htmlFor="teachersRaw" className="block text-sm font-medium text-gray-700 mb-1">Docenti</label>
             <Input id="teachersRaw" name="teachersRaw" placeholder="Nome Cognome 1, Nome Cognome 2" value={formData.teachersRaw} onChange={handleInputChange} />
           </div>
           
           <div>
-            <label html="studentsRaw" className="block text-sm font-medium text-gray-700 mb-1">Discenti</label>
+            <label htmlFor="studentsRaw" className="block text-sm font-medium text-gray-700 mb-1">Discenti</label>
             <Textarea id="studentsRaw" name="studentsRaw" placeholder="Nome Cognome 1\nNome Cognome 2" value={formData.studentsRaw} onChange={handleInputChange} rows={5} />
           </div>
         </div>
