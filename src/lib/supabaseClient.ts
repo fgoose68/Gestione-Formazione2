@@ -1,14 +1,11 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-if (!supabaseUrl) {
-  throw new Error('VITE_SUPABASE_URL is required')
-}
-
-if (!supabaseKey) {
-  throw new Error('VITE_SUPABASE_ANON_KEY is required')
+// Validazione più rigorosa dell'URL
+if (!supabaseUrl || !/^https:\/\/[a-zA-Z0-9-]+\.supabase\.co$/.test(supabaseUrl)) {
+  throw new Error('URL Supabase non valido. Formato atteso: https://[id-progetto].supabase.co')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
