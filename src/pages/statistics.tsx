@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { Button } from '@/components/ui/button' // Importa Button direttamente
-import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { format, addMonths, subMonths, startOfMonth, endOfMonth, isThisMonth } from 'date-fns'
+import { supabase } from '../lib/supabase'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
+import { Skeleton } from '../components/ui/skeleton'
+import { format } from 'date-fns'
 import { it } from 'date-fns/locale'
 
 interface Course {
@@ -28,6 +26,7 @@ export default function StatisticsPage() {
     const fetchCourses = async () => {
       try {
         setLoading(true)
+        // Sostituisci con la tua query effettiva a Supabase
         const { data, error } = await supabase
           .from('courses')
           .select(`
@@ -54,7 +53,7 @@ export default function StatisticsPage() {
   }, [selectedMonth])
 
   const handleMonthChange = (date: Date) => {
-    setSelectedMonth(startOfMonth(date))
+    setSelectedMonth(date)
   }
 
   return (
@@ -62,11 +61,12 @@ export default function StatisticsPage() {
       <Card>
         <CardHeader>
           <CardTitle className="flex justify-between items-center">
-            <div>Statistiche corsi mensili</div>
+            <div>
+              Statistiche corsi mensili
+            </div>
             <div className="flex items-center space-x-2">
               <Button
                 variant="outline"
-                size="icon"
                 onClick={() => handleMonthChange(subMonths(selectedMonth, 1))}
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -76,8 +76,7 @@ export default function StatisticsPage() {
               </div>
               <Button
                 variant="outline"
-                size="icon"
-                onClick={() => handleMonthChange(addMonths(selectedMonth, 1))}
+                onClick={() => handleMonthChange(addMonths(selectedMode, 1))}
                 disabled={isThisMonth(selectedMonth)}
               >
                 <ChevronRight className="h-4 w-4" />
