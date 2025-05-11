@@ -3,7 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Outlet, Navigate } from "react-router-dom";
-import IndexPage from "@/pages/Index"; // Rinominato da Index a IndexPage per chiarezza
+import IndexPage from "@/pages/IndexPage"; // CORREZIONE: Il percorso ora punta a IndexPage
 import NotFound from "@/pages/NotFound";
 import NewEvent from "@/pages/NewEvent";
 import CalendarPage from "@/pages/CalendarPage";
@@ -35,8 +35,6 @@ const ProtectedRoute = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, newSession) => {
       console.log(`ProtectedRoute: onAuthStateChange event: ${event}, new session:`, newSession);
       setSession(newSession);
-      // Se l'evento è SIGNED_IN e la sessione è cambiata, setLoading potrebbe essere già false.
-      // Se l'utente si disconnette (SIGNED_OUT), newSession sarà null, e il Navigate a /login scatterà.
       if (loading && (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT')) {
         setLoading(false); 
       }
@@ -46,11 +44,11 @@ const ProtectedRoute = () => {
       subscription?.unsubscribe();
       console.log('ProtectedRoute: Unsubscribed from auth state changes.');
     };
-  }, [loading]); // Aggiunto loading per rieseguire se necessario, anche se getSession è una tantum
+  }, [loading]);
 
   if (loading) {
     console.log('ProtectedRoute: Still loading session state...');
-    return <div>Caricamento sessione utente...</div>; // O uno spinner/scheletro più carino
+    return <div>Caricamento sessione utente...</div>;
   }
 
   console.log('ProtectedRoute: Rendering decision. Session:', session, 'Loading:', loading);
@@ -68,7 +66,7 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<IndexPage />} /> {/* Usare IndexPage qui */}
+            <Route path="/" element={<IndexPage />} /> {/* Usa IndexPage qui */}
             <Route path="/nuovo-evento" element={<NewEvent />} />
             <Route path="/calendario" element={<CalendarPage />} />
             <Route path="/archivio" element={<ArchivePage />} />
