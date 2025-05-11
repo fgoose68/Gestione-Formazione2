@@ -8,27 +8,33 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Correctly get the subscription object
+    console.log('LoginPage: useEffect mounted');
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        console.log('LoginPage: User session found, navigating to /');
+      console.log(`LoginPage: onAuthStateChange event: ${event}, session:`, session);
+      if (event === 'SIGNED_IN') {
+        console.log('LoginPage: User SIGNED_IN, navigating to /');
         navigate('/');
-      } else {
-        console.log('LoginPage: No user session, staying on login.');
+      } else if (event === 'INITIAL_SESSION' && session) {
+        console.log('LoginPage: INITIAL_SESSION with active session, navigating to /');
+        navigate('/');
       }
+      // Non è necessario gestire SIGNED_OUT qui per la navigazione,
+      // perché se l'utente si disconnette, dovrebbe rimanere/tornare alla pagina di login.
     });
 
-    // Check initial session state
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Controlla lo stato della sessione all'avvio, nel caso onAuthStateChange non catturi subito INITIAL_SESSION
+    // (anche se di solito lo fa)
+    const checkInitialSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        console.log('LoginPage (initial check): User session found, navigating to /');
+        console.log('LoginPage (initial direct check): Session found, navigating to /');
         navigate('/');
       } else {
-        console.log('LoginPage (initial check): No user session.');
+        console.log('LoginPage (initial direct check): No session.');
       }
-    });
-    
-    // Cleanup function
+    };
+    checkInitialSession();
+
     return () => {
       subscription?.unsubscribe();
       console.log('LoginPage: Unsubscribed from auth state changes.');
@@ -50,7 +56,7 @@ const LoginPage = () => {
         <Auth
           supabaseClient={supabase}
           appearance={{ theme: ThemeSupa }}
-          providers={['google', 'github']} 
+          providers={[]} // Rimosso ['google', 'github'] per semplificare
           theme="light"
           localization={{
             variables: {
@@ -58,7 +64,7 @@ const LoginPage = () => {
                 email_label: 'Indirizzo Email',
                 password_label: 'Password',
                 button_label: 'Accedi',
-                social_provider_text: 'Accedi con {{provider}}',
+                social_provider_text: 'Accedi con {{provider}}', // Anche se rimosso, lo lascio per completezza
                 link_text: 'Hai già un account? Accedi',
               },
               sign_up: {
