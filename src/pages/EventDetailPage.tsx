@@ -34,7 +34,7 @@ const EventDetailPage = () => {
       setEvent(currentEvent || null);
       if (!currentEvent) {
         showError("Evento non trovato.");
-        // navigate('/'); // Considera se navigare via o mostrare messaggio
+        // Considera se navigare via o mostrare messaggio
       }
     }
   }, [eventId, events, navigate]);
@@ -153,7 +153,7 @@ const EventDetailPage = () => {
                         <TableHead className="text-center font-semibold">Mil./App.</TableHead>
                         <TableHead className="text-center font-semibold bg-blue-50">Previsti</TableHead>
                         <TableHead className="text-center font-semibold">Effettivi</TableHead>
-                        <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead>
+                        <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead> {/* Aggiunta colonna Assenti */}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -169,7 +169,7 @@ const EventDetailPage = () => {
                           <TableCell className="text-center">
                              <Input type="number" min="0" value={att.actual || 0} onChange={(e) => handleAttendeeChange(att.department_name, 'actual', e.target.value)} className="w-20 text-center mx-auto" disabled={attendeesLoading}/>
                           </TableCell>
-                          <TableCell className="text-center font-medium bg-red-50">{att.absent}</TableCell>
+                          <TableCell className="text-center font-medium bg-red-50">{att.absent}</TableCell> {/* Cella per Assenti */}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -182,7 +182,7 @@ const EventDetailPage = () => {
                         <TableCell className="text-center font-bold text-slate-800">{totals.militari}</TableCell>
                         <TableCell className="text-center font-bold text-slate-800 bg-blue-100">{totals.expected}</TableCell>
                         <TableCell className="text-center font-bold text-slate-800">{totals.actual}</TableCell>
-                        <TableCell className="text-center font-bold text-slate-800 bg-red-100">{totals.absent}</TableCell>
+                        <TableCell className="text-center font-bold text-slate-800 bg-red-100">{totals.absent}</TableCell> {/* Cella per Totale Assenti */}
                       </TableRow>
                     </TableFooter>
                   </Table>
