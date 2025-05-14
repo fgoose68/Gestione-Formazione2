@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
 import { DepartmentAttendee } from '@/types';
-import { supabase } from '@/integrations/supabase/client'; // Importa supabase per salvare i discenti
+import { supabase } from '@/integrations/supabase/client'; // Importa supabase per ottenere l'utente se disponibile
 
 // Reparti predefiniti come nell'hook useDepartmentAttendees
 const DEFAULT_DEPARTMENTS = [
@@ -43,30 +43,20 @@ const NewEvent = () => {
 
   // Stato per i discenti per reparto nel form di creazione
   const [departmentAttendeesInput, setDepartmentAttendeesInput] = useState<Omit<DepartmentAttendee, 'id' | 'event_id' | 'user_id'>[]>([]);
-  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  // Rimosso lo stato currentUserId, l'ID utente verrà recuperato al momento del submit se disponibile
 
   // Inizializza i discenti per reparto con i reparti predefiniti all'avvio
   useEffect(() => {
-    const initializeAttendees = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setCurrentUserId(user.id);
-        const initialAttendees: Omit<DepartmentAttendee, 'id' | 'event_id' | 'user_id'>[] = DEFAULT_DEPARTMENTS.map(name => ({
-          department_name: name,
-          officers: 0,
-          inspectors: 0,
-          superintendents: 0,
-          militari: 0,
-          actual: 0,
-          expected: 0, // Calcolato dinamicamente
-        }));
-        setDepartmentAttendeesInput(initialAttendees);
-      } else {
-         showError("Utente non autenticato. Impossibile creare evento.");
-         // Potresti voler reindirizzare al login qui se necessario
-      }
-    };
-    initializeAttendees();
+    const initialAttendees: Omit<DepartmentAttendee, 'id' | 'event_id' | 'user_id'>[] = DEFAULT_DEPARTMENTS.map(name => ({
+      department_name: name,
+      officers: 0,
+      inspectors: 0,
+      superintendents: 0,
+      militari: 0,
+      actual: 0,
+      expected: 0, // Calcolato dinamicamente
+    }));
+    setDepartmentAttendeesInput(initialAttendees);
   }, []);
 
 
@@ -125,10 +115,8 @@ const NewEvent = () => {
       showError('Seleziona un intervallo di date valido.');
       return;
     }
-    if (!currentUserId) {
-       showError("Utente non autenticato. Impossibile salvare.");
-       return;
-    }
+    // Rimosso il controllo sull'utente autenticato qui.
+    // L'ID utente verrà recuperato all'interno di addEvent e saveAttendees se disponibile.
 
     setLoading(true); // Imposta loading all'inizio del salvataggio
 
@@ -143,17 +131,21 @@ const NewEvent = () => {
     };
 
     try {
-      // 1. Salva il nuovo evento
+      // 1. Salva il nuovo evento (addEvent gestirà l'ID utente se disponibile)
       const eventResult = await addEvent(newEventData);
 
       if (eventResult && eventResult.id) {
         const newEventId = eventResult.id;
 
         // 2. Prepara i dati dei discenti per l'inserimento
+        // Tentiamo di ottenere l'utente anche qui per associare i discenti se possibile
+        const { data: { user } } = await supabase.auth.getUser();
+        const userId = user?.id || null;
+
         const attendeesToSave = departmentAttendeesInput.map(att => ({
-          ...att,
+          ...att, // id sarà gestito da upsert se presente
           event_id: newEventId,
-          user_id: currentUserId,
+          user_id: userId, // Inserisce l'ID utente se disponibile, altrimenti null
           expected: calculateExpected(att), // Ricalcola per sicurezza prima di salvare
         }));
 
@@ -324,7 +316,7 @@ const NewEvent = () => {
           <Button variant="outline" onClick={() => navigate('/')} disabled={loading}>
             Annulla
           </Button>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSubmit} disabled={loading || !currentUserId}>
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSubmit} disabled={loading}> {/* Rimosso || !currentUserId */}
             {loading ? 'Salvataggio...' : 'Salva Evento'}
              <Save className="ml-2 h-5 w-5" />
           </Button>

@@ -23,18 +23,13 @@ const StatisticaPage = () => {
   const fetchStatsData = async () => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        showError("Utente non autenticato. Impossibile caricare statistiche.");
-        setLoading(false);
-        return;
-      }
+      // Rimosso il controllo sull'utente. Le query potrebbero fallire se RLS lo richiede.
 
-      // Fetch events for the current user
+      // Fetch events
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
+        // Rimosso .eq('user_id', user.id)
         .select('*')
-        .eq('user_id', user.id)
         .order('start_date', { ascending: true });
 
       if (eventsError) throw eventsError;
@@ -54,7 +49,8 @@ const StatisticaPage = () => {
            .from('department_attendees')
            .select('*')
            .in('event_id', eventIds)
-           .eq('user_id', user.id); // Filtra anche per user_id
+           // Rimosso .eq('user_id', user.id)
+           ;
 
          if (attendeesError) throw attendeesError;
          setAttendees(attendeesData || []);
@@ -64,6 +60,7 @@ const StatisticaPage = () => {
 
 
     } catch (err: any) {
+      // L'errore specifico "Utente non autenticato" non viene più mostrato qui
       showError(`Errore caricamento statistiche: ${err.message}`);
       console.error("Errore fetchStatsData:", err);
       setEvents([]);

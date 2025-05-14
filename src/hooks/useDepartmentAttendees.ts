@@ -30,7 +30,9 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
     );
   };
 
-  const initializeAttendees = useCallback(async (currentUserId: string) => {
+  // Questa funzione di inizializzazione non ha più bisogno dell'ID utente qui,
+  // l'ID utente verrà aggiunto solo al momento del salvataggio se disponibile.
+  const initializeAttendees = useCallback(() => {
     if (!eventId) return;
     const initialAttendees: DepartmentAttendee[] = DEFAULT_DEPARTMENTS.map(name => {
       const baseAttendee = {
@@ -41,7 +43,7 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
         superintendents: 0,
         militari: 0,
         actual: 0,
-        user_id: currentUserId,
+        // user_id non viene inizializzato qui
       };
       return {
         ...baseAttendee,
@@ -52,21 +54,24 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
   }, [eventId]);
 
   const fetchAttendees = useCallback(async () => {
-    if (!eventId) return;
-    setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+    if (!eventId) {
         setAttendees([]);
         setInitialDataLoaded(true);
         return;
-      }
+    }
+    setLoading(true);
+    try {
+      // Tentiamo di ottenere l'utente, ma non blocchiamo se non c'è.
+      const { data: { user } } = await supabase.auth.getUser();
+      const userId = user?.id || null; // Ottieni l'ID utente se disponibile
 
       const { data, error } = await supabase
         .from('department_attendees')
         .select('*')
         .eq('event_id', eventId)
-        .eq('user_id', user.id);
+        // Rimosso .eq('user_id', userId) per tentare di caricare i discenti indipendentemente dall'utente loggato
+        // Questo potrebbe richiedere una modifica delle policy RLS se i discenti sono legati all'utente
+        ;
 
       if (error) throw error;
 
@@ -75,46 +80,47 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
         const combinedAttendees = DEFAULT_DEPARTMENTS.map(name => {
           const existing = fetchedAttendeesMap.get(name);
           if (existing) {
-            return { ...existing, event_id: eventId, user_id: user.id, expected: calculateExpected(existing) };
+            // Assicurati che event_id e user_id siano presenti anche se non vengono usati per il fetch
+            return { ...existing, event_id: eventId, user_id: existing.user_id || userId, expected: calculateExpected(existing) };
           }
           const newAttendeeBase = {
             event_id: eventId,
             department_name: name,
             officers: 0, inspectors: 0, superintendents: 0, militari: 0, actual: 0,
-            user_id: user.id,
+            user_id: userId, // Aggiungi l'ID utente se disponibile
           };
           return { ...newAttendeeBase, expected: calculateExpected(newAttendeeBase) };
         });
         setAttendees(combinedAttendees);
       } else {
-        await initializeAttendees(user.id);
+        // Se non ci sono dati esistenti, inizializza con i reparti di default
+        initializeAttendees();
       }
       setInitialDataLoaded(true);
     } catch (err: any) {
+      // L'errore specifico "Utente non autenticato" non viene più mostrato qui
       showError(`Errore caricamento discenti per reparto: ${err.message}`);
       console.error("Errore fetchAttendees:", err);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) await initializeAttendees(user.id);
+      // In caso di errore, inizializza comunque con i reparti di default
+      initializeAttendees();
       setInitialDataLoaded(true);
     } finally {
       setLoading(false);
     }
-  }, [eventId, initializeAttendees]);
+  }, [eventId, initializeAttendees]); // initializeAttendees è memoized
 
   const saveAttendees = async () => {
     if (!eventId || attendees.length === 0) return;
     setLoading(true);
     try {
+      // Tentiamo di ottenere l'utente, ma non blocchiamo se non c'è.
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        showError("Utente non autenticato per salvare i discenti.");
-        return;
-      }
+      const userId = user?.id || null; // Ottieni l'ID utente se disponibile
 
       const upsertData = attendees.map(att => ({
         ...att, // id sarà gestito da upsert se presente
         event_id: eventId,
-        user_id: user.id,
+        user_id: userId, // Inserisce l'ID utente se disponibile, altrimenti null
         expected: calculateExpected(att), // Assicura che 'expected' sia sempre aggiornato prima del salvataggio
       }));
       
@@ -127,8 +133,9 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
 
       if (error) throw error;
       showSuccess("Dati discenti per reparto salvati con successo!");
-      await fetchAttendees();
+      await fetchAttendees(); // Ricarica i dati dopo il salvataggio
     } catch (err: any) {
+      // L'errore specifico "Utente non autenticato" non viene più mostrato qui
       showError(`Errore salvataggio discenti per reparto: ${err.message}`);
       console.error("Errore saveAttendees:", err);
     } finally {
