@@ -1,19 +1,20 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@supabase/supabase-js';
 
-// Le variabili d'ambiente in Vite sono accessibili tramite import.meta.env
-// e devono essere prefissate con VITE_ nel file .env
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+// Le variabili d'ambiente in Vite devono iniziare con VITE_
+// e sono accessibili tramite import.meta.env
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validazione più rigorosa dell'URL
-if (!supabaseUrl || typeof supabaseUrl !== 'string' || !supabaseUrl.startsWith('http')) {
-  console.error('VITE_SUPABASE_URL non è definito o non è un URL valido. Controlla il tuo file .env e assicurati che la variabile inizi con VITE_ e sia un URL completo (es: https://xyz.supabase.co). Valore attuale:', supabaseUrl);
-  throw new Error('VITE_SUPABASE_URL deve essere un URL valido (es: https://xyz.supabase.co)')
+if (!supabaseUrl || !supabaseKey) {
+  console.error(
+    "Errore: Le variabili d'ambiente VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY non sono definite." +
+    " Assicurati di aver creato un file .env nella root del progetto con questi valori." +
+    " Esempio di file .env:\n" +
+    "VITE_SUPABASE_URL=https://tuo-progetto.supabase.co\n" +
+    "VITE_SUPABASE_ANON_KEY=tua-anon-key"
+  );
+  // Potresti voler lanciare un errore qui o gestire il caso in cui le chiavi non sono disponibili
+  // throw new Error("Variabili d'ambiente Supabase non configurate.");
 }
 
-if (!supabaseKey || typeof supabaseKey !== 'string') {
-  console.error('VITE_SUPABASE_ANON_KEY non è definito o non è una stringa valida. Controlla il tuo file .env e assicurati che la variabile inizi con VITE_. Valore attuale:', supabaseKey);
-  throw new Error('VITE_SUPABASE_ANON_KEY è richiesta e deve essere una stringa')
-}
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
+export const supabase = createClient(supabaseUrl as string, supabaseKey as string);
