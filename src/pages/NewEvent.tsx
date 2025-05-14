@@ -5,6 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar'; // Shadcn Calendar
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importa i componenti Select
 import { useState, useMemo, useEffect } from 'react';
 import { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
@@ -12,8 +13,8 @@ import { useEvents } from '@/hooks';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
-import { DepartmentAttendee } from '@/types';
-import { supabase } from '@/integrations/supabase/client'; // Importa supabase per ottenere l'utente se disponibile
+import { DepartmentAttendee, Event } from '@/types'; // Importa anche Event per il tipo del corso
+import { supabase } from '@/integrations/supabase/client';
 
 // Reparti predefiniti come nell'hook useDepartmentAttendees
 const DEFAULT_DEPARTMENTS = [
@@ -29,26 +30,28 @@ const DEFAULT_DEPARTMENTS = [
   "Altri Reparti"
 ];
 
+// Tipi di corso disponibili
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning'];
+
+
 const NewEvent = () => {
-  const { addEvent } = useEvents(); // Non destrutturiamo più 'loading' da useEvents qui
+  const { addEvent } = useEvents();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [formData, setFormData] = useState({
     title: '',
     description: '',
     location: '',
-    teachersRaw: '', // Per input testuale docenti
-    // studentsRaw: '', // Rimosso input testuale discenti
+    teachersRaw: '',
   });
 
-  // Stato di caricamento locale per il form
+  // Stato per il tipo di corso selezionato
+  const [courseType, setCourseType] = useState<Event['type'] | undefined>(undefined);
+
   const [loading, setLoading] = useState(false);
 
-  // Stato per i discenti per reparto nel form di creazione
   const [departmentAttendeesInput, setDepartmentAttendeesInput] = useState<Omit<DepartmentAttendee, 'id' | 'event_id' | 'user_id'>[]>([]);
-  // Rimosso lo stato currentUserId, l'ID utente verrà recuperato al momento del submit se disponibile
 
-  // Inizializza i discenti per reparto con i reparti predefiniti all'avvio
   useEffect(() => {
     const initialAttendees: Omit<DepartmentAttendee, 'id' | 'event_id' | 'user_id'>[] = DEFAULT_DEPARTMENTS.map(name => ({
       department_name: name,
@@ -57,7 +60,7 @@ const NewEvent = () => {
       superintendents: 0,
       militari: 0,
       actual: 0,
-      expected: 0, // Calcolato dinamicamente
+      expected: 0,
     }));
     setDepartmentAttendeesInput(initialAttendees);
   }, []);
@@ -83,7 +86,6 @@ const NewEvent = () => {
         if (att.department_name === departmentName) {
           const numericValue = parseInt(value, 10);
           const updatedAtt = { ...att, [field]: isNaN(numericValue) || numericValue < 0 ? 0 : numericValue };
-          // Ricalcola 'expected' ogni volta che uno dei suoi componenti cambia
           updatedAtt.expected = calculateExpected(updatedAtt);
           return updatedAtt;
         }
@@ -101,7 +103,6 @@ const NewEvent = () => {
         acc.militari += curr.militari || 0;
         acc.expected += curr.expected || 0;
         acc.actual += curr.actual || 0;
-        // Assenti non calcolati qui, solo per visualizzazione nel dettaglio
         return acc;
       },
       { officers: 0, inspectors: 0, superintendents: 0, militari: 0, expected: 0, actual: 0 }
@@ -118,10 +119,13 @@ const NewEvent = () => {
       showError('Seleziona un intervallo di date valido.');
       return;
     }
-    // Rimosso il controllo sull'utente autenticato qui.
-    // L'ID utente verrà recuperato all'interno di addEvent e saveAttendees se disponibile.
+     if (!courseType) { // Aggiunta validazione per il tipo di corso
+      showError('Seleziona il tipo di corso.');
+      return;
+    }
 
-    setLoading(true); // Imposta loading all'inizio del salvataggio
+
+    setLoading(true);
 
     const newEventData = {
       title: formData.title,
@@ -129,65 +133,55 @@ const NewEvent = () => {
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
       location: formData.location,
-      teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t), // Array di stringhe
-      // students: [], // Rimosso
+      teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t),
+      type: courseType, // Includi il tipo di corso
     };
 
     try {
-      // 1. Salva il nuovo evento (addEvent gestirà l'ID utente se disponibile)
       const eventResult = await addEvent(newEventData);
 
       if (eventResult && eventResult.id) {
         const newEventId = eventResult.id;
 
-        // 2. Prepara i dati dei discenti per l'inserimento
-        // Tentiamo di ottenere l'utente anche qui per associare i discenti se possibile
         const { data: { user } } = await supabase.auth.getUser();
         const userId = user?.id || null;
 
         const attendeesToSave = departmentAttendeesInput.map(att => ({
-          ...att, // id sarà gestito da upsert se presente
+          ...att,
           event_id: newEventId,
-          user_id: userId, // Inserisce l'ID utente se disponibile, altrimenti null
-          expected: calculateExpected(att), // Ricalcola per sicurezza prima di salvare
+          user_id: userId,
+          expected: calculateExpected(att),
         }));
 
-        // 3. Salva i discenti per reparto
         const { error: attendeesError } = await supabase
           .from('department_attendees')
           .insert(attendeesToSave);
 
         if (attendeesError) {
-           // Se il salvataggio dei discenti fallisce, potresti voler gestire l'errore
-           // e magari cancellare l'evento appena creato, o mostrare un avviso.
-           // Per semplicità, mostriamo solo l'errore.
            console.error("Errore salvataggio discenti per reparto:", attendeesError);
            showError(`Evento creato, ma errore nel salvataggio discenti: ${attendeesError.message}`);
-           // Non lanciamo l'errore qui per non bloccare la navigazione se l'evento è stato creato
         } else {
            showSuccess('Evento e discenti salvati con successo!');
         }
 
-        navigate('/'); // Torna alla dashboard dopo la creazione (anche se i discenti non si salvano)
+        navigate('/');
 
       } else {
-         // addEvent ha già mostrato un errore se fallisce, ma gestiamo il caso in cui non restituisce l'ID
-         if (!loading) { // Evita di mostrare un errore se addEvent è già in loading
+         if (!loading) {
             showError('Errore nella creazione dell\'evento.');
          }
       }
     } catch (err: any) {
-       // Questo catch gestisce errori non catturati da addEvent o dall'insert dei discenti
        console.error("Errore generale nel submit:", err);
        showError(`Si è verificato un errore: ${err.message}`);
     } finally {
-      setLoading(false); // Imposta loading alla fine
+      setLoading(false);
     }
   };
 
   return (
     <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl mx-auto"> {/* Aumentato max-w */}
+      <div className="bg-white rounded-lg shadow-xl p-8 max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold text-blue-800 mb-8 border-b pb-4">Crea Nuovo Evento Formativo</h1>
 
         <div className="space-y-6">
@@ -200,6 +194,22 @@ const NewEvent = () => {
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
             <Textarea id="description" name="description" placeholder="Dettagli del corso, obiettivi, argomenti trattati..." value={formData.description} onChange={handleInputChange} rows={4} />
           </div>
+
+           {/* Campo Selezione Tipo Corso */}
+          <div>
+            <label htmlFor="courseType" className="block text-sm font-medium text-gray-700 mb-1">Tipo di Corso *</label>
+            <Select onValueChange={(value: Event['type']) => setCourseType(value)} value={courseType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleziona il tipo di corso" />
+              </SelectTrigger>
+              <SelectContent>
+                {COURSE_TYPES.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date e Orari *</label>
@@ -319,7 +329,7 @@ const NewEvent = () => {
           <Button variant="outline" onClick={() => navigate('/')} disabled={loading}>
             Annulla
           </Button>
-          <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSubmit} disabled={loading}> {/* Rimosso || !currentUserId */}
+          <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={handleSubmit} disabled={loading}>
             {loading ? 'Salvataggio...' : 'Salva Evento'}
              <Save className="ml-2 h-5 w-5" />
           </Button>

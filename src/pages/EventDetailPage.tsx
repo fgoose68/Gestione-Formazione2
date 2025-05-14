@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save } from 'lucide-react';
+import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag } from 'lucide-react'; // Importa l'icona Tag
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
@@ -74,14 +74,21 @@ const EventDetailPage = () => {
   }, [attendeesWithCalculatedAbsent]);
 
   if (eventLoading || (attendeesLoading && !initialDataLoaded && eventId)) {
-    return <div className="container mx-auto p-6 text-center"><p className="text-xl text-gray-700">Caricamento dettagli evento...</p></div>;
+    return (
+      <div className="container mx-auto p-6 text-center">
+        <p className="text-xl text-gray-700">Caricamento dettagli evento...</p>
+      </div>
+    );
   }
 
   if (!event && !eventLoading && eventId) { // Controlla anche eventLoading per evitare flash di "non trovato"
     return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">Evento non trovato.</p>
-        <Button onClick={() => navigate('/')} className="mt-4"><ArrowLeftCircle className="mr-2 h-5 w-5" />Torna alla Dashboard</Button>
+        <Button onClick={() => navigate('/')} className="mt-4">
+          <ArrowLeftCircle className="mr-2 h-5 w-5" />
+          Torna alla Dashboard
+        </Button>
       </div>
     );
   }
@@ -90,7 +97,10 @@ const EventDetailPage = () => {
      return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">ID Evento non specificato.</p>
-        <Button onClick={() => navigate('/')} className="mt-4"><ArrowLeftCircle className="mr-2 h-5 w-5" />Torna alla Dashboard</Button>
+        <Button onClick={() => navigate('/')} className="mt-4">
+          <ArrowLeftCircle className="mr-2 h-5 w-5" />
+          Torna alla Dashboard
+        </Button>
       </div>
     );
   }
@@ -129,6 +139,13 @@ const EventDetailPage = () => {
                 </div>
                 {event.location && <div><h3 className="text-lg font-semibold text-blue-700 flex items-center"><MapPin className="mr-2 h-5 w-5 text-orange-500" />Luogo</h3><p>{event.location}</p></div>}
               </div>
+              {/* Visualizzazione Tipo Corso */}
+              {event.type && (
+                 <div>
+                   <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Tag className="mr-2 h-5 w-5 text-orange-500" />Tipo Corso</h3>
+                   <p className="font-medium">{event.type}</p>
+                 </div>
+              )}
               {event.teachers?.length > 0 && <div><h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Users className="mr-2 h-5 w-5 text-orange-500" />Docenti</h3><ul className="list-disc list-inside pl-5 bg-slate-100 p-3 rounded-md">{event.teachers.map((t, i) => <li key={i}>{t}</li>)}</ul></div>}
               <div>
                 <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Info className="mr-2 h-5 w-5 text-orange-500" />Stato</h3>

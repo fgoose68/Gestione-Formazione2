@@ -8,9 +8,10 @@ export interface Event {
   teachers: string[];
   // students: string[]; // Questo campo è stato rimosso
   status: 'in_preparazione' | 'completato' | 'archiviato';
-  user_id: string;
+  user_id: string | null; // Reso nullable
   created_at: string; // ISO string
   completed_tasks?: string[];
+  type?: 'Centralizzato' | 'Periferico' | 'Iniziativa' | 'e-learning'; // Nuovo campo per il tipo di corso
 }
 
 export interface Deadline {
@@ -32,6 +33,6 @@ export interface DepartmentAttendee {
   militari: number; // Per App./Fin.
   expected: number;
   actual: number;
-  user_id?: string; // Opzionale perché il client potrebbe non averlo subito
+  user_id?: string | null; // Reso nullable
   // `absent` sarà calcolato dinamicamente
 }
