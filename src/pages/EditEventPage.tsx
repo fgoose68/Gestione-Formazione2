@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeftCircle, Save, Calendar as CalendarIcon, MapPin, User, Users, FileText, Edit } from 'lucide-react'; // Aggiunto Edit
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importa i componenti Select
+import { ArrowLeftCircle, Save, Calendar as CalendarIcon, MapPin, User, Users, FileText, Edit, Tag } from 'lucide-react'; // Aggiunto Tag
 import { useEvents } from '@/hooks/useEvents';
 import { Event } from '@/types';
 import { showError, showSuccess } from '@/utils/toast';
@@ -13,10 +14,14 @@ import { format, parseISO } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { it } from 'date-fns/locale';
 
+// Tipi di corso disponibili (copiato da NewEvent.tsx)
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning'];
+
+
 const EditEventPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { events, loading: eventsLoading, fetchEvents, updateEvent } = useEvents(); // Usa updateEvent
+  const { events, loading: eventsLoading, fetchEvents, updateEvent } = useEvents();
   
   const [event, setEvent] = useState<Event | null>(null);
   const [formData, setFormData] = useState({
@@ -27,7 +32,8 @@ const EditEventPage = () => {
     studentsRaw: ''
   });
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [loading, setLoading] = useState(false); // Stato di loading per il salvataggio
+  const [courseType, setCourseType] = useState<Event['type'] | undefined>(undefined); // Stato per il tipo di corso
+  const [loading, setLoading] = useState(false);
 
   // Carica i dati dell'evento quando l'ID o la lista eventi cambiano
   useEffect(() => {
@@ -50,6 +56,8 @@ const EditEventPage = () => {
             to: parseISO(currentEvent.end_date)
           });
         }
+        // Prepopola il tipo di corso
+        setCourseType(currentEvent.type);
       } else {
         showError("Evento non trovato per la modifica.");
         // navigate('/'); // Potrebbe essere troppo aggressivo
@@ -76,6 +84,11 @@ const EditEventPage = () => {
       showError('Seleziona un intervallo di date valido.');
       return;
     }
+     if (!courseType) { // Aggiunta validazione per il tipo di corso
+      showError('Seleziona il tipo di corso.');
+      return;
+    }
+
 
     setLoading(true);
     const updatedEventData = {
@@ -86,21 +99,22 @@ const EditEventPage = () => {
       end_date: dateRange.to.toISOString(),
       location: formData.location,
       teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t),
-      students: formData.studentsRaw.split('\n').map(s => s.trim()).filter(s => s)
+      students: formData.studentsRaw.split('\n').map(s => s.trim()).filter(s => s),
+      type: courseType, // Includi il tipo di corso aggiornato
     };
 
-    const result = await updateEvent(eventId, updatedEventData); // Chiama la funzione di update
+    const result = await updateEvent(eventId, updatedEventData);
     setLoading(false);
 
     if (result) {
       showSuccess("Evento aggiornato con successo!");
-      navigate(`/evento/${eventId}`); // Torna alla pagina di dettaglio
+      navigate(`/evento/${eventId}`);
     } else {
        showError("Errore durante l'aggiornamento dell'evento.");
     }
   };
 
-  if (eventsLoading || (!event && eventId)) { // Mostra loading se gli eventi stanno caricando o se l'evento specifico non è ancora trovato
+  if (eventsLoading || (!event && eventId)) {
     return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-gray-700">Caricamento dati evento per modifica...</p>
@@ -108,7 +122,7 @@ const EditEventPage = () => {
     );
   }
   
-   if (!event && !eventId) { // Caso di errore senza ID
+   if (!event && !eventId) {
      return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">ID Evento non specificato per la modifica.</p>
@@ -132,7 +146,6 @@ const EditEventPage = () => {
            </Button>
         </div>
         
-        {/* Form di modifica */}
         <div className="space-y-6">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso *</label>
@@ -143,6 +156,22 @@ const EditEventPage = () => {
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
             <Textarea id="description" name="description" placeholder="Dettagli del corso, obiettivi, argomenti trattati..." value={formData.description} onChange={handleInputChange} rows={4} disabled={loading}/>
           </div>
+
+           {/* Campo Selezione Tipo Corso */}
+          <div>
+            <label htmlFor="courseType" className="block text-sm font-medium text-gray-700 mb-1">Tipo di Corso *</label>
+            <Select onValueChange={(value: Event['type']) => setCourseType(value)} value={courseType} disabled={loading}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleziona il tipo di corso" />
+              </SelectTrigger>
+              <SelectContent>
+                {COURSE_TYPES.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Date e Orari *</label>
@@ -201,6 +230,7 @@ const EditEventPage = () => {
         <div className="mt-10 flex justify-end">
           <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={handleSave} disabled={loading}>
             {loading ? 'Salvataggio...' : 'Salva Modifiche Evento'}
+             <Save className="ml-2 h-5 w-5" />
           </Button>
         </div>
       </div>
