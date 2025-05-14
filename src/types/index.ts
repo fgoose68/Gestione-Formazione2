@@ -6,7 +6,7 @@ export interface Event {
   end_date: string;   // ISO string
   location?: string;
   teachers: string[];
-  students: string[]; // Questo potrebbe diventare obsoleto o usato per un elenco generale
+  // students: string[]; // Questo campo è stato rimosso
   status: 'in_preparazione' | 'completato' | 'archiviato';
   user_id: string;
   created_at: string; // ISO string
