@@ -11,20 +11,28 @@ export const useEvents = () => {
     console.log('useEvents: fetchEvents called');
     setLoading(true);
     try {
-      // Con RLS impostato su TRUE, questa query dovrebbe funzionare anche senza autenticazione.
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.log('useEvents: No user found, clearing events.');
+        setEvents([]);
+        setLoading(false);
+        return;
+      }
+      console.log('useEvents: User found, fetching events for user_id:', user.id);
       const { data, error } = await supabase
         .from('events')
         .select('*')
+        .eq('user_id', user.id)
         .order('start_date', { ascending: true });
 
       if (error) {
         console.error('useEvents: Error fetching events:', error);
-        showError(`Errore nel caricamento eventi: ${error.message}`);
         throw error;
       }
       console.log('useEvents: Events fetched successfully:', data);
       setEvents(data || []);
     } catch (error: any) {
+      showError(`Errore nel caricamento eventi: ${error.message}`);
       console.error("useEvents: Errore fetchEvents:", error);
       setEvents([]);
     } finally {
@@ -36,16 +44,17 @@ export const useEvents = () => {
   const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status'>) => {
     setLoading(true);
     try {
-      // Ottiene l'utente autenticato se presente, altrimenti user.id sarà null.
-      // Questo è gestito dalle policy RLS impostate su TRUE.
       const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || null;
+      if (!user) {
+        showError('Utente non autenticato.');
+        return null;
+      }
 
       const { data, error } = await supabase
         .from('events')
         .insert({
           ...eventData,
-          user_id: userId, // Inserisce l'ID utente se disponibile, altrimenti null
+          user_id: user.id,
           status: 'in_preparazione',
         })
         .select()
@@ -53,7 +62,7 @@ export const useEvents = () => {
 
       if (error) throw error;
       showSuccess('Evento creato con successo!');
-      await fetchEvents(); // Aggiorna la lista dopo l'aggiunta
+      await fetchEvents();
       return data as Event;
     } catch (error: any) {
       showError(`Errore nel salvataggio evento: ${error.message}`);
@@ -64,75 +73,97 @@ export const useEvents = () => {
     }
   };
   
+  // Nuova funzione per aggiornare un evento esistente
+  const updateEvent = async (eventId: string, eventData: Partial<Omit<Event, 'user_id' | 'created_at'>>) => {
+     setLoading(true);
+     try {
+       const { data: { user } } = await supabase.auth.getUser();
+       if (!user) {
+         showError('Utente non autenticato.');
+         return null;
+       }
+
+       // Assicurati di non sovrascrivere user_id o created_at
+       const { user_id, created_at, ...dataToUpdate } = eventData;
+
+       const { data, error } = await supabase
+         .from('events')
+         .update(dataToUpdate)
+         .eq('id', eventId)
+         .eq('user_id', user.id) // Assicura che l'utente possa modificare solo i propri eventi
+         .select()
+         .single();
+
+       if (error) throw error;
+       showSuccess('Evento aggiornato con successo!');
+       await fetchEvents(); // Ricarica gli eventi dopo l'aggiornamento
+       return data as Event;
+     } catch (error: any) {
+       showError(`Errore nell'aggiornamento evento: ${error.message}`);
+       console.error("useEvents: Errore updateEvent:", error);
+       return null;
+     } finally {
+       setLoading(false);
+     }
+  };
+
+
   const updateEventStatus = async (eventId: string, status: Event['status']) => {
     setLoading(true);
     try {
-      // Con RLS impostato su TRUE, questa query dovrebbe funzionare anche senza autenticazione.
+      const { data: { user } } = await supabase.auth.getUser();
+       if (!user) {
+         showError('Utente non autenticato.');
+         return null;
+       }
       const { data, error } = await supabase
         .from('events')
         .update({ status })
         .eq('id', eventId)
-        // Non è necessario filtrare per user_id se RLS è TRUE
+        .eq('user_id', user.id) // Assicura che l'utente possa modificare solo i propri eventi
         .select()
         .single();
 
       if (error) throw error;
       showSuccess('Stato evento aggiornato!');
-      await fetchEvents(); // Aggiorna la lista dopo l'aggiornamento
+      await fetchEvents();
       return data as Event;
     } catch (error: any) {
       showError(`Errore aggiornamento stato: ${error.message}`);
-      console.error("useEvents: Errore updateEventStatus:", error);
       return null;
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteEvent = async (eventId: string) => {
-    setLoading(true);
-    try {
-      // Elimina prima i discenti associati
-      const { error: deleteAttendeesError } = await supabase
-        .from('department_attendees')
-        .delete()
-        .eq('event_id', eventId);
-
-      if (deleteAttendeesError) {
-        console.error('useEvents: Error deleting attendees:', deleteAttendeesError);
-        // Non bloccare l'eliminazione dell'evento se fallisce l'eliminazione dei discenti,
-        // ma mostra un avviso.
-        showError(`Errore nell'eliminazione dei discenti associati: ${deleteAttendeesError.message}`);
-      }
-
-      // Poi elimina l'evento
-      const { error: deleteEventError } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', eventId);
-
-      if (deleteEventError) {
-        console.error('useEvents: Error deleting event:', deleteEventError);
-        throw deleteEventError; // Lancia l'errore per bloccare l'operazione se l'evento non viene eliminato
-      }
-
-      showSuccess('Evento eliminato con successo!');
-      await fetchEvents(); // Aggiorna la lista dopo l'eliminazione
-      return true; // Indica successo
-    } catch (error: any) {
-      showError(`Errore nell'eliminazione evento: ${error.message}`);
-      console.error("useEvents: Errore deleteEvent:", error);
-      return false; // Indica fallimento
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
   useEffect(() => {
-    console.log('useEvents: useEffect for initial fetch triggered');
-    fetchEvents();
+    console.log('useEvents: useEffect for auth state change triggered');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('useEvents: Auth state changed, event:', event);
+      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+        console.log('useEvents: SIGNED_IN or INITIAL_SESSION, fetching events.');
+        if (session) fetchEvents();
+        else setEvents([]);
+      } else if (event === 'SIGNED_OUT') {
+        console.log('useEvents: SIGNED_OUT, clearing events.');
+        setEvents([]);
+      }
+    });
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('useEvents (initial check): Session state:', session ? 'Exists' : 'Null');
+      if (session) {
+        fetchEvents();
+      } else {
+        setEvents([]);
+      }
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+      console.log('useEvents: Unsubscribed from auth state changes.');
+    };
   }, [fetchEvents]);
 
-  return { events, loading, addEvent, fetchEvents, updateEventStatus, deleteEvent };
+  return { events, loading, addEvent, fetchEvents, updateEventStatus, updateEvent }; // Esporta updateEvent
 };
