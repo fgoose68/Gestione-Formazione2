@@ -1,6 +1,6 @@
 import { useState } from 'react';
 // Rimosso: import Head from 'next/head';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client'; // CORREZIONE: Importa dal client centralizzato
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
