@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, parseISO, isPast, isToday, isWithinInterval, addDays } from 'date-fns'; // Importa isWithinInterval e addDays
 import { it } from 'date-fns/locale';
 import { Event } from '@/types';
+import { showSuccess } from '@/utils/toast'; // Importa showSuccess
 
 const IndexPage = () => {
   const { events, loading: eventsLoading, updateEventStatus } = useEvents();
