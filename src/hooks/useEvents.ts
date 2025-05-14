@@ -89,10 +89,50 @@ export const useEvents = () => {
     }
   };
 
+  const deleteEvent = async (eventId: string) => {
+    setLoading(true);
+    try {
+      // Elimina prima i discenti associati
+      const { error: deleteAttendeesError } = await supabase
+        .from('department_attendees')
+        .delete()
+        .eq('event_id', eventId);
+
+      if (deleteAttendeesError) {
+        console.error('useEvents: Error deleting attendees:', deleteAttendeesError);
+        // Non bloccare l'eliminazione dell'evento se fallisce l'eliminazione dei discenti,
+        // ma mostra un avviso.
+        showError(`Errore nell'eliminazione dei discenti associati: ${deleteAttendeesError.message}`);
+      }
+
+      // Poi elimina l'evento
+      const { error: deleteEventError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (deleteEventError) {
+        console.error('useEvents: Error deleting event:', deleteEventError);
+        throw deleteEventError; // Lancia l'errore per bloccare l'operazione se l'evento non viene eliminato
+      }
+
+      showSuccess('Evento eliminato con successo!');
+      await fetchEvents(); // Aggiorna la lista dopo l'eliminazione
+      return true; // Indica successo
+    } catch (error: any) {
+      showError(`Errore nell'eliminazione evento: ${error.message}`);
+      console.error("useEvents: Errore deleteEvent:", error);
+      return false; // Indica fallimento
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
   useEffect(() => {
     console.log('useEvents: useEffect for initial fetch triggered');
     fetchEvents();
   }, [fetchEvents]);
 
-  return { events, loading, addEvent, fetchEvents, updateEventStatus };
+  return { events, loading, addEvent, fetchEvents, updateEventStatus, deleteEvent };
 };

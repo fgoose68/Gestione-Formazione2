@@ -6,18 +6,29 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag } from 'lucide-react'; // Importa l'icona Tag
+import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag, Trash2 } from 'lucide-react'; // Importa Trash2
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
 import { useEvents } from '@/hooks/useEvents';
 import { useDepartmentAttendees } from '@/hooks/useDepartmentAttendees';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"; // Importa AlertDialog
 
 const EventDetailPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  const { events, loading: eventLoading } = useEvents(); // Hook per i dati dell'evento principale
+  const { events, loading: eventLoading, deleteEvent } = useEvents(); // Destruttura deleteEvent
   const [event, setEvent] = useState<Event | null>(null);
 
   const { 
@@ -73,6 +84,20 @@ const EventDetailPage = () => {
     );
   }, [attendeesWithCalculatedAbsent]);
 
+  const handleNavigateToEdit = () => {
+    if(eventId) navigate(`/evento/${eventId}/modifica`);
+  };
+
+  const handleDeleteEvent = async () => {
+    if (eventId) {
+      const success = await deleteEvent(eventId);
+      if (success) {
+        navigate('/'); // Torna alla dashboard dopo l'eliminazione
+      }
+    }
+  };
+
+
   if (eventLoading || (attendeesLoading && !initialDataLoaded && eventId)) {
     return (
       <div className="container mx-auto p-6 text-center">
@@ -106,10 +131,6 @@ const EventDetailPage = () => {
   }
 
 
-  const handleNavigateToEdit = () => {
-    if(eventId) navigate(`/evento/${eventId}/modifica`);
-  };
-
   return (
     <div className="container mx-auto p-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
@@ -117,10 +138,35 @@ const EventDetailPage = () => {
           <ArrowLeftCircle className="mr-2 h-5 w-5 text-blue-700" />
           Torna alla Dashboard
         </Button>
-        {event && <Button onClick={handleNavigateToEdit} variant="default" className="bg-orange-500 hover:bg-orange-600 text-white">
-          <Edit className="mr-2 h-5 w-5" />
-          Modifica Dati Evento
-        </Button>}
+        {event && (
+          <div className="flex space-x-3">
+            <Button onClick={handleNavigateToEdit} variant="default" className="bg-orange-500 hover:bg-orange-600 text-white">
+              <Edit className="mr-2 h-5 w-5" />
+              Modifica Dati Evento
+            </Button>
+            
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white">
+                  <Trash2 className="mr-2 h-5 w-5" />
+                  Elimina Evento
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Sei assolutamente sicuro?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Questa azione non può essere annullata. Verranno eliminati l'evento e tutti i dati dei discenti associati.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annulla</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleDeleteEvent} className="bg-red-600 hover:bg-red-700">Elimina</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
       </div>
 
       {event && (
