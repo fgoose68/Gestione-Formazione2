@@ -1,4 +1,4 @@
-import { Calendar, Clock, FileText, Users, Archive, PlusCircle, AlertTriangle, CheckCircle2, MapPin } from 'lucide-react';
+import { Calendar, Clock, FileText, Users, Archive, PlusCircle, AlertTriangle, CheckCircle2, MapPin, BarChart2 } from 'lucide-react'; // Aggiunto BarChart2 per l'icona Statistica
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -7,23 +7,15 @@ import { useNavigate } from 'react-router-dom';
 import { format, differenceInDays, parseISO, isPast, isToday } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Event } from '@/types';
-import { supabase } from '@/integrations/supabase/client'; // Importa supabase dal client centralizzato
-import { useEffect, useState } from 'react';
+// Rimosso l'import di supabase e la logica utente/logout dato che l'autenticazione è stata rimossa
+// import { supabase } from '@/integrations/supabase/client'; 
+// import { useEffect, useState } from 'react';
 
 const IndexPage = () => {
   const { events, loading: eventsLoading, updateEventStatus } = useEvents();
   const { deadlines } = useDeadlines(events);
   const navigate = useNavigate();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUserEmail(user?.email || null);
-    };
-    fetchUser();
-  }, []);
-
+  // Rimosso lo stato userEmail e l'useEffect per fetchUser
 
   const getEventProgress = (event: Event): number => {
     const totalTasks = 5; 
@@ -49,14 +41,7 @@ const IndexPage = () => {
     // Esempio: await updateEventCompletedTasks(eventId, [...(event.completed_tasks || []), taskType]);
   };
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Errore durante il logout:', error);
-    } else {
-      navigate('/login'); // Reindirizza alla pagina di login dopo il logout
-    }
-  };
+  // Rimosso handleLogout
 
   if (eventsLoading) {
     return <div className="flex justify-center items-center min-h-screen"><p>Caricamento dashboard...</p></div>;
@@ -73,7 +58,7 @@ const IndexPage = () => {
             <span className="tracking-wider">FORMAZIONE</span>
           </h1>
           <div className="flex items-center space-x-4">
-            {userEmail && <span className="text-sm">Utente: {userEmail}</span>}
+            {/* Rimosso userEmail display */}
             <Button variant="ghost" className="text-white hover:bg-blue-700" onClick={() => navigate('/')}>
               <Clock className="mr-2 h-5 w-5" /> Dashboard
             </Button>
@@ -83,7 +68,10 @@ const IndexPage = () => {
             <Button variant="ghost" className="text-white hover:bg-blue-700" onClick={() => navigate('/archivio')}> 
               <Archive className="mr-2 h-5 w-5" /> Archivio
             </Button>
-            <Button variant="destructive" onClick={handleLogout} size="sm">Logout</Button>
+             <Button variant="ghost" className="text-white hover:bg-blue-700" onClick={() => navigate('/statistica')}> 
+              <BarChart2 className="mr-2 h-5 w-5" /> Statistica
+            </Button>
+            {/* Rimosso Logout button */}
           </div>
         </div>
       </nav>
