@@ -11,23 +11,20 @@ export const useEvents = () => {
     console.log('useEvents: fetchEvents called');
     setLoading(true);
     try {
-      // Rimosso il controllo sull'utente. La query potrebbe fallire se RLS lo richiede.
+      // Con RLS impostato su TRUE, questa query dovrebbe funzionare anche senza autenticazione.
       const { data, error } = await supabase
         .from('events')
-        // Rimosso .eq('user_id', user.id) per tentare di caricare tutti gli eventi
         .select('*')
         .order('start_date', { ascending: true });
 
       if (error) {
         console.error('useEvents: Error fetching events:', error);
-        // Mostra un errore generico se il fetch fallisce (es. per RLS)
         showError(`Errore nel caricamento eventi: ${error.message}`);
         throw error;
       }
       console.log('useEvents: Events fetched successfully:', data);
       setEvents(data || []);
     } catch (error: any) {
-      // L'errore specifico "Utente non autenticato" non viene più mostrato qui
       console.error("useEvents: Errore fetchEvents:", error);
       setEvents([]);
     } finally {
@@ -39,10 +36,10 @@ export const useEvents = () => {
   const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status'>) => {
     setLoading(true);
     try {
-      // Tentiamo di ottenere l'utente, ma non blocchiamo se non c'è.
-      // Supabase RLS potrebbe bloccare l'operazione se user_id è richiesto.
+      // Ottiene l'utente autenticato se presente, altrimenti user.id sarà null.
+      // Questo è gestito dalle policy RLS impostate su TRUE.
       const { data: { user } } = await supabase.auth.getUser();
-      const userId = user?.id || null; // Usa null se l'utente non è autenticato
+      const userId = user?.id || null;
 
       const { data, error } = await supabase
         .from('events')
@@ -59,7 +56,6 @@ export const useEvents = () => {
       await fetchEvents(); // Aggiorna la lista dopo l'aggiunta
       return data as Event;
     } catch (error: any) {
-      // L'errore specifico "Utente non autenticato" non viene più mostrato qui
       showError(`Errore nel salvataggio evento: ${error.message}`);
       console.error("useEvents: Errore addEvent:", error);
       return null;
@@ -71,12 +67,12 @@ export const useEvents = () => {
   const updateEventStatus = async (eventId: string, status: Event['status']) => {
     setLoading(true);
     try {
-      // Rimosso il controllo sull'utente. La query potrebbe fallire se RLS lo richiede.
+      // Con RLS impostato su TRUE, questa query dovrebbe funzionare anche senza autenticazione.
       const { data, error } = await supabase
         .from('events')
         .update({ status })
         .eq('id', eventId)
-        // Rimosso .eq('user_id', user.id) per tentare l'aggiornamento indipendentemente dall'utente loggato
+        // Non è necessario filtrare per user_id se RLS è TRUE
         .select()
         .single();
 
@@ -85,7 +81,6 @@ export const useEvents = () => {
       await fetchEvents(); // Aggiorna la lista dopo l'aggiornamento
       return data as Event;
     } catch (error: any) {
-      // L'errore specifico "Utente non autenticato" non viene più mostrato qui
       showError(`Errore aggiornamento stato: ${error.message}`);
       console.error("useEvents: Errore updateEventStatus:", error);
       return null;
@@ -96,15 +91,8 @@ export const useEvents = () => {
 
   useEffect(() => {
     console.log('useEvents: useEffect for initial fetch triggered');
-    // Esegui il fetch iniziale all'avvio, indipendentemente dallo stato di autenticazione
     fetchEvents();
-
-    // Rimosso il listener onAuthStateChange poiché l'app non dipende più dallo stato di autenticazione per il fetch iniziale.
-    // Se in futuro volessi reintrodurre logiche basate sull'utente, dovrai riaggiungerlo.
-
-    // Non c'è più una subscription da pulire se rimuoviamo onAuthStateChange
-    // return () => { subscription?.unsubscribe(); };
-  }, [fetchEvents]); // fetchEvents è memoized con useCallback
+  }, [fetchEvents]);
 
   return { events, loading, addEvent, fetchEvents, updateEventStatus };
 };
