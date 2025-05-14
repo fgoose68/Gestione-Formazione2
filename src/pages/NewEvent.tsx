@@ -30,7 +30,7 @@ const DEFAULT_DEPARTMENTS = [
 ];
 
 const NewEvent = () => {
-  const { addEvent, loading } = useEvents();
+  const { addEvent } = useEvents(); // Non destrutturiamo più 'loading' da useEvents qui
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [formData, setFormData] = useState({
@@ -40,6 +40,9 @@ const NewEvent = () => {
     teachersRaw: '', // Per input testuale docenti
     // studentsRaw: '', // Rimosso input testuale discenti
   });
+
+  // Stato di caricamento locale per il form
+  const [loading, setLoading] = useState(false);
 
   // Stato per i discenti per reparto nel form di creazione
   const [departmentAttendeesInput, setDepartmentAttendeesInput] = useState<Omit<DepartmentAttendee, 'id' | 'event_id' | 'user_id'>[]>([]);
