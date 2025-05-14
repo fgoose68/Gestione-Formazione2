@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeftCircle, Save, Calendar as CalendarIcon, MapPin, User, Users, FileText } from 'lucide-react';
+import { ArrowLeftCircle, Save, Calendar as CalendarIcon, MapPin, User, Users, FileText, Edit } from 'lucide-react'; // Aggiunto Edit
 import { useEvents } from '@/hooks/useEvents';
 import { Event } from '@/types';
 import { showError, showSuccess } from '@/utils/toast';
