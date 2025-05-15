@@ -4,7 +4,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useEvents, useDeadlines } from '@/hooks';
 import { useNavigate } from 'react-router-dom';
-import { format, differenceInDays, parseISO, isPast, isToday, isWithinInterval, addDays } from 'date-fns'; // Importa isWithinInterval e addDays
+import { format, differenceInDays, parseISO, isPast, isToday, isWithinInterval, addDays, subMonths } from 'date-fns'; // Importa subMonths
 import { it } from 'date-fns/locale';
 import { Event } from '@/types';
 import { showSuccess } from '@/utils/toast'; // Importa showSuccess
@@ -44,7 +44,15 @@ const IndexPage = () => {
     return <div className="flex justify-center items-center min-h-screen"><p>Caricamento dashboard...</p></div>;
   }
 
-  const activeEvents = events.filter(event => event.status !== 'archiviato');
+  // Filtra gli eventi per mostrare solo quelli non archiviati
+  // E la cui data di fine non sia più vecchia di un mese rispetto ad oggi
+  const activeEvents = events.filter(event => {
+    const eventEndDate = parseISO(event.end_date);
+    const oneMonthAgo = subMonths(new Date(), 1);
+    
+    return event.status !== 'archiviato' && eventEndDate >= oneMonthAgo;
+  });
+
 
   // Filtra le scadenze per mostrare solo quelle non completate e future/odierne
   const upcomingDeadlines = deadlines.filter(d => !d.completed && (isToday(d.date) || d.date > new Date()));
@@ -177,7 +185,7 @@ const IndexPage = () => {
               })}
             </div>
           ) : (
-            <p className="text-gray-600">Nessun evento attivo. Crea un nuovo evento per iniziare!</p>
+            <p className="text-gray-600">Nessun evento attivo da visualizzare.</p>
           )}
         </section>
       </main>
