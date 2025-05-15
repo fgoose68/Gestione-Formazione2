@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Home, BarChart2, CalendarDays, Users, Info, Tag } from "lucide-react"; // Importa l'icona Tag
+import { Home, BarChart2, CalendarDays, Users, Info, Tag } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from '@/integrations/supabase/client';
 import { Event, DepartmentAttendee } from '@/types';
-import { showError } from '@/utils/toast';
+import { toast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval, getMonth, getYear } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -59,7 +59,11 @@ const StatisticaPage = () => {
 
 
     } catch (err: any) {
-      showError(`Errore caricamento statistiche: ${err.message}`);
+      toast({
+        title: "Errore",
+        description: `Errore caricamento statistiche: ${err.message}`,
+        variant: "destructive",
+      });
       console.error("Errore fetchStatsData:", err);
       setEvents([]);
       setAttendees([]);
@@ -83,15 +87,20 @@ const StatisticaPage = () => {
     const typeStats: { [key: string]: { count: number; totalActual: number } } = {};
 
     // Inizializza con tutti i tipi di corso per mostrare anche quelli con 0 eventi
-    COURSE_TYPES.forEach(type => {
-      typeStats[type || 'Non Specificato'] = { count: 0, totalActual: 0 };
+    // Inizializza anche 'Non Specificato'
+    [...COURSE_TYPES, 'Non Specificato'].forEach(type => {
+       if (type) { // Assicura che type non sia undefined prima di usarlo come chiave
+         typeStats[type] = { count: 0, totalActual: 0 };
+       }
     });
-     // Aggiungi un conteggio per eventi senza tipo specificato
-    typeStats['Non Specificato'] = { count: 0, totalActual: 0 };
 
 
     events.forEach(event => {
       const type = event.type || 'Non Specificato';
+      // Assicurati che la chiave esista prima di incrementare
+      if (!typeStats[type]) {
+         typeStats[type] = { count: 0, totalActual: 0 };
+      }
       typeStats[type].count++;
 
       // Trova i discenti per questo evento e somma gli effettivi
@@ -182,11 +191,12 @@ const StatisticaPage = () => {
                  </TableRow>
                </TableHeader>
                <TableBody>
-                 {Object.entries(statsByType).map(([type, stats]) => (
+                 {/* Ordina le chiavi per visualizzare i tipi in un ordine prevedibile */}
+                 {Object.keys(statsByType).sort().map(type => (
                    <TableRow key={type}>
                      <TableCell className="font-medium">{type}</TableCell>
-                     <TableCell className="text-center">{stats.count}</TableCell>
-                     <TableCell className="text-center">{stats.totalActual}</TableCell>
+                     <TableCell className="text-center">{statsByType[type].count}</TableCell>
+                     <TableCell className="text-center">{statsByType[type].totalActual}</TableCell>
                    </TableRow>
                  ))}
                </TableBody>
@@ -205,13 +215,11 @@ const StatisticaPage = () => {
           {events.length > 0 ? (
             <div className="space-y-8">
               {events.map(event => {
-                 // Calcola assenti per ogni riga di discenti per questo evento
                  const eventAttendeesWithAbsent = (attendeesByEvent.get(event.id) || []).map(att => ({
                     ...att,
                     absent: Math.max(0, (att.expected || 0) - (att.actual || 0)),
                  }));
 
-                 // Calcola totali per questo evento
                  const eventTotals = eventAttendeesWithAbsent.reduce(
                    (acc, curr) => {
                      acc.officers += curr.officers || 0;
@@ -229,7 +237,7 @@ const StatisticaPage = () => {
                 return (
                   <div key={event.id} className="border rounded-lg p-4 bg-slate-50">
                     <h3 className="text-lg font-bold text-blue-800 mb-3">{event.title}</h3>
-                     {event.type && <p className="text-sm text-gray-600 mb-1">Tipo: <span className="font-medium">{event.type}</span></p>} {/* Visualizza tipo anche qui */}
+                     {event.type && <p className="text-sm text-gray-600 mb-1">Tipo: <span className="font-medium">{event.type}</span></p>}
                      <p className="text-sm text-gray-600 mb-3">
                        Periodo: {format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}
                      </p>
