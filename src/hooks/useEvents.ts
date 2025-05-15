@@ -3,7 +3,18 @@ import { showError, showSuccess } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Event } from '@/types';
 
-export const useEvents = () => {
+// Definisci il tipo di ritorno dello hook per maggiore chiarezza
+interface UseEventsReturn {
+  events: Event[];
+  loading: boolean;
+  addEvent: (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status'>) => Promise<Event | null>;
+  fetchEvents: () => Promise<void>;
+  updateEventStatus: (eventId: string, status: Event['status']) => Promise<Event | null>;
+  updateEvent: (eventId: string, eventData: Partial<Omit<Event, 'user_id' | 'created_at'>>) => Promise<Event | null>;
+  deleteEvent: (eventId: string) => Promise<boolean>;
+}
+
+export const useEvents = (): UseEventsReturn => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -44,7 +55,7 @@ export const useEvents = () => {
   const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status'>) => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } = {} } = await supabase.auth.getUser();
       if (!user) {
         showError('Utente non autenticato.');
         return null;
@@ -73,11 +84,10 @@ export const useEvents = () => {
     }
   };
   
-  // Nuova funzione per aggiornare un evento esistente
   const updateEvent = async (eventId: string, eventData: Partial<Omit<Event, 'user_id' | 'created_at'>>) => {
      setLoading(true);
      try {
-       const { data: { user } } = await supabase.auth.getUser();
+       const { data: { user } = {} } = await supabase.auth.getUser();
        if (!user) {
          showError('Utente non autenticato.');
          return null;
@@ -111,7 +121,7 @@ export const useEvents = () => {
   const updateEventStatus = async (eventId: string, status: Event['status']) => {
     setLoading(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user } = {} } = await supabase.auth.getUser(); // Aggiunto default {}
        if (!user) {
          showError('Utente non autenticato.');
          return null;
@@ -135,6 +145,75 @@ export const useEvents = () => {
       setLoading(false);
     }
   };
+  
+  const deleteEvent = async (eventId: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      const { data: { user } = {} } = await supabase.auth.getUser(); // Aggiunto default {}
+      if (!user) {
+        showError('Utente non autenticato.');
+        return false;
+      }
+
+      // Elimina prima i discenti associati all'evento
+      const { error: deleteAttendeesError } = await supabase
+        .from('department_attendees')
+        .delete()
+        .eq('event_id', eventId)
+        .eq('user_id', user.id); // Assicura che l'utente possa eliminare solo i propri dati
+
+      if (deleteAttendeesError) {
+        console.error("useEvents: Errore eliminazione discenti:", deleteAttendeesError);
+        throw deleteAttendeesError; // Propaga l'errore
+      }
+      
+      // Elimina anche le relazioni in event_instructors e event_participants se esistono
+       const { error: deleteEventInstructorsError } = await supabase
+        .from('event_instructors')
+        .delete()
+        .eq('event_id', eventId); // RLS dovrebbe gestire il controllo utente tramite la policy su event_instructors
+
+       if (deleteEventInstructorsError) {
+         console.error("useEvents: Errore eliminazione event_instructors:", deleteEventInstructorsError);
+         throw deleteEventInstructorsError;
+       }
+
+       const { error: deleteEventParticipantsError } = await supabase
+        .from('event_participants')
+        .delete()
+        .eq('event_id', eventId); // RLS dovrebbe gestire il controllo utente tramite la policy su event_participants
+
+       if (deleteEventParticipantsError) {
+         console.error("useEvents: Errore eliminazione event_participants:", deleteEventParticipantsError);
+         throw deleteEventParticipantsError;
+       }
+
+
+      // Ora elimina l'evento principale
+      const { error: deleteEventError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId)
+        .eq('user_id', user.id); // Assicura che l'utente possa eliminare solo i propri eventi
+
+      if (deleteEventError) {
+        console.error("useEvents: Errore eliminazione evento:", deleteEventError);
+        throw deleteEventError; // Propaga l'errore
+      }
+
+      showSuccess('Evento eliminato con successo!');
+      await fetchEvents(); // Ricarica gli eventi dopo l'eliminazione
+      return true;
+
+    } catch (error: any) {
+      showError(`Errore nell'eliminazione evento: ${error.message}`);
+      console.error("useEvents: Errore deleteEvent:", error);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     console.log('useEvents: useEffect for auth state change triggered');
@@ -165,5 +244,24 @@ export const useEvents = () => {
     };
   }, [fetchEvents]);
 
-  return { events, loading, addEvent, fetchEvents, updateEventStatus, updateEvent }; // Esporta updateEvent
+  // Aggiungi un controllo prima di restituire le funzioni
+  const hookReturn: UseEventsReturn = {
+    events,
+    loading,
+    addEvent,
+    fetchEvents,
+    updateEventStatus,
+    updateEvent,
+    deleteEvent,
+  };
+
+  // Verifica che le funzioni critiche siano definite
+  if (typeof hookReturn.addEvent !== 'function') console.error("useEvents: addEvent is not a function!");
+  if (typeof hookReturn.fetchEvents !== 'function') console.error("useEvents: fetchEvents is not a function!");
+  if (typeof hookReturn.updateEventStatus !== 'function') console.error("useEvents: updateEventStatus is not a function!");
+  if (typeof hookReturn.updateEvent !== 'function') console.error("useEvents: updateEvent is not a function!");
+  if (typeof hookReturn.deleteEvent !== 'function') console.error("useEvents: deleteEvent is not a function!");
+
+
+  return hookReturn;
 };
