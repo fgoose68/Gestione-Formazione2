@@ -10,9 +10,9 @@ const DEFAULT_DEPARTMENTS = [
   "Provinciale Frosinone",
   "Provinciale Rieti",
   "Provinciale Viterbo",
-  "ROAN", // Aggiunto ROAN come da allegato implicito
+  "ROAN",
   "ReTLA Lazio",
-  "CAR", 
+  "CAR", // Centro Addestramento Regionale
   "Altri Reparti"
 ];
 
@@ -30,7 +30,7 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
     );
   };
 
-  const initializeAttendees = useCallback(async (currentUserId: string) => {
+  const initializeAttendees = useCallback(() => {
     if (!eventId) return;
     const initialAttendees: DepartmentAttendee[] = DEFAULT_DEPARTMENTS.map(name => {
       const baseAttendee = {
@@ -41,7 +41,7 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
         superintendents: 0,
         militari: 0,
         actual: 0,
-        user_id: currentUserId,
+        user_id: null, // Inizializza user_id a null
       };
       return {
         ...baseAttendee,
@@ -52,22 +52,20 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
   }, [eventId]);
 
   const fetchAttendees = useCallback(async () => {
-    if (!eventId) return;
-    setLoading(true);
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
+    if (!eventId) {
         setAttendees([]);
         setInitialDataLoaded(true);
-        setLoading(false); // Assicura che loading sia false anche senza utente
         return;
-      }
-
+    }
+    setLoading(true);
+    try {
+      // Con RLS impostato su TRUE, questa query dovrebbe funzionare anche senza autenticazione.
       const { data, error } = await supabase
         .from('department_attendees')
         .select('*')
         .eq('event_id', eventId)
-        .eq('user_id', user.id);
+        // Non è necessario filtrare per user_id se RLS è TRUE
+        ;
 
       if (error) throw error;
 
@@ -76,27 +74,28 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
         const combinedAttendees = DEFAULT_DEPARTMENTS.map(name => {
           const existing = fetchedAttendeesMap.get(name);
           if (existing) {
-            // Assicurati che 'expected' sia ricalcolato anche per i dati esistenti
-            return { ...existing, event_id: eventId, user_id: user.id, expected: calculateExpected(existing) };
+            // Assicurati che event_id sia presente e user_id sia null se non presente nel fetch
+            return { ...existing, event_id: eventId, user_id: existing.user_id || null, expected: calculateExpected(existing) };
           }
           const newAttendeeBase = {
             event_id: eventId,
             department_name: name,
             officers: 0, inspectors: 0, superintendents: 0, militari: 0, actual: 0,
-            user_id: user.id,
+            user_id: null, // Inizializza user_id a null
           };
           return { ...newAttendeeBase, expected: calculateExpected(newAttendeeBase) };
         });
         setAttendees(combinedAttendees);
       } else {
-        await initializeAttendees(user.id);
+        // Se non ci sono dati esistenti, inizializza con i reparti di default
+        initializeAttendees();
       }
       setInitialDataLoaded(true);
     } catch (err: any) {
       showError(`Errore caricamento discenti per reparto: ${err.message}`);
       console.error("Errore fetchAttendees:", err);
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) await initializeAttendees(user.id);
+      // In caso di errore, inizializza comunque con i reparti di default
+      initializeAttendees();
       setInitialDataLoaded(true);
     } finally {
       setLoading(false);
@@ -107,36 +106,28 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
     if (!eventId || attendees.length === 0) return;
     setLoading(true);
     try {
+      // Ottiene l'utente autenticato se presente, altrimenti user.id sarà null.
+      // Questo è gestito dalle policy RLS impostate su TRUE.
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        showError("Utente non autenticato per salvare i discenti.");
-        return;
-      }
+      const userId = user?.id || null;
 
-      const upsertData = attendees.map(att => {
-        // Escludi 'absent' e 'id' se non presente (per nuovi record)
-        const { absent, id, ...dataToSave } = att;
-        return {
-          ...dataToSave,
-          event_id: eventId,
-          user_id: user.id,
-          expected: calculateExpected(att), // Assicura che 'expected' sia sempre aggiornato
-          ...(id && { id }), // Includi l'ID solo se esiste (per aggiornamenti)
-        };
-      });
+      const upsertData = attendees.map(att => ({
+        ...att, // id sarà gestito da upsert se presente
+        event_id: eventId,
+        user_id: userId, // Inserisce l'ID utente se disponibile, altrimenti null
+        expected: calculateExpected(att), // Assicura che 'expected' sia sempre aggiornato prima del salvataggio
+      }));
       
-      console.log("Dati inviati per upsert (escluso absent):", upsertData);
-
       const { error } = await supabase
         .from('department_attendees')
         .upsert(upsertData, { 
-          onConflict: 'event_id,department_name,user_id', 
+          onConflict: 'event_id,department_name', // Modificato onConflict per non includere user_id
           ignoreDuplicates: false 
         });
 
       if (error) throw error;
       showSuccess("Dati discenti per reparto salvati con successo!");
-      await fetchAttendees(); // Ricarica per avere ID e dati aggiornati
+      await fetchAttendees(); // Ricarica i dati dopo il salvataggio
     } catch (err: any) {
       showError(`Errore salvataggio discenti per reparto: ${err.message}`);
       console.error("Errore saveAttendees:", err);
@@ -145,8 +136,7 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
     }
   };
   
-  // Aggiorna il tipo per 'field' per escludere 'expected' e 'absent'
-  const updateAttendeeField = (departmentName: string, field: 'officers' | 'inspectors' | 'superintendents' | 'militari' | 'actual', value: number) => {
+  const updateAttendeeField = (departmentName: string, field: keyof Omit<DepartmentAttendee, 'id' | 'event_id' | 'department_name' | 'user_id' | 'expected'>, value: number) => {
     setAttendees(prev =>
       prev.map(att => {
         if (att.department_name === departmentName) {

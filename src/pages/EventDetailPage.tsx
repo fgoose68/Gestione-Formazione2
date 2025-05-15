@@ -6,11 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag, Archive } from 'lucide-react'; // Importa Archive
+import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag, Trash2 } from 'lucide-react'; // Importa Trash2
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
-import { useEvents } from '@/hooks/useEvents'; // Mantieni useEvents
+import { useEvents } from '@/hooks/useEvents';
 import { useDepartmentAttendees } from '@/hooks/useDepartmentAttendees';
 import {
   AlertDialog,
@@ -28,8 +28,7 @@ const EventDetailPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  // Non destrutturare deleteEvent qui, useremo updateEventStatus
-  const { events, loading: eventLoading, updateEventStatus } = useEvents(); 
+  const { events, loading: eventLoading, deleteEvent } = useEvents(); // Destruttura deleteEvent
   const [event, setEvent] = useState<Event | null>(null);
 
   const { 
@@ -89,16 +88,11 @@ const EventDetailPage = () => {
     if(eventId) navigate(`/evento/${eventId}/modifica`);
   };
 
-  // Funzione per archiviare l'evento
-  const handleArchiveEvent = async () => {
+  const handleDeleteEvent = async () => {
     if (eventId) {
-      // Chiama updateEventStatus per cambiare lo stato in 'archiviato'
-      const result = await updateEventStatus(eventId, 'archiviato');
-      if (result) {
-        showSuccess("Evento archiviato con successo!");
-        navigate('/'); // Torna alla dashboard dopo l'archiviazione
-      } else {
-        showError("Errore durante l'archiviazione dell'evento.");
+      const success = await deleteEvent(eventId);
+      if (success) {
+        navigate('/'); // Torna alla dashboard dopo l'eliminazione
       }
     }
   };
@@ -144,7 +138,7 @@ const EventDetailPage = () => {
           <ArrowLeftCircle className="mr-2 h-5 w-5 text-blue-700" />
           Torna alla Dashboard
         </Button>
-        {event && event.status !== 'archiviato' && ( // Mostra i pulsanti solo se l'evento non è già archiviato
+        {event && (
           <div className="flex space-x-3">
             <Button onClick={handleNavigateToEdit} variant="default" className="bg-orange-500 hover:bg-orange-600 text-white">
               <Edit className="mr-2 h-5 w-5" />
@@ -153,34 +147,26 @@ const EventDetailPage = () => {
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                {/* Cambiato il testo del pulsante */}
-                <Button variant="secondary" className="bg-gray-300 hover:bg-gray-400 text-gray-800">
-                  <Archive className="mr-2 h-5 w-5" />
-                  Archivia Evento
+                <Button variant="destructive" className="bg-red-600 hover:bg-red-700 text-white">
+                  <Trash2 className="mr-2 h-5 w-5" />
+                  Elimina Evento
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  {/* Cambiato il testo del titolo e della descrizione */}
-                  <AlertDialogTitle>Sei sicuro di voler archiviare questo evento?</AlertDialogTitle>
+                  <AlertDialogTitle>Sei assolutamente sicuro?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    L'evento verrà spostato nella sezione Archivio e non sarà più visibile nella Dashboard principale. Potrai gestirlo dall'archivio.
+                    Questa azione non può essere annullata. Verranno eliminati l'evento e tutti i dati dei discenti associati.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  {/* Cambiato il testo dell'azione e la funzione chiamata */}
-                  <AlertDialogAction onClick={handleArchiveEvent} className="bg-gray-600 hover:bg-gray-700">Archivia</AlertDialogAction>
+                  <AlertDialogAction onClick={handleDeleteEvent} className="bg-red-600 hover:bg-red-700">Elimina</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
         )}
-         {event && event.status === 'archiviato' && ( // Mostra un messaggio se l'evento è archiviato
-            <div className="flex items-center text-gray-600 font-medium">
-               <Archive className="mr-2 h-5 w-5" /> Evento Archiviato
-            </div>
-         )}
       </div>
 
       {event && (
@@ -234,7 +220,7 @@ const EventDetailPage = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {attendeesWithCalculatedAbsent.map(att => (
+                      {attendeesWithCalculatedAbsent.map((att) => (
                         <TableRow key={att.department_name}>
                           <TableCell className="font-medium">{att.department_name}</TableCell>
                           {(['officers', 'inspectors', 'superintendents', 'militari'] as const).map(field => (
