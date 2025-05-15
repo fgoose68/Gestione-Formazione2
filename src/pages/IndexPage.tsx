@@ -89,6 +89,56 @@ const IndexPage = () => {
           </Button>
         </div>
 
+        {/* Sezione Eventi Attivi (spostata sopra) */}
+        <section className="mb-10">
+          <h2 className="text-2xl font-semibold text-blue-700 mb-4 flex items-center">
+            <Calendar className="mr-3 h-7 w-7" /> Eventi Attivi
+          </h2>
+          {activeEvents.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeEvents.map(event => {
+                const daysLeft = getDaysRemaining(event.start_date);
+                const progress = getEventProgress(event);
+                return (
+                  <Card key={event.id} className="shadow-lg hover:shadow-xl transition-shadow flex flex-col">
+                    <CardHeader>
+                      <CardTitle className="text-xl text-blue-800">{event.title}</CardTitle>
+                      <p className="text-sm text-gray-500">
+                        {format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}
+                      </p>
+                    </CardHeader>
+                    <CardContent className="flex-grow">
+                      <p className="text-sm text-gray-600 mb-1">Stato: <span className="font-medium">{event.status.replace('_', ' ')}</span></p>
+                       {event.type && <p className="text-sm text-gray-600 mb-1">Tipo: <span className="font-medium">{event.type}</span></p>} {/* Visualizza tipo */}
+                      {daysLeft >= 0 ? (
+                        <p className="text-sm text-orange-600 mb-3">{daysLeft} giorni rimanenti</p>
+                      ) : (
+                        <p className="text-sm text-red-600 mb-3">Evento passato</p>
+                      )}
+                      <div className="mb-1">
+                        <Progress value={progress} className="h-3" />
+                        <p className="text-xs text-gray-500 mt-1 text-right">{progress.toFixed(0)}% completato</p>
+                      </div>
+                      {event.location && <p className="text-xs text-gray-500"><MapPin className="inline h-3 w-3 mr-1"/>{event.location}</p>}
+                    </CardContent>
+                    <CardFooter className="border-t pt-4 flex justify-between items-center"> {/* Modificato per allineare */}
+                      <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>Dettagli</Button>
+                       {event.status !== 'archiviato' && (
+                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-red-600" onClick={() => updateEventStatus(event.id, 'archiviato')}>
+                          <Archive className="mr-1 h-4 w-4" /> Archivia
+                        </Button>
+                      )}
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-gray-600">Nessun evento attivo da visualizzare.</p>
+          )}
+        </section>
+
+        {/* Sezione Scadenze Urgenti (spostata sotto) */}
         <section className="mb-10">
           <h2 className="text-2xl font-semibold text-blue-700 mb-4 flex items-center">
             <AlertTriangle className="mr-3 h-7 w-7 text-red-500" /> Scadenze Urgenti
@@ -138,54 +188,6 @@ const IndexPage = () => {
             </div>
           ) : (
             <p className="text-gray-600">Nessuna scadenza imminente. Ottimo lavoro!</p>
-          )}
-        </section>
-        
-        <section>
-          <h2 className="text-2xl font-semibold text-blue-700 mb-4 flex items-center">
-            <Calendar className="mr-3 h-7 w-7" /> Eventi Attivi
-          </h2>
-          {activeEvents.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {activeEvents.map(event => {
-                const daysLeft = getDaysRemaining(event.start_date);
-                const progress = getEventProgress(event);
-                return (
-                  <Card key={event.id} className="shadow-lg hover:shadow-xl transition-shadow flex flex-col">
-                    <CardHeader>
-                      <CardTitle className="text-xl text-blue-800">{event.title}</CardTitle>
-                      <p className="text-sm text-gray-500">
-                        {format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}
-                      </p>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                      <p className="text-sm text-gray-600 mb-1">Stato: <span className="font-medium">{event.status.replace('_', ' ')}</span></p>
-                       {event.type && <p className="text-sm text-gray-600 mb-1">Tipo: <span className="font-medium">{event.type}</span></p>} {/* Visualizza tipo */}
-                      {daysLeft >= 0 ? (
-                        <p className="text-sm text-orange-600 mb-3">{daysLeft} giorni rimanenti</p>
-                      ) : (
-                        <p className="text-sm text-red-600 mb-3">Evento passato</p>
-                      )}
-                      <div className="mb-1">
-                        <Progress value={progress} className="h-3" />
-                        <p className="text-xs text-gray-500 mt-1 text-right">{progress.toFixed(0)}% completato</p>
-                      </div>
-                      {event.location && <p className="text-xs text-gray-500"><MapPin className="inline h-3 w-3 mr-1"/>{event.location}</p>}
-                    </CardContent>
-                    <CardFooter className="border-t pt-4 flex justify-between items-center"> {/* Modificato per allineare */}
-                      <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>Dettagli</Button>
-                       {event.status !== 'archiviato' && (
-                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-red-600" onClick={() => updateEventStatus(event.id, 'archiviato')}>
-                          <Archive className="mr-1 h-4 w-4" /> Archivia
-                        </Button>
-                      )}
-                    </CardFooter>
-                  </Card>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-600">Nessun evento attivo da visualizzare.</p>
           )}
         </section>
       </main>
