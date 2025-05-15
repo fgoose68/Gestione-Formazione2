@@ -1,16 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Home, Archive, CalendarDays, MapPin, Info, RotateCcw } from "lucide-react"; // Aggiunto RotateCcw per ripristino
+import { Home, Archive, CalendarDays, MapPin, Info, RotateCcw, Trash2 } from "lucide-react"; // Aggiunto Trash2 per eliminazione
 import { useEvents } from "@/hooks"; // Importa useEvents
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card'; // Importa componenti Card
 import { format, parseISO } from 'date-fns'; // Importa funzioni per formattare date
 import { it } from 'date-fns/locale'; // Importa locale italiano
 import { Event } from '@/types'; // Importa il tipo Event
 import { showError, showSuccess } from '@/utils/toast'; // Importa toast
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"; // Importa AlertDialog
 
 const ArchivePage = () => {
   const navigate = useNavigate();
-  const { events, loading: eventsLoading, updateEventStatus } = useEvents(); // Usa useEvents
+  // Importa anche deleteEvent dallo hook useEvents
+  const { events, loading: eventsLoading, updateEventStatus, deleteEvent } = useEvents(); 
 
   // Filtra gli eventi per mostrare solo quelli archiviati
   const archivedEvents = events.filter(event => event.status === 'archiviato');
@@ -25,6 +37,17 @@ const ArchivePage = () => {
     } else {
       showError("Errore durante il ripristino dell'evento.");
     }
+  };
+  
+  // Nuova funzione per eliminare definitivamente un evento
+  const handleDeleteEventPermanently = async (eventId: string) => {
+     const success = await deleteEvent(eventId);
+     if (success) {
+        // La lista eventi si aggiornerà automaticamente tramite useEvents
+        // Non è necessaria una navigazione qui
+     } else {
+        // L'errore è già gestito nello hook deleteEvent
+     }
   };
 
 
@@ -71,6 +94,30 @@ const ArchivePage = () => {
                     <Button variant="ghost" size="sm" className="text-gray-600 hover:text-green-600" onClick={() => handleUnarchiveEvent(event.id)}>
                        <RotateCcw className="mr-1 h-4 w-4" /> Ripristina
                     </Button>
+                    
+                    {/* Pulsante e AlertDialog per eliminazione definitiva */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-red-600">
+                          <Trash2 className="mr-1 h-4 w-4" /> Elimina Definitivamente
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Sei assolutamente sicuro?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Questa azione non può essere annullata. Verrà eliminato definitivamente l'evento e tutti i dati associati (discenti per reparto, ecc.) dal database.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Annulla</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDeleteEventPermanently(event.id)} className="bg-red-600 hover:bg-red-700">
+                            Sì, Elimina Definitivamente
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+
                  </CardFooter>
               </Card>
             ))}
