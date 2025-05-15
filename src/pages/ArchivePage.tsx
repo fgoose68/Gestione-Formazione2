@@ -91,32 +91,35 @@ const ArchivePage = () => {
                     <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>
                        <Info className="mr-2 h-4 w-4"/> Dettagli
                     </Button>
-                    <Button variant="ghost" size="sm" className="text-gray-600 hover:text-green-600" onClick={() => handleUnarchiveEvent(event.id)}>
-                       <RotateCcw className="mr-1 h-4 w-4" /> Ripristina
-                    </Button>
-                    
-                    {/* Pulsante e AlertDialog per eliminazione definitiva */}
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="sm" className="text-gray-600 hover:text-red-600">
-                          <Trash2 className="mr-1 h-4 w-4" /> Elimina Definitivamente
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Sei assolutamente sicuro?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Questa azione non può essere annullata. Verrà eliminato definitivamente l'evento e tutti i dati associati (discenti per reparto, ecc.) dal database.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Annulla</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => handleDeleteEventPermanently(event.id)} className="bg-red-600 hover:bg-red-700">
-                            Sì, Elimina Definitivamente
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    {/* Raggruppa i pulsanti Ripristina ed Elimina Definitivamente */}
+                    <div className="flex space-x-2">
+                      <Button variant="ghost" size="sm" className="text-gray-600 hover:text-green-600" onClick={() => handleUnarchiveEvent(event.id)}>
+                         <RotateCcw className="mr-1 h-4 w-4" /> Ripristina
+                      </Button>
+                      
+                      {/* Pulsante e AlertDialog per eliminazione definitiva */}
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="ghost" size="sm" className="text-gray-600 hover:text-red-600">
+                            <Trash2 className="mr-1 h-4 w-4" /> Elimina Definitivamente
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Sei assolutamente sicuro?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Questa azione non può essere annullata. Verrà eliminato definitivamente l'evento e tutti i dati associati (discenti per reparto, ecc.) dal database.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Annulla</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDeleteEventPermanently(event.id)} className="bg-red-600 hover:bg-red-700">
+                              Sì, Elimina Definitivamente
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div> {/* Fine raggruppamento */}
 
                  </CardFooter>
               </Card>
