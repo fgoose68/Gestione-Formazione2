@@ -31,6 +31,8 @@ const StatisticaPage = () => {
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*, type') // Seleziona anche il campo 'type'
+        .eq('user_id', (await supabase.auth.getUser()).data.user?.id) // Filtra per utente loggato
+        .neq('status', 'archiviato') // ESCLUDI eventi archiviati
         .order('start_date', { ascending: true });
 
       if (eventsError) throw eventsError;
@@ -49,7 +51,8 @@ const StatisticaPage = () => {
          const { data: attendeesData, error: attendeesError } = await supabase
            .from('department_attendees')
            .select('*')
-           .in('event_id', eventIds);
+           .in('event_id', eventIds)
+           .eq('user_id', (await supabase.auth.getUser()).data.user?.id); // Filtra per utente loggato
 
          if (attendeesError) throw attendeesError;
          setAttendees(attendeesData || []);

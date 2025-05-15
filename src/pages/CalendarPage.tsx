@@ -12,15 +12,20 @@ const CalendarPage = () => {
   const navigate = useNavigate();
   const { events, loading: eventsLoading } = useEvents();
   
+  // Filtra gli eventi attivi (non archiviati)
+  const activeEvents = useMemo(() => {
+    return events.filter(event => event.status !== 'archiviato');
+  }, [events]);
+
   // Stato per il mese attualmente visualizzato nel calendario. Inizializza al mese corrente.
   const [currentDisplayMonth, setCurrentDisplayMonth] = useState<Date>(startOfMonth(new Date()));
   // Stato per il giorno selezionato (opzionale, ma lo manteniamo se utile per altre funzionalità)
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
-  // Filtra gli eventi per mostrare solo quelli che iniziano nel mese visualizzato
+  // Filtra gli eventi ATTIVI per mostrare solo quelli che iniziano nel mese visualizzato
   const monthlyEvents = useMemo(() => {
-    if (!events || events.length === 0) return [];
-    return events
+    if (!activeEvents || activeEvents.length === 0) return [];
+    return activeEvents
       .filter(event => {
         const eventStartDate = parseISO(event.start_date);
         return (
@@ -29,13 +34,13 @@ const CalendarPage = () => {
         );
       })
       .sort((a, b) => parseISO(a.start_date).getTime() - parseISO(b.start_date).getTime());
-  }, [events, currentDisplayMonth]);
+  }, [activeEvents, currentDisplayMonth]); // Usa activeEvents qui
 
-  // Crea un array di date di inizio evento per l'evidenziazione nel calendario
+  // Crea un array di date di inizio evento per l'evidenziazione nel calendario (solo per eventi attivi)
   const eventStartDates = useMemo(() => {
-    if (!events) return [];
-    return events.map(event => parseISO(event.start_date));
-  }, [events]);
+    if (!activeEvents) return [];
+    return activeEvents.map(event => parseISO(event.start_date));
+  }, [activeEvents]); // Usa activeEvents qui
 
   // Gestore per quando l'utente cambia il mese nel calendario
   const handleMonthChange = (month: Date) => {
