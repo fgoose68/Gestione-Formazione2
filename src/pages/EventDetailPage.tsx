@@ -116,7 +116,7 @@ const EventDetailPage = () => {
     return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">Evento non trovato.</p>
-        <Button onClick={() => navigate('/')} className="mt-4">
+        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black"> {/* Modificato qui */}
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
@@ -128,7 +128,7 @@ const EventDetailPage = () => {
      return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">ID Evento non specificato.</p>
-        <Button onClick={() => navigate('/')} className="mt-4">
+        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black"> {/* Modificato qui */}
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
@@ -140,8 +140,9 @@ const EventDetailPage = () => {
   return (
     <div className="container mx-auto p-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        <Button onClick={() => navigate('/')} variant="outline" className="bg-white hover:bg-slate-100">
-          <ArrowLeftCircle className="mr-2 h-5 w-5 text-blue-700" />
+        {/* Modificato qui */}
+        <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
+          <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
         {event && event.status !== 'archiviato' && ( // Mostra i pulsanti solo se l'evento non è già archiviato

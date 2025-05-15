@@ -60,7 +60,8 @@ const ArchivePage = () => {
           <Archive className="mr-3 h-8 w-8" />
           Archivio Eventi
         </h1>
-        <Button variant="outline" onClick={() => navigate('/')} className="hover:bg-blue-50">
+        {/* Modificato qui */}
+        <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
           <Home className="mr-2 h-4 w-4" />
           Torna alla Dashboard
         </Button>
