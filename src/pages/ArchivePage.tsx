@@ -22,7 +22,7 @@ import {
 const ArchivePage = () => {
   const navigate = useNavigate();
   // Destruttura anche deleteEvent dallo hook useEvents
-  const { events, loading: eventsLoading, updateEventStatus, deleteEvent } = useEvents(); 
+  const { events, loading: eventsLoading, updateEventStatus, deleteEvent } = useEvents();
 
   // Filtra gli eventi per mostrare solo quelli archiviati
   const archivedEvents = events.filter(event => event.status === 'archiviato');
@@ -60,13 +60,12 @@ const ArchivePage = () => {
           <Archive className="mr-3 h-8 w-8" />
           Archivio Eventi
         </h1>
-        {/* Modificato qui */}
         <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
           <Home className="mr-2 h-4 w-4" />
           Torna alla Dashboard
         </Button>
       </div>
-      
+
       <div className="bg-white rounded-lg shadow-xl p-6">
         {archivedEvents.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -78,23 +77,23 @@ const ArchivePage = () => {
                       {format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}
                     </p>
                  </CardHeader>
-                 <CardContent className="flex-grow">
-                    {event.type && <p className="text-sm text-gray-600 mb-1">Tipo: <span className="font-medium">{event.type}</span></p>}
-                    {event.location && <p className="text-xs text-gray-500"><MapPin className="inline h-3 w-3 mr-1"/>{event.location}</p>}
+                 <CardContent className="flex-grow space-y-2"> {/* Aggiunto space-y-2 per spaziatura verticale */}
+                    {event.type && <p className="text-sm text-gray-600">Tipo: <span className="font-medium">{event.type}</span></p>} {/* Rimosso mb-1 */}
+                    {event.location && <p className="text-xs text-gray-500 flex items-center"><MapPin className="inline h-3 w-3 mr-1 flex-shrink-0"/>{event.location}</p>} {/* Aggiunto flex per allineamento icona/testo */}
                  </CardContent>
-                 <CardFooter className="border-t pt-4 flex justify-between items-center">
-                    <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>
+                 <CardFooter className="border-t pt-4 flex justify-between items-center flex-wrap gap-2"> {/* Aggiunto flex-wrap e gap-2 */}
+                    <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)} className="flex-shrink-0"> {/* Aggiunto flex-shrink-0 */}
                        <Info className="mr-2 h-4 w-4"/> Dettagli
                     </Button>
-                    <div className="flex space-x-2"> {/* Contenitore per i pulsanti di azione */}
-                       <Button variant="ghost" size="sm" className="text-gray-600 hover:text-green-600" onClick={() => handleUnarchiveEvent(event.id)}>
+                    <div className="flex space-x-2 flex-wrap justify-end flex-grow"> {/* Aggiunto flex-wrap, justify-end, flex-grow */}
+                       <Button variant="ghost" size="sm" className="text-gray-600 hover:text-green-600 flex-shrink-0" onClick={() => handleUnarchiveEvent(event.id)}> {/* Aggiunto flex-shrink-0 */}
                           <RotateCcw className="mr-1 h-4 w-4" /> Ripristina
                        </Button>
-                       
+
                        {/* AlertDialog per l'eliminazione definitiva */}
                        <AlertDialog>
                          <AlertDialogTrigger asChild>
-                           <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50">
+                           <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50 flex-shrink-0"> {/* Aggiunto flex-shrink-0 */}
                              <Trash2 className="mr-1 h-4 w-4" /> Elimina
                            </Button>
                          </AlertDialogTrigger>
