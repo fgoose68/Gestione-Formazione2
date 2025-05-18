@@ -1,15 +1,16 @@
 import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { useEvent } from "@/hooks/useEvent";
+import { useEvents } from "@/hooks/useEvents"; // Changed from useEvent to useEvents
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { Event } from "@/types";
+import { useState, useMemo } from "react";
 
 const CalendarPage = () => {
   const navigate = useNavigate();
-  const { events, loading } = useEvent();
+  const { events, loading } = useEvents(); // Updated to match the hook name
   const [date, setDate] = useState<Date>(new Date());
 
   const monthlyEvents = useMemo(() => {
