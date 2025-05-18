@@ -1,7 +1,7 @@
-import { Calendar as ShadcnCalendar } from "@/components/ui/calendar";
+import { Calendar as ShadCalendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { useEvent } from "@/hooks/useEvent";
+import { useEvents } from "@/hooks/useEvents"; // Modificato da useEvent a useEvents
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,7 @@ import { useMemo, useState } from "react";
 
 const CalendarPage = () => {
   const navigate = useNavigate();
-  const { events, loading } = useEvent();
+  const { events, loading } = useEvents(); // Modificato per usare useEvents
   const [date, setDate] = useState<Date>(new Date());
 
   const monthlyEvents = useMemo(() => {
@@ -19,30 +19,30 @@ const CalendarPage = () => {
       const eventDate = parseISO(event.start_date);
       return (
         eventDate.getMonth() === date.getMonth() &&
-        eventDate.getFullYear() === date.getFullYear()
+        eventDate.getYear() === date.getYear()
       );
     });
   }, [events, date]);
 
   return (
-    <div className="container mx-auto p-4 flex flex-col items-center min-h-screen">
-      <div className="w-full max-w-4xl">
+    <div className="container mx-auto p-4">
+      <div className="flex flex-col items-center">
         <Button 
           onClick={() => navigate('/')}
           className="mb-6 bg-yellow-400 hover:bg-yellow-500 text-black"
         >
           Torna alla Dashboard
         </Button>
-
-        <div className="flex flex-col items-center">
-          <Card className="w-full max-w-md">
+        
+        <div className="w-full max-w-2xl">
+          <Card>
             <CardHeader>
               <CardTitle className="text-center text-xl">
-                Calendario
+                Calendario Eventi
               </CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <ShadcnCalendar
+              <ShadCalendar
                 mode="single"
                 selected={date}
                 onSelect={setDate}
@@ -54,7 +54,7 @@ const CalendarPage = () => {
             </CardContent>
           </Card>
 
-          <Card className="w-full mt-8">
+          <Card className="mt-8">
             <CardHeader>
               <CardTitle className="text-center">
                 Eventi di {format(date, "MMMM yyyy", { locale: it })}
@@ -65,8 +65,8 @@ const CalendarPage = () => {
                 <p className="text-center">Caricamento eventi...</p>
               ) : monthlyEvents.length > 0 ? (
                 <div className="space-y-4">
-                  {monthlyEvents.map((event) => (
-                    <div
+                  {monthlyEvents.map(event => (
+                    <div 
                       key={event.id}
                       className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
                       onClick={() => navigate(`/evento/${event.id}`)}
