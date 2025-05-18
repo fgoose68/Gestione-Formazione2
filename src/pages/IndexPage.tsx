@@ -164,9 +164,9 @@ const IndexPage = () => {
                 }
 
                 return (
-                  <Card key={`${deadline.eventId}-${deadline.type}`} className={`shadow-lg hover:shadow-xl transition-shadow border-l-4 ${borderColor}`}>
-                    <CardHeader>
-                      <CardTitle className="text-base font-semibold text-gray-800">{deadline.message}</CardTitle>
+                  <Card key={`${deadline.eventId}-${deadline.type}`} className={`shadow-lg hover:shadow-xl transition-shadow border-l-4 ${borderColor} flex flex-col`}> {/* Added flex flex-col */}
+                    <CardHeader className="flex-grow"> {/* Added flex-grow */}
+                      <CardTitle className="text-base font-semibold text-gray-800 break-words">{deadline.message}</CardTitle> {/* Added break-words */}
                       <p className="text-xs text-gray-500">Evento: {deadline.eventTitle}</p>
                     </CardHeader>
                     <CardContent>
@@ -177,8 +177,8 @@ const IndexPage = () => {
                         {daysUntil > 0 && daysUntil <= 10 && ` (tra ${daysUntil} giorni)`} {/* Mostra giorni rimanenti solo se > 0 e <= 10 */}
                       </p>
                     </CardContent>
-                     <CardFooter>
-                      <Button size="sm" variant="outline" onClick={() => handleMarkAsCompleted(deadline.eventId, deadline.type + '_fatta')}>
+                     <CardFooter className="flex justify-center flex-wrap gap-2 border-t pt-4"> {/* Added flex justify-center flex-wrap gap-2 and border-t pt-4 */}
+                      <Button size="sm" variant="outline" onClick={() => handleMarkAsCompleted(deadline.eventId, deadline.type + '_fatta')} className="flex-shrink-0"> {/* Added flex-shrink-0 */}
                         <CheckCircle2 className="mr-2 h-4 w-4"/> Segna come completata (Simulato)
                       </Button>
                     </CardFooter>
