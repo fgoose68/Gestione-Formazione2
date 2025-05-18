@@ -1,9 +1,10 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom"; // Importa useNavigate
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button"; // Importa il componente Button
 
 const NotFound = () => {
   const location = useLocation();
+  const navigate = useNavigate(); // Ottieni la funzione navigate
 
   useEffect(() => {
     console.error(
@@ -17,8 +18,8 @@ const NotFound = () => {
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">404</h1>
         <p className="text-xl text-gray-600 mb-4">Oops! Page not found</p>
-        {/* Sostituito <a> con Button e applicato stile giallo/nero */}
-        <Button onClick={() => window.location.href = '/'} className="bg-yellow-400 hover:bg-yellow-500 text-black">
+        {/* Sostituito window.location.href con navigate */}
+        <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
           Torna alla Dashboard
         </Button>
       </div>
