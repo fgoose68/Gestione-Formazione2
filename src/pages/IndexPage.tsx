@@ -1,4 +1,4 @@
-import { Calendar, Clock, FileText, Users, AlertTriangle, CheckCircle2, MapPin, Info } from 'lucide-react';
+import { Calendar, Clock, FileText, Users, AlertTriangle, CheckCircle2, MapPin, Info, Home } from 'lucide-react'; // Aggiunto Home
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useEvents } from '@/hooks/useEvents';
@@ -19,7 +19,16 @@ const IndexPage = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="mb-8">
+      {/* Aggiunto il pulsante "Torna alla Dashboard" qui */}
+      <div className="flex justify-between items-center mb-8">
+        <Button 
+          onClick={() => navigate('/')} // Già sulla dashboard, ma utile per coerenza o se si aggiungono sottopagine
+          className="bg-yellow-400 hover:bg-yellow-500 text-black"
+        >
+          <Home className="mr-2 h-4 w-4" />
+          Torna alla Dashboard
+        </Button>
+         {/* Spostato il pulsante "Crea Nuovo Evento" per allinearlo a destra */}
         <Button 
           onClick={() => navigate('/nuovo-evento')}
           className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -27,6 +36,7 @@ const IndexPage = () => {
           Crea Nuovo Evento
         </Button>
       </div>
+
 
       <section className="mb-10">
         <h2 className="text-2xl font-semibold text-blue-700 mb-4 flex items-center">
