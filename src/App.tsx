@@ -11,29 +11,20 @@ import ArchivePage from "@/pages/ArchivePage";
 import EventDetailPage from "@/pages/EventDetailPage";
 import EditEventPage from "@/pages/EditEventPage";
 import StatisticaPage from "@/pages/StatisticaPage";
-import Login from "@/pages/Login";
-// Importa useSessionContext invece di useSession
-import { SessionContextProvider, useSessionContext } from '@supabase/auth-helpers-react';
-import { supabase } from '@/integrations/supabase/client';
+import Login from "@/pages/Login"; // Importa la pagina di Login
+import { SessionContextProvider, useSession } from '@supabase/auth-helpers-react'; // Importa il provider e l'hook
+import { supabase } from '@/integrations/supabase/client'; // Importa il client Supabase
 
 const queryClient = new QueryClient();
 
 // Componente wrapper per proteggere le rotte
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
-  // Usa useSessionContext per ottenere sessione e stato di caricamento
-  const { session, isLoading } = useSessionContext();
-
-  // Se sta ancora caricando, non renderizzare nulla (o uno spinner)
-  if (isLoading) {
-    return null; // Puoi sostituire con un componente di caricamento se preferisci
-  }
-
-  // Se non sta caricando e non c'è sessione, reindirizza al login
+  const session = useSession();
+  // Se la sessione è ancora in fase di caricamento, potresti mostrare uno spinner
+  // Per ora, reindirizziamo semplicemente se non c'è sessione
   if (!session) {
     return <Navigate to="/login" replace />;
   }
-
-  // Se non sta caricando e la sessione esiste, renderizza i figli
   return children;
 };
 
@@ -56,7 +47,7 @@ const App = () => (
             <Route path="/evento/:id" element={<ProtectedRoute><EventDetailPage /></ProtectedRoute>} />
             <Route path="/evento/:id/modifica" element={<ProtectedRoute><EditEventPage /></ProtectedRoute>} />
             <Route path="/statistica" element={<ProtectedRoute><StatisticaPage /></ProtectedRoute>} />
-
+            
             {/* Rotta 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
