@@ -30,6 +30,18 @@ const IndexPage = () => {
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [deadlines]);
 
+  // Filtra le scadenze imminenti per tipo di corso
+  const standardDeadlines = useMemo(() => {
+    const standardTypes = ['docente', 'discenti_standard', 'avvio_standard', 'giorno_evento_registri', 'post_evento_feedback', 'post_evento_modello_l'];
+    return upcomingDeadlines.filter(d => standardTypes.includes(d.type));
+  }, [upcomingDeadlines]);
+
+  const elearningDeadlines = useMemo(() => {
+    const elearningTypes = ['discenti_elearning', 'comunicazione_scuola', 'lettera_abilitazione', 'mail_sollecito_1', 'mail_sollecito_2', 'avviso_proroga', 'relazione_finale'];
+    return upcomingDeadlines.filter(d => elearningTypes.includes(d.type));
+  }, [upcomingDeadlines]);
+
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -71,36 +83,67 @@ const IndexPage = () => {
           </div>
         </div>
 
-        {/* Sezione Scadenze Imminenti */}
-        <Card className="shadow-lg mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
-              <Info className="mr-3 h-7 w-7" /> Scadenze Imminenti
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {eventsLoading ? (
-              <p className="text-center text-gray-600">Caricamento scadenze...</p>
-            ) : upcomingDeadlines.length > 0 ? (
-              <div className="space-y-4">
-                {upcomingDeadlines.map((deadline, index) => (
-                  <div key={index} className={`border rounded-lg p-4 ${isToday(deadline.date) ? 'bg-yellow-100 border-yellow-400' : 'bg-slate-50 border-gray-200'} hover:bg-slate-100 transition-colors cursor-pointer`}
-                       onClick={() => navigate(`/evento/${deadline.eventId}`)}>
-                    <p className="font-medium text-gray-800">{deadline.message}</p>
-                    <p className={`text-sm ${isToday(deadline.date) ? 'text-yellow-700 font-semibold' : 'text-gray-500'}`}>
-                      Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-600">Nessuna scadenza imminente.</p>
-            )}
-          </CardContent>
-        </Card>
+        {/* Sezione Scadenze Imminenti - Divisa in due colonne */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          {/* Colonna Sinistra: Scadenze Standard */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
+                <Info className="mr-3 h-7 w-7" /> Scadenze Corsi Standard
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {eventsLoading ? (
+                <p className="text-center text-gray-600">Caricamento scadenze...</p>
+              ) : standardDeadlines.length > 0 ? (
+                <div className="space-y-4">
+                  {standardDeadlines.map((deadline, index) => (
+                    <div key={index} className={`border rounded-lg p-4 ${isToday(deadline.date) ? 'bg-yellow-100 border-yellow-400' : 'bg-slate-50 border-gray-200'} hover:bg-slate-100 transition-colors cursor-pointer`}
+                         onClick={() => navigate(`/evento/${deadline.eventId}`)}>
+                      <p className="font-medium text-gray-800">{deadline.message}</p>
+                      <p className={`text-sm ${isToday(deadline.date) ? 'text-yellow-700 font-semibold' : 'text-gray-500'}`}>
+                        Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-600">Nessuna scadenza imminente per corsi standard.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Colonna Destra: Scadenze E-learning */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
+                <Info className="mr-3 h-7 w-7" /> Scadenze Corsi E-learning
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {eventsLoading ? (
+                <p className="text-center text-gray-600">Caricamento scadenze...</p>
+              ) : elearningDeadlines.length > 0 ? (
+                <div className="space-y-4">
+                  {elearningDeadlines.map((deadline, index) => (
+                    <div key={index} className={`border rounded-lg p-4 ${isToday(deadline.date) ? 'bg-yellow-100 border-yellow-400' : 'bg-slate-50 border-gray-200'} hover:bg-slate-100 transition-colors cursor-pointer`}
+                         onClick={() => navigate(`/evento/${deadline.eventId}`)}>
+                      <p className="font-medium text-gray-800">{deadline.message}</p>
+                      <p className={`text-sm ${isToday(deadline.date) ? 'text-yellow-700 font-semibold' : 'text-gray-500'}`}>
+                        Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-600">Nessuna scadenza imminente per corsi e-learning.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
 
-        {/* Sezione Eventi Attivi */}
+        {/* Sezione Eventi Attivi (rimane sotto) */}
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
