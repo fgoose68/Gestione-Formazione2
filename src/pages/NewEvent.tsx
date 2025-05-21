@@ -132,7 +132,8 @@ const NewEvent = () => {
       description: formData.description,
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
-      location: formData.location,
+      // Se il tipo è e-learning, salva la location come stringa vuota o null
+      location: courseType === 'e-learning' ? '' : formData.location,
       teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t),
       type: courseType, // Includi il tipo di corso
     };
@@ -187,18 +188,18 @@ const NewEvent = () => {
         <div className="space-y-6">
           <div>
             <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso *</label>
-            <Input id="title" name="title" placeholder="Es: Sicurezza sul Lavoro Avanzato" value={formData.title} onChange={handleInputChange} className="text-lg"/>
+            <Input id="title" name="title" placeholder="Es: Sicurezza sul Lavoro Avanzato" value={formData.title} onChange={handleInputChange} className="text-lg" disabled={loading}/>
           </div>
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
-            <Textarea id="description" name="description" placeholder="Dettagli del corso, obiettivi, argomenti trattati..." value={formData.description} onChange={handleInputChange} rows={4} />
+            <Textarea id="description" name="description" placeholder="Dettagli del corso, obiettivi, argomenti trattati..." value={formData.description} onChange={handleInputChange} rows={4} disabled={loading}/>
           </div>
 
            {/* Campo Selezione Tipo Corso */}
           <div>
             <label htmlFor="courseType" className="block text-sm font-medium text-gray-700 mb-1">Tipo di Corso *</label>
-            <Select onValueChange={(value: Event['type']) => setCourseType(value)} value={courseType}>
+            <Select onValueChange={(value: Event['type']) => setCourseType(value)} value={courseType} disabled={loading}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleziona il tipo di corso" />
               </SelectTrigger>
@@ -219,6 +220,7 @@ const NewEvent = () => {
                 <Button
                   variant={"outline"}
                   className={`w-full justify-start text-left font-normal ${!dateRange && "text-muted-foreground"}`}
+                  disabled={loading}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateRange?.from ? (
@@ -251,12 +253,19 @@ const NewEvent = () => {
 
           <div>
             <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo</label>
-            <Input id="location" name="location" placeholder="Indirizzo o 'Online'" value={formData.location} onChange={handleInputChange} />
+            <Input
+              id="location"
+              name="location"
+              placeholder="Indirizzo o 'Online'"
+              value={formData.location}
+              onChange={handleInputChange}
+              disabled={loading || courseType === 'e-learning'} // Disabilita se loading o tipo è e-learning
+            />
           </div>
 
           <div>
             <label htmlFor="teachersRaw" className="block text-sm font-medium text-gray-700 mb-1">Docenti</label>
-            <Input id="teachersRaw" name="teachersRaw" placeholder="Mario Rossi, Luigi Verdi (separati da virgola)" value={formData.teachersRaw} onChange={handleInputChange} />
+            <Input id="teachersRaw" name="teachersRaw" placeholder="Mario Rossi, Luigi Verdi (separati da virgola)" value={formData.teachersRaw} onChange={handleInputChange} disabled={loading}/>
           </div>
 
           {/* Tabella Discenti per Reparto */}
