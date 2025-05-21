@@ -13,12 +13,16 @@ const IndexPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { events, loading: eventsLoading } = useEvents();
-  const { deadlines } = useDeadlines(events);
 
+  // Filtra gli eventi non archiviati per la dashboard e per le scadenze
   const activeEvents = useMemo(() => {
     return events.filter(event => event.status !== 'archiviato');
   }, [events]);
 
+  // Usa l'hook useDeadlines passando SOLO gli eventi attivi
+  const { deadlines } = useDeadlines(activeEvents);
+
+  // Filtra le scadenze imminenti (oggi o future) dagli eventi attivi
   const upcomingDeadlines = useMemo(() => {
     const today = new Date();
     return deadlines
@@ -94,6 +98,7 @@ const IndexPage = () => {
             )}
           </CardContent>
         </Card>
+
 
         {/* Sezione Eventi Attivi */}
         <Card className="shadow-lg">
