@@ -18,10 +18,10 @@ function Login() {
   }, [navigate]);
 
   return (
-    <div
+    <div 
       className="min-h-screen flex items-center justify-center bg-cover bg-center"
       style={{
-        backgroundImage: "url('/images/AULA-UNIVERSITA-Imagoeconomica_359058-k7RD--1020x533@IlSole24Ore-Web.jpg')"
+        backgroundImage: "url('/images/AULA-UNIVERSITE-Imagoeconomica_359058-k7RD--1020x533@IlSole24Ore-Web.jpg')"
       }}
     >
       <div className="w-full max-w-md bg-white/90 p-8 rounded-lg shadow-md backdrop-blur-sm">
