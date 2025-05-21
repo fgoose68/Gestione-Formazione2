@@ -3,10 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Clock, PlusCircle, CalendarDays, Archive, BarChart2, Info } from 'lucide-react';
+import { Clock, PlusCircle, CalendarDays, Archive, BarChart2, Info, LogOut } from 'lucide-react'; // Importa l'icona LogOut
 import { useEvents, useDeadlines } from '@/hooks'; // Importa gli hook
 import { format, parseISO, isPast, isToday } from 'date-fns'; // Importa funzioni per date
 import { it } from 'date-fns/locale'; // Importa locale italiano
+import { supabase } from '@/integrations/supabase/client'; // Importa il client Supabase
 
 const IndexPage = () => {
   const navigate = useNavigate();
@@ -26,6 +27,18 @@ const IndexPage = () => {
       .filter(d => !d.completed && (isToday(d.date) || d.date > today))
       .sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [deadlines]);
+
+  // Funzione per gestire il logout
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Errore durante il logout:", error);
+      // Potresti mostrare un toast di errore qui se necessario
+    } else {
+      // La navigazione alla pagina di login è gestita dal ProtectedRoute in App.tsx
+      console.log("Logout effettuato con successo.");
+    }
+  };
 
 
   return (
@@ -47,6 +60,10 @@ const IndexPage = () => {
           </Button>
            <Button onClick={() => navigate('/statistica')} variant="outline">
             <BarChart2 className="mr-2 h-5 w-5" /> Statistiche
+          </Button>
+          {/* Pulsante Log Out */}
+          <Button onClick={handleLogout} variant="destructive"> {/* Usiamo la variante 'destructive' per il logout */}
+             <LogOut className="mr-2 h-5 w-5" /> Log Out
           </Button>
         </div>
       </div>
