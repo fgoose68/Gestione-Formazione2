@@ -3,7 +3,7 @@ import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button'; // Aggiunto import
+// Rimosso l'import di Button perché non più necessario in questa pagina
 
 function Login() {
   const navigate = useNavigate();
@@ -24,18 +24,9 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md animate-in relative"> {/* Aggiunto relative */}
-        {/* Aggiunto pulsante Torna alla Dashboard */}
-        <div className="absolute top-4 left-4">
-          <Button 
-            onClick={() => navigate('/')} 
-            className="bg-yellow-400 hover:bg-yellow-500 text-black"
-            size="sm"
-          >
-            Torna alla Dashboard
-          </Button>
-        </div>
-        
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md animate-in"> {/* Rimosso 'relative' se non più necessario per posizionare il pulsante */}
+        {/* Rimosso il pulsante "Torna alla Dashboard" */}
+
         <h1 className="text-2xl font-bold text-center text-blue-800 mb-6">Accedi o Registrati</h1>
         <Auth
           supabaseClient={supabase}
