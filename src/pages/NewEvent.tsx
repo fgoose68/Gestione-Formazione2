@@ -212,7 +212,8 @@ const NewEvent = () => {
 
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date e Orari *</label>
+            {/* Modificato il testo dell'etichetta */}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date *</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
