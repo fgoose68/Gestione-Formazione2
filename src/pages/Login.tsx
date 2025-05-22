@@ -25,7 +25,8 @@ function Login() {
       }}
     >
       <div className="w-full max-w-md bg-white/90 p-8 rounded-lg shadow-md backdrop-blur-sm">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">Accedi o Registrati</h1>
+        {/* Modificato il titolo qui */}
+        <h1 className="text-2xl font-bold text-center text-blue-800 mb-6">Gestione Formazione Sezione Corsi</h1>
         <Auth
           supabaseClient={supabase}
           providers={[]}
