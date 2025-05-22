@@ -63,7 +63,8 @@ const IndexPage = () => {
           {/* Modificato il titolo qui */}
           <h1 className="text-3xl font-bold text-blue-800 flex items-center">
             <Clock className="mr-3 h-8 w-8" />
-            <span className="text-yellow-600">Gestione</span> <span className="text-green-600 ml-2">Formazione</span>
+            {/* Cambiato il colore di 'Gestione' a text-yellow-500 */}
+            <span className="text-yellow-500">Gestione</span> <span className="text-green-600 ml-2">Formazione</span>
           </h1>
           <div className="flex space-x-3">
             <Button onClick={() => navigate('/nuovo-evento')} className="bg-green-600 hover:bg-green-700 text-white">
