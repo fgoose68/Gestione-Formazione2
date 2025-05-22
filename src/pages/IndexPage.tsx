@@ -60,9 +60,10 @@ const IndexPage = () => {
       {/* Inner div for content and overlay */}
       <div className="container mx-auto p-6 bg-white/90 min-h-screen"> {/* Added semi-transparent white background */}
         <div className="flex justify-between items-center mb-8 border-b pb-4">
+          {/* Modificato il titolo qui */}
           <h1 className="text-3xl font-bold text-blue-800 flex items-center">
             <Clock className="mr-3 h-8 w-8" />
-            Dashboard
+            <span className="text-yellow-600">Gestione</span> <span className="text-green-600 ml-2">Formazione</span>
           </h1>
           <div className="flex space-x-3">
             <Button onClick={() => navigate('/nuovo-evento')} className="bg-green-600 hover:bg-green-700 text-white">
@@ -85,7 +86,7 @@ const IndexPage = () => {
 
         {/* Sezione Scadenze Imminenti - Divisa in due colonne */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Colonna Sinistra: Scadenze Standard */}
+          {/* Colonna Sinistra: Scadenze Corsi Standard */}
           <Card className="shadow-lg">
             <CardHeader>
               <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
