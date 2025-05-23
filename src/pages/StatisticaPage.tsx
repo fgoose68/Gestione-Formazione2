@@ -190,34 +190,17 @@ const StatisticaPage = () => {
            };
       }
 
-      // Add actual counts for each rank
-      // Nota: Qui sommiamo i valori effettivi (actual) per ogni grado, non i previsti (expected)
-      // Se volessimo sommare i previsti, useremmo att.officers, att.inspectors, etc.
-      // La richiesta è per gli EFFETTIVI suddivisi per grado, quindi sommiamo i valori effettivi per ogni grado.
-      // Tuttavia, la struttura del DB e dell'hook useDepartmentAttendees salva officers, inspectors, etc. come PREVISTI.
-      // Il campo 'actual' è il totale effettivo per il reparto.
-      // Per mostrare gli effettivi *suddivisi per grado*, avremmo bisogno di salvare anche i discenti effettivi per grado nel DB.
-      // Dato che il DB salva solo il totale effettivo per reparto (campo 'actual'),
-      // e i campi officers, inspectors, etc. sono i PREVISTI,
-      // la tabella richiesta (effettivi per reparto *e* grado) non è direttamente aggregabile dai dati attuali.
-      // Posso mostrare il totale EFFETTIVI per reparto, o i PREVISTI per reparto e grado.
-      // La richiesta specifica "solo quelli Effettivi" e "suddiviso per Reparto e per tipo di discente".
-      // Questo implica che l'utente vorrebbe vedere quanti Ufficiali EFFETTIVI, Ispettori EFFETTIVI, ecc. ci sono stati per ogni reparto.
-      // Questo dato *non* è presente nel DB attuale (solo il totale effettivo per reparto è presente).
-      // Posso mostrare una tabella con: Reparto | Totale Effettivi (dal campo 'actual').
-      // Oppure posso mostrare una tabella con: Reparto | Uff. (Previsti) | Isp. (Previsti) | Sovr. (Previsti) | Mil./App. (Previsti) | Totale Previsti | Totale Effettivi.
-      // Quest'ultima opzione sembra più utile e usa i dati disponibili.
-      // Modifico l'aggregazione per mostrare i totali PREVISTI per grado e il totale EFFETTIVI per reparto.
-
-      totalsMap[deptName].officers += att.officers || 0; // Somma PREVISTI Ufficiali
-      totalsMap[deptName].inspectors += att.inspectors || 0; // Somma PREVISTI Ispettori
-      totalsMap[deptName].superintendents += att.superintendents || 0; // Somma PREVISTI Sovrintendenti
-      totalsMap[deptName].militari += att.militari || 0; // Somma PREVISTI Militari
-      totalsMap[deptName].actualTotal += att.actual || 0; // Somma TOTALI EFFETTIVI per reparto
+      // Add actual counts for each rank (these are PREVISTI from the DB structure)
+      totalsMap[deptName].officers += att.officers || 0;
+      totalsMap[deptName].inspectors += att.inspectors || 0;
+      totalsMap[deptName].superintendents += att.superintendents || 0;
+      totalsMap[deptName].militari += att.militari || 0;
+      // Add total actual for the department
+      totalsMap[deptName].actualTotal += att.actual || 0;
     });
 
-    // Convert map to array and sort by department name
-    return Object.values(totalsMap).sort((a, b) => a.department_name.localeCompare(b.department_name));
+    // Convert map to array, ORDERED by DEFAULT_DEPARTMENTS
+    return DEFAULT_DEPARTMENTS.map(deptName => totalsMap[deptName]);
 
   }, [attendees]); // Depends on the attendees data for the current month
 
