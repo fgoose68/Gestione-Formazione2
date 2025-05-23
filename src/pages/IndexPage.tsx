@@ -85,7 +85,58 @@ const IndexPage = () => {
           </div>
         </div>
 
-        {/* Sezione Scadenze Imminenti - Divisa in due colonne */}
+        {/* Sezione Eventi Attivi (Spostata sopra) */}
+        <Card className="shadow-lg mb-8"> {/* Aggiunto mb-8 per spaziatura */}
+          <CardHeader>
+            <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
+               <CalendarDays className="mr-3 h-7 w-7" /> Eventi Attivi
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {eventsLoading ? (
+              <p className="text-center text-gray-600">Caricamento eventi...</p>
+            ) : activeEvents.length > 0 ? (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Titolo</TableHead>
+                      <TableHead>Periodo</TableHead>
+                      <TableHead>Luogo</TableHead>
+                      <TableHead>Stato</TableHead>
+                      <TableHead className="text-right">Azioni</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {activeEvents.map((event) => (
+                      <TableRow key={event.id}>
+                        <TableCell className="font-medium">{event.title}</TableCell>
+                        {/* Modificato il formato data qui */}
+                        <TableCell>{format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}</TableCell>
+                        <TableCell>{event.location || 'N/D'}</TableCell>
+                        <TableCell>
+                           <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${ event.status === 'in_preparazione' ? 'bg-yellow-200 text-yellow-800' : event.status === 'completato' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800'}`}>
+                             {event.status.replace('_', ' ')}
+                           </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>
+                            Dettagli
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <p className="text-center text-gray-600">Nessun evento attivo trovato. <Button variant="link" onClick={() => navigate('/nuovo-evento')} className="p-0 h-auto">Crea un nuovo evento</Button>.</p>
+            )}
+          </CardContent>
+        </Card>
+
+
+        {/* Sezione Scadenze Imminenti - Divisa in due colonne (Spostata sotto) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Colonna Sinistra: Scadenze Corsi Standard */}
           <Card className="shadow-lg">
@@ -143,57 +194,6 @@ const IndexPage = () => {
             </CardContent>
           </Card>
         </div>
-
-
-        {/* Sezione Eventi Attivi (rimane sotto) */}
-        <Card className="shadow-lg">
-          <CardHeader>
-            <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
-               <CalendarDays className="mr-3 h-7 w-7" /> Eventi Attivi
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {eventsLoading ? (
-              <p className="text-center text-gray-600">Caricamento eventi...</p>
-            ) : activeEvents.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Titolo</TableHead>
-                      <TableHead>Periodo</TableHead>
-                      <TableHead>Luogo</TableHead>
-                      <TableHead>Stato</TableHead>
-                      <TableHead className="text-right">Azioni</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {activeEvents.map((event) => (
-                      <TableRow key={event.id}>
-                        <TableCell className="font-medium">{event.title}</TableCell>
-                        {/* Modificato il formato data qui */}
-                        <TableCell>{format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}</TableCell>
-                        <TableCell>{event.location || 'N/D'}</TableCell>
-                        <TableCell>
-                           <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${ event.status === 'in_preparazione' ? 'bg-yellow-200 text-yellow-800' : event.status === 'completato' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800'}`}>
-                             {event.status.replace('_', ' ')}
-                           </span>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>
-                            Dettagli
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <p className="text-center text-gray-600">Nessun evento attivo trovato. <Button variant="link" onClick={() => navigate('/nuovo-evento')} className="p-0 h-auto">Crea un nuovo evento</Button>.</p>
-            )}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
