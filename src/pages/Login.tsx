@@ -18,14 +18,21 @@ function Login() {
   }, [navigate]);
 
   return (
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center bg-cover bg-center"
       style={{
         backgroundImage: "url('/images/AULA-UNIVERSITE-Imagoeconomica_359058-k7RD--1020x533@IlSole24Ore-Web.jpg')"
       }}
     >
       <div className="w-full max-w-md bg-white/90 p-8 rounded-lg shadow-md backdrop-blur-sm">
-        {/* Modificato il titolo qui */}
+        {/* Tricolore */}
+        <div className="flex justify-center mb-4"> {/* Centra il tricolore e aggiunge margine sotto */}
+          <div className="w-8 h-2 bg-green-600"></div> {/* Verde */}
+          <div className="w-8 h-2 bg-white"></div> {/* Bianco */}
+          <div className="w-8 h-2 bg-red-600"></div> {/* Rosso */}
+        </div>
+
+        {/* Titolo */}
         <h1 className="text-2xl font-bold text-center text-blue-800 mb-6">Gestione Formazione Sezione Corsi</h1>
         <Auth
           supabaseClient={supabase}
