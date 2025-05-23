@@ -33,6 +33,20 @@ const DEFAULT_DEPARTMENTS = [
 // Tipi di corso disponibili
 const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning'];
 
+// Opzioni per il menu a tendina Luogo
+const LOCATIONS = [
+  "Roma",
+  "RI",
+  "VT",
+  "FR",
+  "ROAN",
+  "LT",
+  "Formia",
+  "Scuola PEF",
+  "Scuola Nautica",
+  "Altre sedi"
+];
+
 
 const NewEvent = () => {
   const { addEvent } = useEvents();
@@ -41,12 +55,14 @@ const NewEvent = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    location: '',
     teachersRaw: '',
   });
 
   // Stato per il tipo di corso selezionato
   const [courseType, setCourseType] = useState<Event['type'] | undefined>(undefined);
+  // Stato per il luogo selezionato (ora dal menu a tendina)
+  const [location, setLocation] = useState<string | undefined>(undefined);
+
 
   const [loading, setLoading] = useState(false);
 
@@ -123,6 +139,11 @@ const NewEvent = () => {
       showError('Seleziona il tipo di corso.');
       return;
     }
+    // Validazione per il luogo, a meno che non sia e-learning
+    if (courseType !== 'e-learning' && !location) {
+       showError('Seleziona il luogo del corso.');
+       return;
+    }
 
 
     setLoading(true);
@@ -132,8 +153,8 @@ const NewEvent = () => {
       description: formData.description,
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
-      // Se il tipo è e-learning, salva la location come stringa vuota o null
-      location: courseType === 'e-learning' ? '' : formData.location,
+      // Se il tipo è e-learning, salva la location come stringa vuota, altrimenti usa il valore selezionato
+      location: courseType === 'e-learning' ? '' : location || '',
       teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t),
       type: courseType, // Includi il tipo di corso
     };
@@ -251,16 +272,22 @@ const NewEvent = () => {
             </Popover>
           </div>
 
+          {/* Campo Selezione Luogo */}
           <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo</label>
-            <Input
-              id="location"
-              name="location"
-              placeholder="Indirizzo o 'Online'"
-              value={formData.location}
-              onChange={handleInputChange}
-              disabled={loading || courseType === 'e-learning'} // Disabilita se loading o tipo è e-learning
-            />
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {courseType === 'e-learning' ? '(Non applicabile per e-learning)' : '*'}</label>
+            <Select onValueChange={setLocation} value={location} disabled={loading || courseType === 'e-learning'}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleziona il luogo" />
+              </SelectTrigger>
+              <SelectContent>
+                {LOCATIONS.map(loc => (
+                  <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+             {courseType === 'e-learning' && (
+                <p className="mt-1 text-sm text-gray-500">Il luogo non è richiesto per i corsi e-learning.</p>
+             )}
           </div>
 
           <div>

@@ -17,6 +17,20 @@ import { it } from 'date-fns/locale';
 // Tipi di corso disponibili (copiato da NewEvent.tsx)
 const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning'];
 
+// Opzioni per il menu a tendina Luogo (copiato da NewEvent.tsx)
+const LOCATIONS = [
+  "Roma",
+  "RI",
+  "VT",
+  "FR",
+  "ROAN",
+  "LT",
+  "Formia",
+  "Scuola PEF",
+  "Scuola Nautica",
+  "Altre sedi"
+];
+
 
 const EditEventPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
@@ -27,12 +41,12 @@ const EditEventPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    location: '',
     teachersRaw: '',
-    studentsRaw: ''
+    studentsRaw: '' // Questo campo non è più usato per il salvataggio, ma lo teniamo per coerenza con lo stato iniziale se necessario
   });
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [courseType, setCourseType] = useState<Event['type'] | undefined>(undefined); // Stato per il tipo di corso
+  const [location, setLocation] = useState<string | undefined>(undefined); // Stato per il luogo selezionato
   const [loading, setLoading] = useState(false);
 
   // Carica i dati dell'evento quando l'ID o la lista eventi cambiano
@@ -45,9 +59,8 @@ const EditEventPage = () => {
         setFormData({
           title: currentEvent.title,
           description: currentEvent.description || '',
-          location: currentEvent.location || '',
           teachersRaw: currentEvent.teachers?.join(', ') || '',
-          studentsRaw: currentEvent.students?.join('\n') || ''
+          studentsRaw: '' // Non usiamo più questo campo per l'editing
         });
         // Prepopola il date range picker
         if (currentEvent.start_date && currentEvent.end_date) {
@@ -58,6 +71,8 @@ const EditEventPage = () => {
         }
         // Prepopola il tipo di corso
         setCourseType(currentEvent.type);
+        // Prepopola il luogo
+        setLocation(currentEvent.location || undefined); // Usa undefined se la location è vuota/null
       } else {
         showError("Evento non trovato per la modifica.");
         // navigate('/'); // Potrebbe essere troppo aggressivo
@@ -88,6 +103,11 @@ const EditEventPage = () => {
       showError('Seleziona il tipo di corso.');
       return;
     }
+    // Validazione per il luogo, a meno che non sia e-learning
+    if (courseType !== 'e-learning' && !location) {
+       showError('Seleziona il luogo del corso.');
+       return;
+    }
 
 
     setLoading(true);
@@ -97,9 +117,10 @@ const EditEventPage = () => {
       description: formData.description,
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
-      location: formData.location,
+      // Se il tipo è e-learning, salva la location come stringa vuota, altrimenti usa il valore selezionato
+      location: courseType === 'e-learning' ? '' : location || '',
       teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t),
-      students: formData.studentsRaw.split('\n').map(s => s.trim()).filter(s => s),
+      // Rimosso il campo students
       type: courseType, // Includi il tipo di corso aggiornato
     };
 
@@ -211,9 +232,22 @@ const EditEventPage = () => {
             </Popover>
           </div>
           
+          {/* Campo Selezione Luogo */}
           <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo</label>
-            <Input id="location" name="location" placeholder="Indirizzo o 'Online'" value={formData.location} onChange={handleInputChange} disabled={loading}/>
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {courseType === 'e-learning' ? '(Non applicabile per e-learning)' : '*'}</label>
+            <Select onValueChange={setLocation} value={location} disabled={loading || courseType === 'e-learning'}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Seleziona il luogo" />
+              </SelectTrigger>
+              <SelectContent>
+                {LOCATIONS.map(loc => (
+                  <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+             {courseType === 'e-learning' && (
+                <p className="mt-1 text-sm text-gray-500">Il luogo non è richiesto per i corsi e-learning.</p>
+             )}
           </div>
           
           <div>
@@ -221,10 +255,11 @@ const EditEventPage = () => {
             <Input id="teachersRaw" name="teachersRaw" placeholder="Mario Rossi, Luigi Verdi (separati da virgola)" value={formData.teachersRaw} onChange={handleInputChange} disabled={loading}/>
           </div>
           
-          <div>
+          {/* Rimosso il campo Discenti Previsti (Elenco Generale) */}
+          {/* <div>
             <label htmlFor="studentsRaw" className="block text-sm font-medium text-gray-700 mb-1">Discenti Previsti (Elenco Generale)</label>
             <Textarea id="studentsRaw" name="studentsRaw" placeholder="Nome Cognome 1 (uno per riga)&#10;Nome Cognome 2" value={formData.studentsRaw} onChange={handleInputChange} rows={5} disabled={loading}/>
-          </div>
+          </div> */}
         </div>
         
         <div className="mt-10 flex justify-end">
