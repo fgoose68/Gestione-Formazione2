@@ -13,6 +13,20 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 // Tipi di corso disponibili (usati per raggruppare le statistiche)
 const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning'];
 
+// Reparti predefiniti (copiato da useDepartmentAttendees per coerenza)
+const DEFAULT_DEPARTMENTS = [
+  "Comando Regionale",
+  "Provinciale Roma",
+  "Provinciale Latina",
+  "Provinciale Frosinone",
+  "Provinciale Rieti",
+  "Provinciale Viterbo",
+  "ROAN",
+  "ReTLA Lazio",
+  "CAR",
+  "Altri Reparti"
+];
+
 
 const StatisticaPage = () => {
   const navigate = useNavigate();
@@ -27,11 +41,19 @@ const StatisticaPage = () => {
   const fetchStatsData = async () => {
     setLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+         setEvents([]);
+         setAttendees([]);
+         setLoading(false);
+         return;
+      }
+
       // Fetch events (includi il campo 'type')
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*, type') // Seleziona anche il campo 'type'
-        .eq('user_id', (await supabase.auth.getUser()).data.user?.id) // Filtra per utente loggato
+        .eq('user_id', user.id) // Filtra per utente loggato
         .neq('status', 'archiviato') // ESCLUDI eventi archiviati
         .order('start_date', { ascending: true });
 
@@ -52,7 +74,7 @@ const StatisticaPage = () => {
            .from('department_attendees')
            .select('*')
            .in('event_id', eventIds)
-           .eq('user_id', (await supabase.auth.getUser()).data.user?.id); // Filtra per utente loggato
+           .eq('user_id', user.id); // Filtra per utente loggato
 
          if (attendeesError) throw attendeesError;
          setAttendees(attendeesData || []);
@@ -128,6 +150,93 @@ const StatisticaPage = () => {
     return map;
   }, [attendees]);
 
+  // NUOVA AGGREGAZIONE: Totali effettivi per Reparto e Grado nel mese
+  const monthlyDepartmentRankTotals = useMemo(() => {
+    const totalsMap: {
+      [key: string]: {
+        department_name: string;
+        officers: number;
+        inspectors: number;
+        superintendents: number;
+        militari: number;
+        actualTotal: number; // Total actual for this department across all events in the month
+      };
+    } = {};
+
+    // Initialize with all default departments to ensure they appear even if 0 attendees
+    DEFAULT_DEPARTMENTS.forEach(deptName => {
+        totalsMap[deptName] = {
+            department_name: deptName,
+            officers: 0,
+            inspectors: 0,
+            superintendents: 0,
+            militari: 0,
+            actualTotal: 0,
+        };
+    });
+
+    // Aggregate actual attendees by department and rank
+    attendees.forEach(att => {
+      const deptName = att.department_name;
+      // Ensure the department exists in the map (should be covered by initialization, but good practice)
+      if (!totalsMap[deptName]) {
+           totalsMap[deptName] = {
+              department_name: deptName,
+              officers: 0,
+              inspectors: 0,
+              superintendents: 0,
+              militari: 0,
+              actualTotal: 0,
+           };
+      }
+
+      // Add actual counts for each rank
+      // Nota: Qui sommiamo i valori effettivi (actual) per ogni grado, non i previsti (expected)
+      // Se volessimo sommare i previsti, useremmo att.officers, att.inspectors, etc.
+      // La richiesta è per gli EFFETTIVI suddivisi per grado, quindi sommiamo i valori effettivi per ogni grado.
+      // Tuttavia, la struttura del DB e dell'hook useDepartmentAttendees salva officers, inspectors, etc. come PREVISTI.
+      // Il campo 'actual' è il totale effettivo per il reparto.
+      // Per mostrare gli effettivi *suddivisi per grado*, avremmo bisogno di salvare anche i discenti effettivi per grado nel DB.
+      // Dato che il DB salva solo il totale effettivo per reparto (campo 'actual'),
+      // e i campi officers, inspectors, etc. sono i PREVISTI,
+      // la tabella richiesta (effettivi per reparto *e* grado) non è direttamente aggregabile dai dati attuali.
+      // Posso mostrare il totale EFFETTIVI per reparto, o i PREVISTI per reparto e grado.
+      // La richiesta specifica "solo quelli Effettivi" e "suddiviso per Reparto e per tipo di discente".
+      // Questo implica che l'utente vorrebbe vedere quanti Ufficiali EFFETTIVI, Ispettori EFFETTIVI, ecc. ci sono stati per ogni reparto.
+      // Questo dato *non* è presente nel DB attuale (solo il totale effettivo per reparto è presente).
+      // Posso mostrare una tabella con: Reparto | Totale Effettivi (dal campo 'actual').
+      // Oppure posso mostrare una tabella con: Reparto | Uff. (Previsti) | Isp. (Previsti) | Sovr. (Previsti) | Mil./App. (Previsti) | Totale Previsti | Totale Effettivi.
+      // Quest'ultima opzione sembra più utile e usa i dati disponibili.
+      // Modifico l'aggregazione per mostrare i totali PREVISTI per grado e il totale EFFETTIVI per reparto.
+
+      totalsMap[deptName].officers += att.officers || 0; // Somma PREVISTI Ufficiali
+      totalsMap[deptName].inspectors += att.inspectors || 0; // Somma PREVISTI Ispettori
+      totalsMap[deptName].superintendents += att.superintendents || 0; // Somma PREVISTI Sovrintendenti
+      totalsMap[deptName].militari += att.militari || 0; // Somma PREVISTI Militari
+      totalsMap[deptName].actualTotal += att.actual || 0; // Somma TOTALI EFFETTIVI per reparto
+    });
+
+    // Convert map to array and sort by department name
+    return Object.values(totalsMap).sort((a, b) => a.department_name.localeCompare(b.department_name));
+
+  }, [attendees]); // Depends on the attendees data for the current month
+
+  // Calcola i totali complessivi per la nuova tabella
+  const monthlyDepartmentRankGrandTotals = useMemo(() => {
+      return monthlyDepartmentRankTotals.reduce(
+          (acc, curr) => {
+              acc.officers += curr.officers;
+              acc.inspectors += curr.inspectors;
+              acc.superintendents += curr.superintendents;
+              acc.militari += curr.militari;
+              acc.actualTotal += curr.actualTotal;
+              return acc;
+          },
+          { officers: 0, inspectors: 0, superintendents: 0, militari: 0, actualTotal: 0 }
+      );
+  }, [monthlyDepartmentRankTotals]);
+
+
   // Funzioni per cambiare mese
   const goToPreviousMonth = () => {
     setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
@@ -153,7 +262,6 @@ const StatisticaPage = () => {
           <BarChart2 className="mr-3 h-8 w-8" />
           Statistiche Eventi
         </h1>
-        {/* Modificato qui */}
         <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
           <Home className="mr-2 h-4 w-4" />
           Torna alla Dashboard
@@ -207,6 +315,58 @@ const StatisticaPage = () => {
              </Table>
            ) : (
              <p className="text-gray-600">Nessun dato disponibile per le statistiche per tipo.</p>
+           )}
+         </CardContent>
+      </Card>
+
+      {/* NUOVA TABELLA: Totale Discenti Effettivi Mensili per Reparto e Grado */}
+      <Card className="shadow-lg mb-8">
+         <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Users className="mr-3 h-7 w-7" /> Totale Discenti Mensili per Reparto e Grado (Previsti)</CardTitle></CardHeader> {/* Modificato titolo per riflettere i dati disponibili */}
+         <CardContent>
+           {loading ? (
+             <p className="text-center text-gray-600">Caricamento dati discenti...</p>
+           ) : monthlyDepartmentRankTotals.length > 0 ? (
+             <div className="overflow-x-auto">
+               <Table>
+                 <TableHeader>
+                   <TableRow>
+                     <TableHead className="font-semibold">Reparto</TableHead>
+                     <TableHead className="text-center font-semibold">Uff. (Previsti)</TableHead> {/* Modificato intestazione */}
+                     <TableHead className="text-center font-semibold">Isp. (Previsti)</TableHead> {/* Modificato intestazione */}
+                     <TableHead className="text-center font-semibold">Sovr. (Previsti)</TableHead> {/* Modificato intestazione */}
+                     <TableHead className="text-center font-semibold">Mil./App. (Previsti)</TableHead> {/* Modificato intestazione */}
+                     <TableHead className="text-center font-semibold bg-blue-50">Totale Previsti</TableHead> {/* Aggiunto Totale Previsti */}
+                     <TableHead className="text-center font-semibold bg-green-50">Totale Effettivi</TableHead> {/* Modificato intestazione e colore */}
+                   </TableRow>
+                 </TableHeader>
+                 <TableBody>
+                   {monthlyDepartmentRankTotals.map(att => (
+                      <TableRow key={att.department_name}>
+                         <TableCell className="font-medium">{att.department_name}</TableCell>
+                         <TableCell className="text-center">{att.officers}</TableCell>
+                         <TableCell className="text-center">{att.inspectors}</TableCell>
+                         <TableCell className="text-center">{att.superintendents}</TableCell>
+                         <TableCell className="text-center">{att.militari}</TableCell>
+                         <TableCell className="text-center font-medium bg-blue-50">{att.officers + att.inspectors + att.superintendents + att.militari}</TableCell> {/* Calcola Totale Previsti */}
+                         <TableCell className="text-center font-medium bg-green-50">{att.actualTotal}</TableCell>
+                      </TableRow>
+                   ))}
+                 </TableBody>
+                 <TableFooter>
+                   <TableRow className="bg-slate-100">
+                     <TableHead className="font-bold text-slate-800">TOTALE Mese</TableHead>
+                     <TableCell className="text-center font-bold text-slate-800">{monthlyDepartmentRankGrandTotals.officers}</TableCell>
+                     <TableCell className="text-center font-bold text-slate-800">{monthlyDepartmentRankGrandTotals.inspectors}</TableCell>
+                     <TableCell className="text-center font-bold text-slate-800">{monthlyDepartmentRankGrandTotals.superintendents}</TableCell>
+                     <TableCell className="text-center font-bold text-slate-800">{monthlyDepartmentRankGrandTotals.militari}</TableCell>
+                     <TableCell className="text-center font-bold text-slate-800 bg-blue-100">{monthlyDepartmentRankGrandTotals.officers + monthlyDepartmentRankGrandTotals.inspectors + monthlyDepartmentRankGrandTotals.superintendents + monthlyDepartmentRankGrandTotals.militari}</TableCell> {/* Totale Previsti Complessivo */}
+                     <TableCell className="text-center font-bold text-slate-800 bg-green-100">{monthlyDepartmentRankGrandTotals.actualTotal}</TableCell>
+                   </TableRow>
+                 </TableFooter>
+               </Table>
+             </div>
+           ) : (
+             <p className="text-center text-gray-600">Nessun dato discenti disponibile per questo mese.</p>
            )}
          </CardContent>
       </Card>
