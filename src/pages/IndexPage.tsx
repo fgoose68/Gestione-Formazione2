@@ -139,7 +139,7 @@ const IndexPage = () => {
         {/* Sezione Scadenze Imminenti - Divisa in due colonne (Spostata sotto) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Colonna Sinistra: Scadenze Corsi Standard */}
-          <Card className="shadow-lg bg-yellow-50"> {/* Aggiunto bg-yellow-50 qui */}
+          <Card className="shadow-lg bg-yellow-100"> {/* Modificato da bg-yellow-50 a bg-yellow-100 */}
             <CardHeader>
               <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
                 <Info className="mr-3 h-7 w-7" /> Scadenze Corsi Standard
@@ -167,7 +167,7 @@ const IndexPage = () => {
           </Card>
 
           {/* Colonna Destra: Scadenze E-learning */}
-          <Card className="shadow-lg bg-green-50"> {/* Aggiunto bg-green-50 qui */}
+          <Card className="shadow-lg bg-green-100"> {/* Modificato da bg-green-50 a bg-green-100 */}
             <CardHeader>
               <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
                 <Info className="mr-3 h-7 w-7" /> Scadenze Corsi E-learning
