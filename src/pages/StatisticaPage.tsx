@@ -319,9 +319,9 @@ const StatisticaPage = () => {
          </CardContent>
       </Card>
 
-      {/* NUOVA TABELLA: Totale Discenti Effettivi Mensili per Reparto e Grado */}
+      {/* NUOVA TABELLA: Riepilogo Mensile Discenti per Reparto e Grado */}
       <Card className="shadow-lg mb-8">
-         <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Users className="mr-3 h-7 w-7" /> Totale Discenti Mensili per Reparto e Grado (Previsti)</CardTitle></CardHeader> {/* Modificato titolo per riflettere i dati disponibili */}
+         <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Users className="mr-3 h-7 w-7" /> Riepilogo Mensile Discenti per Reparto e Grado</CardTitle></CardHeader> {/* Modificato titolo */}
          <CardContent>
            {loading ? (
              <p className="text-center text-gray-600">Caricamento dati discenti...</p>
@@ -331,26 +331,34 @@ const StatisticaPage = () => {
                  <TableHeader>
                    <TableRow>
                      <TableHead className="font-semibold">Reparto</TableHead>
-                     <TableHead className="text-center font-semibold">Uff. (Previsti)</TableHead> {/* Modificato intestazione */}
-                     <TableHead className="text-center font-semibold">Isp. (Previsti)</TableHead> {/* Modificato intestazione */}
-                     <TableHead className="text-center font-semibold">Sovr. (Previsti)</TableHead> {/* Modificato intestazione */}
-                     <TableHead className="text-center font-semibold">Mil./App. (Previsti)</TableHead> {/* Modificato intestazione */}
-                     <TableHead className="text-center font-semibold bg-blue-50">Totale Previsti</TableHead> {/* Aggiunto Totale Previsti */}
-                     <TableHead className="text-center font-semibold bg-green-50">Totale Effettivi</TableHead> {/* Modificato intestazione e colore */}
+                     <TableHead className="text-center font-semibold">Uff. (Previsti)</TableHead>
+                     <TableHead className="text-center font-semibold">Isp. (Previsti)</TableHead>
+                     <TableHead className="text-center font-semibold">Sovr. (Previsti)</TableHead>
+                     <TableHead className="text-center font-semibold">Mil./App. (Previsti)</TableHead>
+                     <TableHead className="text-center font-semibold bg-blue-50">Totale Previsti</TableHead>
+                     <TableHead className="text-center font-semibold bg-green-50">Totale Effettivi</TableHead>
+                     <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead> {/* Aggiunta colonna Assenti */}
                    </TableRow>
                  </TableHeader>
                  <TableBody>
-                   {monthlyDepartmentRankTotals.map(att => (
-                      <TableRow key={att.department_name}>
-                         <TableCell className="font-medium">{att.department_name}</TableCell>
-                         <TableCell className="text-center">{att.officers}</TableCell>
-                         <TableCell className="text-center">{att.inspectors}</TableCell>
-                         <TableCell className="text-center">{att.superintendents}</TableCell>
-                         <TableCell className="text-center">{att.militari}</TableCell>
-                         <TableCell className="text-center font-medium bg-blue-50">{att.officers + att.inspectors + att.superintendents + att.militari}</TableCell> {/* Calcola Totale Previsti */}
-                         <TableCell className="text-center font-medium bg-green-50">{att.actualTotal}</TableCell>
-                      </TableRow>
-                   ))}
+                   {monthlyDepartmentRankTotals.map(att => {
+                      // Calcola gli assenti per questo reparto nel mese
+                      const totalExpectedForDept = att.officers + att.inspectors + att.superintendents + att.militari;
+                      const absentForDept = Math.max(0, totalExpectedForDept - att.actualTotal);
+
+                      return (
+                         <TableRow key={att.department_name}>
+                            <TableCell className="font-medium">{att.department_name}</TableCell>
+                            <TableCell className="text-center">{att.officers}</TableCell>
+                            <TableCell className="text-center">{att.inspectors}</TableCell>
+                            <TableCell className="text-center">{att.superintendents}</TableCell>
+                            <TableCell className="text-center">{att.militari}</TableCell>
+                            <TableCell className="text-center font-medium bg-blue-50">{totalExpectedForDept}</TableCell> {/* Calcola Totale Previsti */}
+                            <TableCell className="text-center font-medium bg-green-50">{att.actualTotal}</TableCell>
+                            <TableCell className="text-center font-medium bg-red-50">{absentForDept}</TableCell> {/* Cella per Assenti */}
+                         </TableRow>
+                      );
+                   })}
                  </TableBody>
                  <TableFooter>
                    <TableRow className="bg-slate-100">
@@ -361,6 +369,10 @@ const StatisticaPage = () => {
                      <TableCell className="text-center font-bold text-slate-800">{monthlyDepartmentRankGrandTotals.militari}</TableCell>
                      <TableCell className="text-center font-bold text-slate-800 bg-blue-100">{monthlyDepartmentRankGrandTotals.officers + monthlyDepartmentRankGrandTotals.inspectors + monthlyDepartmentRankGrandTotals.superintendents + monthlyDepartmentRankGrandTotals.militari}</TableCell> {/* Totale Previsti Complessivo */}
                      <TableCell className="text-center font-bold text-slate-800 bg-green-100">{monthlyDepartmentRankGrandTotals.actualTotal}</TableCell>
+                     {/* Calcola Totale Assenti Complessivo */}
+                     <TableCell className="text-center font-bold text-slate-800 bg-red-100">
+                        {Math.max(0, (monthlyDepartmentRankGrandTotals.officers + monthlyDepartmentRankGrandTotals.inspectors + monthlyDepartmentRankGrandTotals.superintendents + monthlyDepartmentRankGrandTotals.militari) - monthlyDepartmentRankGrandTotals.actualTotal)}
+                     </TableCell>
                    </TableRow>
                  </TableFooter>
                </Table>
