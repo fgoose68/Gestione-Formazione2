@@ -195,8 +195,10 @@ const EventDetailPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-orange-500" />Periodo</h3>
-                  <p><span className="font-medium">Inizio:</span> {format(parseISO(event.start_date), "PPPp", { locale: it })}</p>
-                  <p><span className="font-medium">Fine:</span> {format(parseISO(event.end_date), "PPPp", { locale: it })}</p>
+                  {/* Modificato il formato data qui */}
+                  <p><span className="font-medium">Inizio:</span> {format(parseISO(event.start_date), "PPP", { locale: it })}</p>
+                  {/* Modificato il formato data qui */}
+                  <p><span className="font-medium">Fine:</span> {format(parseISO(event.end_date), "PPP", { locale: it })}</p>
                 </div>
                 {event.location && <div><h3 className="text-lg font-semibold text-blue-700 flex items-center"><MapPin className="mr-2 h-5 w-5 text-orange-500" />Luogo</h3><p>{event.location}</p></div>}
               </div>

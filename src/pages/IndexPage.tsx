@@ -171,6 +171,7 @@ const IndexPage = () => {
                     {activeEvents.map((event) => (
                       <TableRow key={event.id}>
                         <TableCell className="font-medium">{event.title}</TableCell>
+                        {/* Modificato il formato data qui */}
                         <TableCell>{format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}</TableCell>
                         <TableCell>{event.location || 'N/D'}</TableCell>
                         <TableCell>
