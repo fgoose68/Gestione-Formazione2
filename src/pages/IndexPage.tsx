@@ -167,7 +167,7 @@ const IndexPage = () => {
           </Card>
 
           {/* Colonna Destra: Scadenze E-learning */}
-          <Card className="shadow-lg">
+          <Card className="shadow-lg bg-green-50"> {/* Aggiunto bg-green-50 qui */}
             <CardHeader>
               <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
                 <Info className="mr-3 h-7 w-7" /> Scadenze Corsi E-learning
