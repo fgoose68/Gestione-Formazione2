@@ -25,12 +25,18 @@ function Login() {
       }}
     >
       <div className="w-full max-w-md bg-white/90 p-8 rounded-lg shadow-md backdrop-blur-sm">
-        {/* Tricolore - Modificato per coprire la larghezza */}
+        {/* Tricolore */}
         <div className="flex justify-center mb-4"> {/* Centra il tricolore e aggiunge margine sotto */}
           {/* Rimosso w-8, aggiunto w-1/3 */}
           <div className="w-1/3 h-2 bg-green-600"></div> {/* Verde */}
           <div className="w-1/3 h-2 bg-white"></div> {/* Bianco */}
           <div className="w-1/3 h-2 bg-red-600"></div> {/* Rosso */}
+        </div>
+
+        {/* Nuova Bandiera Giallo/Verde */}
+        <div className="flex justify-center mt-2 mb-6"> {/* Aggiunto margine superiore e inferiore */}
+          <div className="w-1/2 h-2 bg-yellow-400"></div> {/* Giallo */}
+          <div className="w-1/2 h-2 bg-green-600"></div> {/* Verde */}
         </div>
 
         {/* Titolo */}
