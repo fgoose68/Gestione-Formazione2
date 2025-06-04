@@ -2,20 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { DepartmentAttendee } from '@/types';
 import { showError, showSuccess } from '@/utils/toast';
-
-const DEFAULT_DEPARTMENTS = [
-  "Comando Regionale",
-  "Provinciale Roma",
-  "Provinciale Latina",
-  "Provinciale Frosinone",
-  "Provinciale Rieti",
-  "Provinciale Viterbo",
-  "ROAN", // Aggiunto ROAN come da allegato implicito
-  "ReTLA Lazio",
-  "CAR", 
-  "Altri Reparti",
-  "Comando Interr.le" // Nuovo reparto aggiunto qui
-];
+import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
 
 export const useDepartmentAttendees = (eventId: string | undefined) => {
   const [attendees, setAttendees] = useState<DepartmentAttendee[]>([]);

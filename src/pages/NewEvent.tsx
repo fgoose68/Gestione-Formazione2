@@ -15,21 +15,7 @@ import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
 import { DepartmentAttendee, Event } from '@/types'; // Importa anche Event per il tipo del corso
 import { supabase } from '@/integrations/supabase/client';
-
-// Reparti predefiniti come nell'hook useDepartmentAttendees
-const DEFAULT_DEPARTMENTS = [
-  "Comando Regionale",
-  "Provinciale Roma",
-  "Provinciale Latina",
-  "Provinciale Frosinone",
-  "Provinciale Rieti",
-  "Provinciale Viterbo",
-  "ROAN",
-  "ReTLA Lazio",
-  "CAR", // Centro Addestramento Regionale
-  "Altri Reparti",
-  "Comando Interr.le" // Nuovo reparto aggiunto qui
-];
+import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
 
 // Tipi di corso disponibili - AGGIUNTO 'Didattica a distanza (DAD)'
 const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning', 'Didattica a distanza (DAD)'];
