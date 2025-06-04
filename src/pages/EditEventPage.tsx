@@ -14,8 +14,8 @@ import { format, parseISO } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { it } from 'date-fns/locale';
 
-// Tipi di corso disponibili (copiato da NewEvent.tsx) - AGGIUNTO 'Didattica a distanza (DAD)'
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning', 'Didattica a distanza (DAD)'];
+// Tipi di corso disponibili (copiato da NewEvent.tsx) - AGGIORNATO L'ORDINE
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'e-learning'];
 
 // Opzioni per il menu a tendina Luogo (copiato da NewEvent.tsx)
 const LOCATIONS = [
@@ -75,7 +75,7 @@ const EditEventPage = () => {
         setLocation(currentEvent.location || undefined); // Usa undefined se la location è vuota/null
       } else {
         showError("Evento non trovato per la modifica.");
-        // navigate('/'); // Potrebbe essere troppo aggressivo
+        // Considera se navigare via o mostrare messaggio
       }
     } else if (!eventId && !eventsLoading) {
          showError("ID Evento non specificato per la modifica.");

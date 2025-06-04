@@ -11,8 +11,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
 
-// Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning', 'Didattica a distanza (DAD)'];
+// Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO L'ORDINE
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'e-learning'];
 
 
 const StatisticaPage = () => {
@@ -273,12 +273,12 @@ const StatisticaPage = () => {
                  </TableRow>
                </TableHeader>
                <TableBody>
-                 {/* Ordina le chiavi per visualizzare i tipi in un ordine prevedibile */}
-                 {Object.keys(statsByType).sort().map(type => (
+                 {/* Ordina le chiavi per visualizzare i tipi nell'ordine desiderato */}
+                 {[...COURSE_TYPES, 'Non Specificato'].map(type => (
                    <TableRow key={type}>
                      <TableCell className="font-medium">{type}</TableCell>
-                     <TableCell className="text-center">{statsByType[type].count}</TableCell>
-                     <TableCell className="text-center">{statsByType[type].totalActual}</TableCell>
+                     <TableCell className="text-center">{statsByType[type]?.count || 0}</TableCell>
+                     <TableCell className="text-center">{statsByType[type]?.totalActual || 0}</TableCell>
                    </TableRow>
                  ))}
                </TableBody>

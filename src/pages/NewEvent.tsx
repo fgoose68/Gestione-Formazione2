@@ -17,8 +17,8 @@ import { DepartmentAttendee, Event } from '@/types'; // Importa anche Event per 
 import { supabase } from '@/integrations/supabase/client';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
 
-// Tipi di corso disponibili - AGGIUNTO 'Didattica a distanza (DAD)'
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning', 'Didattica a distanza (DAD)'];
+// Tipi di corso disponibili - AGGIORNATO L'ORDINE
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'e-learning'];
 
 // Opzioni per il menu a tendina Luogo
 const LOCATIONS = [
