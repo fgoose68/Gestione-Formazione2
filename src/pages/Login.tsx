@@ -26,7 +26,7 @@ function Login() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50"> {/* Modificato qui: bg-white a bg-gray-50 */}
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
         {/* Banda Tricolore (Verde, Bianca, Rossa) */}
         <div className="flex w-full h-4 mb-4 rounded-sm overflow-hidden">
