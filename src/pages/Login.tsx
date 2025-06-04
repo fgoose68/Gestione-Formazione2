@@ -2,7 +2,7 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } => 'react-router-dom';
 import { toast } from 'sonner';
 
 function Login() {
@@ -26,10 +26,10 @@ function Login() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100"> {/* Modificato qui: da bg-gray-50 a bg-gray-100 */}
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
         {/* Banda Tricolore (Verde, Bianca, Rossa) */}
-        <div className="flex w-full h-4 mb-4 rounded-sm overflow-hidden">
+        <div className="flex w-full h-4 mb-2 rounded-sm overflow-hidden"> {/* Modificato da mb-4 a mb-2 */}
           <div className="bg-green-600 w-1/3"></div>
           <div className="bg-white w-1/3"></div>
           <div className="bg-red-600 w-1/3"></div>
@@ -42,7 +42,7 @@ function Login() {
         </div>
 
         {/* Banda Gialla e Verde */}
-        <div className="flex w-full h-3 mb-6 rounded-sm overflow-hidden">
+        <div className="flex w-full h-3 mb-4 rounded-sm overflow-hidden"> {/* Modificato da mb-6 a mb-4 */}
           <div className="bg-yellow-400 w-1/2"></div>
           <div className="bg-green-600 w-1/2"></div>
         </div>
