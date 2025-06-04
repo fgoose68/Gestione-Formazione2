@@ -13,7 +13,8 @@ const DEFAULT_DEPARTMENTS = [
   "ROAN", // Aggiunto ROAN come da allegato implicito
   "ReTLA Lazio",
   "CAR", 
-  "Altri Reparti"
+  "Altri Reparti",
+  "Comando Interr.le" // Nuovo reparto aggiunto qui
 ];
 
 export const useDepartmentAttendees = (eventId: string | undefined) => {
