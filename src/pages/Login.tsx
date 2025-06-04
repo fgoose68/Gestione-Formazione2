@@ -48,7 +48,6 @@ function Login() {
             },
           }}
           theme="light"
-          className="custom-auth-styles" {/* Aggiunta la classe personalizzata qui */}
         />
       </div>
     </div>
