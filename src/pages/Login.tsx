@@ -2,7 +2,7 @@ import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Corretto qui: da `=>` a `from`
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 
 function Login() {
@@ -67,6 +67,21 @@ function Login() {
             },
           }}
           theme="light"
+          localization={{
+            variables: {
+              sign_in: {
+                email_label: 'Indirizzo Email',
+                password_label: 'La tua Password',
+              },
+              sign_up: {
+                email_label: 'Indirizzo Email',
+                password_label: 'Crea Password',
+              },
+              forgotten_password: {
+                email_label: 'Indirizzo Email',
+              },
+            },
+          }}
         />
       </div>
     </div>
