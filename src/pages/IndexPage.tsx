@@ -60,6 +60,7 @@ const IndexPage = () => {
     { type: 'Gestione Registri', days: 'Giorno dell\'evento', message: 'Gestire registri' },
     { type: 'Raccolta Feedback', days: '1 giorno dopo fine', message: 'Raccogliere feedback' },
     { type: 'Generazione Modello L', days: '2 giorni dopo fine', message: 'Generare Modello L' },
+    { type: '', days: '', message: '' }, // Riga vuota aggiunta per allineamento
   ];
 
   // Dati statici per la tabella delle scadenze e-learning
@@ -181,7 +182,7 @@ const IndexPage = () => {
                   </TableHeader>
                   <TableBody>
                     {staticStandardDeadlines.map((deadline, index) => (
-                      <TableRow key={index}>
+                      <TableRow key={index} className={deadline.type === '' ? 'h-12' : ''}> {/* Aggiunto classe per riga vuota */}
                         <TableCell className="font-medium">{deadline.type}</TableCell>
                         <TableCell className="text-center">{deadline.days}</TableCell>
                         <TableCell>{deadline.message}</TableCell>
