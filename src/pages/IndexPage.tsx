@@ -170,7 +170,7 @@ const IndexPage = () => {
             </CardHeader>
             <CardContent>
               {/* Tabella delle scadenze standard */}
-              <div className="mb-6 overflow-x-auto">
+              <div className="mb-6 overflow-x-auto h-[360px]"> {/* Aggiunta altezza fissa */}
                 <h4 className="text-lg font-semibold text-gray-700 mb-3">Regole Scadenze Standard</h4>
                 <Table className="min-w-full">
                   <TableHeader>
@@ -222,7 +222,7 @@ const IndexPage = () => {
             </CardHeader>
             <CardContent>
               {/* Tabella delle scadenze e-learning */}
-              <div className="mb-6 overflow-x-auto">
+              <div className="mb-6 overflow-x-auto h-[360px]"> {/* Aggiunta altezza fissa */}
                 <h4 className="text-lg font-semibold text-gray-700 mb-3">Regole Scadenze E-learning</h4>
                 <Table className="min-w-full">
                   <TableHeader>
