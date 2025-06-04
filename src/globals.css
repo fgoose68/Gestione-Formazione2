@@ -99,3 +99,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom styles for Supabase Auth UI inputs */
+.custom-auth-styles .sbui-input {
+  border-width: 2px !important; /* Rende il bordo più spesso */
+  border-color: hsl(222.2 47.4% 11.2%) !important; /* Colore primario del tuo tema */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1) !important; /* Aggiunge un'ombra più evidente */
+}
+
+.custom-auth-styles .sbui-input:focus {
+  border-color: hsl(217.2 91.2% 59.8%) !important; /* Colore del ring per il focus */
+  box-shadow: 0 0 0 3px hsla(217.2, 91.2%, 59.8%, 0.25) !important; /* Effetto focus ring */
+}
