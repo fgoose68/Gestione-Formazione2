@@ -14,8 +14,8 @@ import { format, parseISO } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { it } from 'date-fns/locale';
 
-// Tipi di corso disponibili (copiato da NewEvent.tsx) - AGGIUNTO 'DAD'
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning', 'DAD'];
+// Tipi di corso disponibili (copiato da NewEvent.tsx) - AGGIUNTO 'Didattica a distanza (DAD)'
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning', 'Didattica a distanza (DAD)'];
 
 // Opzioni per il menu a tendina Luogo (copiato da NewEvent.tsx)
 const LOCATIONS = [
@@ -103,8 +103,8 @@ const EditEventPage = () => {
       showError('Seleziona il tipo di corso.');
       return;
     }
-    // Validazione per il luogo: non richiesto se il tipo è 'e-learning' o 'DAD'
-    if (courseType !== 'e-learning' && courseType !== 'DAD' && !location) {
+    // Validazione per il luogo: non richiesto se il tipo è 'e-learning' o 'Didattica a distanza (DAD)'
+    if (courseType !== 'e-learning' && courseType !== 'Didattica a distanza (DAD)' && !location) {
        showError('Seleziona il luogo del corso.');
        return;
     }
@@ -117,8 +117,8 @@ const EditEventPage = () => {
       description: formData.description,
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
-      // Se il tipo è e-learning o DAD, salva la location come stringa vuota, altrimenti usa il valore selezionato
-      location: (courseType === 'e-learning' || courseType === 'DAD') ? '' : location || '',
+      // Se il tipo è e-learning o Didattica a distanza (DAD), salva la location come stringa vuota, altrimenti usa il valore selezionato
+      location: (courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)') ? '' : location || '',
       teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t),
       // Rimosso il campo students
       type: courseType, // Includi il tipo di corso aggiornato
@@ -234,8 +234,8 @@ const EditEventPage = () => {
           
           {/* Campo Selezione Luogo */}
           <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {(courseType === 'e-learning' || courseType === 'DAD') ? '(Non applicabile)' : '*'}</label>
-            <Select onValueChange={setLocation} value={location} disabled={loading || courseType === 'e-learning' || courseType === 'DAD'}>
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {(courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)') ? '(Non applicabile)' : '*'}</label>
+            <Select onValueChange={setLocation} value={location} disabled={loading || courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)'}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleziona il luogo" />
               </SelectTrigger>
@@ -245,8 +245,8 @@ const EditEventPage = () => {
                 ))}
               </SelectContent>
             </Select>
-             {(courseType === 'e-learning' || courseType === 'DAD') && (
-                <p className="mt-1 text-sm text-gray-500">Il luogo non è richiesto per i corsi e-learning o DAD.</p>
+             {(courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)') && (
+                <p className="mt-1 text-sm text-gray-500">Il luogo non è richiesto per i corsi e-learning o Didattica a distanza (DAD).</p>
              )}
           </div>
           

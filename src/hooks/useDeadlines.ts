@@ -25,7 +25,7 @@ export const useDeadlines = (events: Event[]) => {
     const endDate = event.end_date ? parseISO(event.end_date) : startDate; // Usa end_date se disponibile, altrimenti start_date
 
     // Logica scadenze basata sul tipo di corso
-    if (event.type === 'e-learning' || event.type === 'DAD') { // AGGIUNTO 'DAD'
+    if (event.type === 'e-learning' || event.type === 'Didattica a distanza (DAD)') { // AGGIORNATO a 'Didattica a distanza (DAD)'
       // Scadenze per corsi e-learning e DAD
       
       // Richiesta Discenti: 5 giorni prima

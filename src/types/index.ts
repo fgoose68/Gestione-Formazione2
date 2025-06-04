@@ -10,8 +10,7 @@ export interface Event {
   status: 'in_preparazione' | 'completato' | 'archiviato';
   user_id: string | null; // Reso nullable
   created_at: string; // ISO string
-  completed_tasks?: string[];
-  type?: 'Centralizzato' | 'Periferico' | 'Iniziativa' | 'e-learning' | 'DAD'; // Nuovo campo per il tipo di corso, aggiunto 'DAD'
+  type?: 'Centralizzato' | 'Periferico' | 'Iniziativa' | 'e-learning' | 'Didattica a distanza (DAD)'; // Nuovo campo per il tipo di corso, aggiornato a 'Didattica a distanza (DAD)'
 }
 
 export interface Deadline {
