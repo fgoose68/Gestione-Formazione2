@@ -18,7 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
 
 // Tipi di corso disponibili - AGGIORNATO L'ORDINE
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'e-learning'];
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'E-learning'];
 
 // Opzioni per il menu a tendina Luogo
 const LOCATIONS = [
@@ -126,8 +126,8 @@ const NewEvent = () => {
       showError('Seleziona il tipo di corso.');
       return;
     }
-    // Validazione per il luogo: non richiesto se il tipo è 'e-learning' o 'Didattica a distanza (DAD)'
-    if (courseType !== 'e-learning' && courseType !== 'Didattica a distanza (DAD)' && !location) {
+    // Validazione per il luogo: non richiesto se il tipo è 'E-learning' o 'Didattica a distanza (DAD)'
+    if (courseType !== 'E-learning' && courseType !== 'Didattica a distanza (DAD)' && !location) {
        showError('Seleziona il luogo del corso.');
        return;
     }
@@ -140,8 +140,8 @@ const NewEvent = () => {
       description: formData.description,
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
-      // Se il tipo è e-learning o Didattica a distanza (DAD), salva la location come stringa vuota, altrimenti usa il valore selezionato
-      location: (courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)') ? '' : location || '',
+      // Se il tipo è E-learning o Didattica a distanza (DAD), salva la location come stringa vuota, altrimenti usa il valore selezionato
+      location: (courseType === 'E-learning' || courseType === 'Didattica a distanza (DAD)') ? '' : location || '',
       teachers: formData.teachersRaw.split(',').map(t => t.trim()).filter(t => t),
       type: courseType, // Includi il tipo di corso
     };
@@ -261,8 +261,8 @@ const NewEvent = () => {
 
           {/* Campo Selezione Luogo */}
           <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {(courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)') ? '(Non applicabile)' : ''}</label>
-            <Select onValueChange={setLocation} value={location} disabled={loading || courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)'}>
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {(courseType === 'E-learning' || courseType === 'Didattica a distanza (DAD)') ? '(Non applicabile)' : ''}</label>
+            <Select onValueChange={setLocation} value={location} disabled={loading || courseType === 'E-learning' || courseType === 'Didattica a distanza (DAD)'}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleziona il luogo" />
               </SelectTrigger>
@@ -272,8 +272,8 @@ const NewEvent = () => {
                 ))}
               </SelectContent>
             </Select>
-             {(courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)') && (
-                <p className="mt-1 text-sm text-gray-500">Il luogo non è richiesto per i corsi e-learning o Didattica a distanza (DAD).</p>
+             {(courseType === 'E-learning' || courseType === 'Didattica a distanza (DAD)') && (
+                <p className="mt-1 text-sm text-gray-500">Il luogo non è richiesto per i corsi E-learning o Didattica a distanza (DAD).</p>
              )}
           </div>
 

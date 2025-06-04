@@ -3,7 +3,7 @@ import { showLoading } from '@/utils/toast';
 import { Event, Deadline } from '@/types';
 import { differenceInDays, addDays, subDays, isSameDay, parseISO } from 'date-fns';
 
-// Aggiorna il tipo per includere i nuovi tipi di scadenza specifici per e-learning
+// Aggiorna il tipo per includere i nuovi tipi di scadenza specifici per E-learning
 export interface Deadline {
   type: 'docente' | 'discenti_standard' | 'avvio_standard' | 'giorno_evento_registri' | 'post_evento_feedback' | 'post_evento_modello_l' | 'discenti_elearning' | 'comunicazione_scuola' | 'lettera_abilitazione' | 'mail_sollecito_1' | 'mail_sollecito_2' | 'avviso_proroga' | 'relazione_finale';
   date: Date;
@@ -25,14 +25,14 @@ export const useDeadlines = (events: Event[]) => {
     const endDate = event.end_date ? parseISO(event.end_date) : startDate; // Usa end_date se disponibile, altrimenti start_date
 
     // Logica scadenze basata sul tipo di corso
-    if (event.type === 'e-learning') { // MODIFICATO: Solo 'e-learning' qui
-      // Scadenze per corsi e-learning
+    if (event.type === 'E-learning') { // MODIFICATO: Solo 'E-learning' qui
+      // Scadenze per corsi E-learning
       
       // Richiesta Discenti: 5 giorni prima
       eventDeadlines.push({
         type: 'discenti_elearning',
         date: subDays(startDate, 5),
-        message: `Richiesta discenti (e-learning) per "${event.title}"`,
+        message: `Richiesta discenti (E-learning) per "${event.title}"`,
         eventId: event.id,
         completed: event.completed_tasks?.includes('richiesta_discenti_elearning_fatta') || false,
         eventTitle: event.title,

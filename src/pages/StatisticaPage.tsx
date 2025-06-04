@@ -11,8 +11,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
 
-// Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO L'ORDINE
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'e-learning'];
+// Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'E-learning'];
 
 
 const StatisticaPage = () => {
