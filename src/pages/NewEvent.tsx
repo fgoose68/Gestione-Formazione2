@@ -27,7 +27,8 @@ const DEFAULT_DEPARTMENTS = [
   "ROAN",
   "ReTLA Lazio",
   "CAR", // Centro Addestramento Regionale
-  "Altri Reparti"
+  "Altri Reparti",
+  "Comando Interr.le" // Nuovo reparto aggiunto qui
 ];
 
 // Tipi di corso disponibili - AGGIUNTO 'Didattica a distanza (DAD)'
@@ -208,7 +209,7 @@ const NewEvent = () => {
 
         <div className="space-y-6">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label> {/* Rimosso * */}
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label>
             <Input id="title" name="title" placeholder="Es: Sicurezza sul Lavoro Avanzato" value={formData.title} onChange={handleInputChange} className="text-lg" disabled={loading}/>
           </div>
 
@@ -219,7 +220,7 @@ const NewEvent = () => {
 
            {/* Campo Selezione Tipo Corso */}
           <div>
-            <label htmlFor="courseType" className="block text-sm font-medium text-gray-700 mb-1">Tipo di Corso</label> {/* Rimosso * */}
+            <label htmlFor="courseType" className="block text-sm font-medium text-gray-700 mb-1">Tipo di Corso</label>
             <Select onValueChange={(value: Event['type']) => setCourseType(value)} value={courseType} disabled={loading}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleziona il tipo di corso" />
@@ -235,7 +236,7 @@ const NewEvent = () => {
 
           <div>
             {/* Modificato il testo dell'etichetta */}
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label> {/* Rimosso * */}
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -274,7 +275,7 @@ const NewEvent = () => {
 
           {/* Campo Selezione Luogo */}
           <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {(courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)') ? '(Non applicabile)' : ''}</label> {/* Rimosso * */}
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {(courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)') ? '(Non applicabile)' : ''}</label>
             <Select onValueChange={setLocation} value={location} disabled={loading || courseType === 'e-learning' || courseType === 'Didattica a distanza (DAD)'}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleziona il luogo" />
