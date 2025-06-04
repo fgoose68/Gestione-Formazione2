@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } => '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Clock, PlusCircle, CalendarDays, Archive, BarChart2, Info, LogOut } from 'lucide-react';
 import { useEvents, useDeadlines } from '@/hooks';
@@ -60,6 +60,17 @@ const IndexPage = () => {
     { type: 'Gestione Registri', days: 'Giorno dell\'evento', message: 'Gestire registri' },
     { type: 'Raccolta Feedback', days: '1 giorno dopo fine', message: 'Raccogliere feedback' },
     { type: 'Generazione Modello L', days: '2 giorni dopo fine', message: 'Generare Modello L' },
+  ];
+
+  // Dati statici per la tabella delle scadenze e-learning
+  const staticElearningDeadlines = [
+    { type: 'Richiesta Discenti', days: '5 giorni prima', message: 'Richiesta discenti (e-learning)' },
+    { type: 'Comunicazione Scuola', days: '3 giorni prima', message: 'Comunicazione alla Scuola PEF/Altro' },
+    { type: 'Lettera Abilitazione', days: '1 giorno prima', message: 'Lettera Abilitazione al Corso' },
+    { type: 'Mail Sollecito 1', days: '15 giorni dopo inizio', message: 'Prima mail di sollecito' },
+    { type: 'Mail Sollecito 2', days: '25 giorni dopo inizio', message: 'Seconda mail di sollecito' },
+    { type: 'Avviso Proroga', days: '1 giorno dopo fine', message: 'Avviso Proroga (eventuale)' },
+    { type: 'Relazione Finale', days: '30 giorni dopo inizio', message: 'Relazione Finale' },
   ];
 
 
@@ -209,6 +220,30 @@ const IndexPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Tabella delle scadenze e-learning */}
+              <div className="mb-6 overflow-x-auto">
+                <h4 className="text-lg font-semibold text-gray-700 mb-3">Regole Scadenze E-learning</h4>
+                <Table className="min-w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-semibold">Tipo Scadenza</TableHead>
+                      <TableHead className="text-center font-semibold">Periodo</TableHead>
+                      <TableHead className="font-semibold">Azione</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {staticElearningDeadlines.map((deadline, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{deadline.type}</TableCell>
+                        <TableCell className="text-center">{deadline.days}</TableCell>
+                        <TableCell>{deadline.message}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <h4 className="text-lg font-semibold text-gray-700 mb-3">Scadenze Imminenti</h4>
               {eventsLoading ? (
                 <p className="text-center text-gray-600">Caricamento scadenze...</p>
               ) : elearningDeadlines.length > 0 ? (
