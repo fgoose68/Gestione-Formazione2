@@ -25,14 +25,14 @@ export const useDeadlines = (events: Event[]) => {
     const endDate = event.end_date ? parseISO(event.end_date) : startDate; // Usa end_date se disponibile, altrimenti start_date
 
     // Logica scadenze basata sul tipo di corso
-    if (event.type === 'e-learning' || event.type === 'Didattica a distanza (DAD)') { // AGGIORNATO a 'Didattica a distanza (DAD)'
-      // Scadenze per corsi e-learning e DAD
+    if (event.type === 'e-learning') { // MODIFICATO: Solo 'e-learning' qui
+      // Scadenze per corsi e-learning
       
       // Richiesta Discenti: 5 giorni prima
       eventDeadlines.push({
         type: 'discenti_elearning',
         date: subDays(startDate, 5),
-        message: `Richiesta discenti (e-learning/DAD) per "${event.title}"`,
+        message: `Richiesta discenti (e-learning) per "${event.title}"`,
         eventId: event.id,
         completed: event.completed_tasks?.includes('richiesta_discenti_elearning_fatta') || false,
         eventTitle: event.title,
@@ -99,7 +99,7 @@ export const useDeadlines = (events: Event[]) => {
       });
 
     } else {
-      // Scadenze per altri tipi di corso (Centralizzato, Periferico, Iniziativa, o non specificato)
+      // Scadenze per altri tipi di corso (Centralizzato, Periferico, Iniziativa, Didattica a distanza (DAD) o non specificato)
 
       // 30 giorni prima: richiesta docenti
       eventDeadlines.push({
