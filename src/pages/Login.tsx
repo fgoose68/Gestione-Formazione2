@@ -36,7 +36,8 @@ function Login() {
         </div>
 
         <div className="text-center mb-8">
-          <img src="/images/login-logo.png" alt="Gestione Formazione Logo" className="max-w-sm mx-auto mb-4" />
+          {/* L'attributo alt è stato rimosso o lasciato vuoto come richiesto */}
+          <img src="/images/login-logo.png" alt="" className="max-w-sm mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-blue-800">Gestione Formazione Sezione Corsi</h1>
         </div>
 
