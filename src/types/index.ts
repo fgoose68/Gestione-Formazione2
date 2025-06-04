@@ -11,7 +11,7 @@ export interface Event {
   user_id: string | null; // Reso nullable
   created_at: string; // ISO string
   completed_tasks?: string[];
-  type?: 'Centralizzato' | 'Periferico' | 'Iniziativa' | 'e-learning'; // Nuovo campo per il tipo di corso
+  type?: 'Centralizzato' | 'Periferico' | 'Iniziativa' | 'e-learning' | 'DAD'; // Nuovo campo per il tipo di corso, aggiunto 'DAD'
 }
 
 export interface Deadline {
