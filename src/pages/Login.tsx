@@ -26,8 +26,13 @@ function Login() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-cover bg-center">
-      <div className="w-full max-w-md bg-white/90 p-8 rounded-lg shadow-md backdrop-blur-sm">
+    <div className="min-h-screen flex items-center justify-center bg-white"> {/* Changed background to white */}
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md"> {/* Removed backdrop-blur-sm and /90 opacity */}
+        <div className="text-center mb-8">
+          {/* Assicurati che l'immagine 'login-logo.png' sia nella cartella public/images/ */}
+          <img src="/images/login-logo.png" alt="Gestione Formazione Logo" className="max-w-sm mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-blue-800">Gestione Formazione Sezione Corsi</h1>
+        </div>
         {authError && (
           <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
             {authError}
