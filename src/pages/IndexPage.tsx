@@ -52,6 +52,17 @@ const IndexPage = () => {
     }
   };
 
+  // Dati statici per la tabella delle scadenze standard
+  const staticStandardDeadlines = [
+    { type: 'Richiesta Docenti', days: '30 giorni prima', message: 'Redigere richiesta docenti' },
+    { type: 'Richiesta Discenti', days: '25 giorni prima', message: 'Creare richiesta discenti' },
+    { type: 'Avvio Corso', days: '10 giorni prima', message: 'Preparare Avvio Corso' },
+    { type: 'Gestione Registri', days: 'Giorno dell\'evento', message: 'Gestire registri' },
+    { type: 'Raccolta Feedback', days: '1 giorno dopo fine', message: 'Raccogliere feedback' },
+    { type: 'Generazione Modello L', days: '2 giorni dopo fine', message: 'Generare Modello L' },
+  ];
+
+
   return (
     // Outer div for background image
     <div
@@ -146,6 +157,30 @@ const IndexPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {/* Tabella delle scadenze standard */}
+              <div className="mb-6 overflow-x-auto">
+                <h4 className="text-lg font-semibold text-gray-700 mb-3">Regole Scadenze Standard</h4>
+                <Table className="min-w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="font-semibold">Tipo Scadenza</TableHead>
+                      <TableHead className="text-center font-semibold">Periodo</TableHead>
+                      <TableHead className="font-semibold">Azione</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {staticStandardDeadlines.map((deadline, index) => (
+                      <TableRow key={index}>
+                        <TableCell className="font-medium">{deadline.type}</TableCell>
+                        <TableCell className="text-center">{deadline.days}</TableCell>
+                        <TableCell>{deadline.message}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <h4 className="text-lg font-semibold text-gray-700 mb-3">Scadenze Imminenti</h4>
               {eventsLoading ? (
                 <p className="text-center text-gray-600">Caricamento scadenze...</p>
               ) : standardDeadlines.length > 0 ? (
