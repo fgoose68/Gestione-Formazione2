@@ -10,8 +10,8 @@ import { it } from 'date-fns/locale';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 
-// Tipi di corso disponibili (usati per raggruppare le statistiche)
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning'];
+// Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO
+const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'e-learning', 'Didattica a distanza (DAD)'];
 
 // Reparti predefiniti (copiato da useDepartmentAttendees per coerenza)
 const DEFAULT_DEPARTMENTS = [
