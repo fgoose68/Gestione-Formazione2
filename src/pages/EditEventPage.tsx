@@ -169,7 +169,7 @@ const EditEventPage = () => {
         
         <div className="space-y-6">
           <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso *</label>
+            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label>
             <Input id="title" name="title" placeholder="Es: Sicurezza sul Lavoro Avanzato" value={formData.title} onChange={handleInputChange} className="text-lg" disabled={loading}/>
           </div>
           
@@ -180,7 +180,7 @@ const EditEventPage = () => {
 
            {/* Campo Selezione Tipo Corso */}
           <div>
-            <label htmlFor="courseType" className="block text-sm font-medium text-gray-700 mb-1">Tipo di Corso *</label>
+            <label htmlFor="courseType" className="block text-sm font-medium text-gray-700 mb-1">Tipo di Corso</label>
             <Select onValueChange={(value: Event['type']) => setCourseType(value)} value={courseType} disabled={loading}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleziona il tipo di corso" />
@@ -195,7 +195,7 @@ const EditEventPage = () => {
 
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Date e Orari *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Date e Orari</label>
             <Popover>
               <PopoverTrigger asChild>
                 <Button
@@ -234,7 +234,7 @@ const EditEventPage = () => {
           
           {/* Campo Selezione Luogo */}
           <div>
-            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {(courseType === 'E-learning' || courseType === 'Didattica a distanza (DAD)') ? '(Non applicabile)' : '*'}</label>
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">Luogo {(courseType === 'E-learning' || courseType === 'Didattica a distanza (DAD)') ? '(Non applicabile)' : ''}</label>
             <Select onValueChange={setLocation} value={location} disabled={loading || courseType === 'E-learning' || courseType === 'Didattica a distanza (DAD)'}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Seleziona il luogo" />
