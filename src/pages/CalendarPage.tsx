@@ -1,7 +1,7 @@
 import { Calendar as ShadCalendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
-import { useEvents } from "@/hooks/useEvents"; // Modificato da useEvent a useEvents
+import { useEvents } from "@/hooks/useEvents";
 import { format, parseISO } from "date-fns";
 import { it } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
@@ -10,7 +10,7 @@ import { useMemo, useState } from "react";
 
 const CalendarPage = () => {
   const navigate = useNavigate();
-  const { events, loading } = useEvents(); // Modificato per usare useEvents
+  const { events, loading } = useEvents();
   const [date, setDate] = useState<Date>(new Date());
 
   const monthlyEvents = useMemo(() => {
@@ -65,10 +65,11 @@ const CalendarPage = () => {
                 <p className="text-center">Caricamento eventi...</p>
               ) : monthlyEvents.length > 0 ? (
                 <div className="space-y-4">
-                  {monthlyEvents.map(event => (
+                  {monthlyEvents.map((event, index) => (
                     <div 
                       key={event.id}
-                      className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                      className={`border rounded-lg p-4 cursor-pointer transition-colors 
+                        ${index % 2 === 0 ? 'bg-yellow-50 hover:bg-yellow-100' : 'bg-green-50 hover:bg-green-100'}`}
                       onClick={() => navigate(`/evento/${event.id}`)}
                     >
                       <h3 className="font-medium">{event.title}</h3>
