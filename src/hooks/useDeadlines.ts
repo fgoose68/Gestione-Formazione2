@@ -1,4 +1,14 @@
-// ... (codice precedente rimane invariato)
+import { parseISO, subDays, isBefore, isToday } from 'date-fns';
+import { Event } from '@/types';
+
+export interface Deadline {
+  type: string;
+  date: Date;
+  message: string;
+  eventId: string;
+  completed: boolean;
+  eventTitle: string;
+}
 
 const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
   const eventDeadlines: Deadline[] = [];
@@ -9,33 +19,49 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
   if (event.type === 'E-learning') {
     // Scadenze per corsi E-learning
-    
-    // Richiesta Discenti: 8 giorni prima (modificato da 5 a 8)
     eventDeadlines.push({
       type: 'discenti_elearning',
-      date: subDays(startDate, 8), // Modificato da 5 a 8
+      date: subDays(startDate, 8),
       message: `Richiesta discenti (E-learning) per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('richiesta_discenti_elearning_fatta') || false,
       eventTitle: event.title,
     });
 
-    // Comunicazione alla Scuola PEF/Altro: 7 giorni prima (modificato da 3 a 7)
     eventDeadlines.push({
       type: 'comunicazione_scuola',
-      date: subDays(startDate, 7), // Modificato da 3 a 7
+      date: subDays(startDate, 7),
       message: `Comunicazione alla Scuola PEF/Altro per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('comunicazione_scuola_fatta') || false,
       eventTitle: event.title,
     });
 
-    // ... (resto del codice rimane invariato)
+    // Altre scadenze E-learning...
   } else {
-    // ... (codice per altri tipi di corso rimane invariato)
+    // Scadenze per corsi standard
+    eventDeadlines.push({
+      type: 'docente',
+      date: subDays(startDate, 30),
+      message: `Richiesta docenti per "${event.title}"`,
+      eventId: event.id,
+      completed: event.completed_tasks?.includes('richiesta_docente_fatta') || false,
+      eventTitle: event.title,
+    });
+
+    // Altre scadenze standard...
   }
 
   return eventDeadlines;
 };
 
-// ... (codice successivo rimane invariato)
+export const useDeadlines = (events: Event[]) => {
+  const deadlines = events.flatMap(calculateDeadlinesForEvent);
+  
+  return {
+    deadlines,
+    upcomingDeadlines: deadlines.filter(d => !d.completed && !isBefore(d.date, new Date())),
+    pastDeadlines: deadlines.filter(d => isBefore(d.date, new Date()) && !isToday(d.date)),
+    todayDeadlines: deadlines.filter(d => isToday(d.date))
+  };
+};

@@ -1,4 +1,3 @@
 export * from './useEvents';
-export * from './useDeadlines';
-export * from './useDepartmentAttendees'; // Aggiunto nuovo hook
-// Add any other hooks you create here
+export * from './useDeadlines'; // Aggiungi questa riga
+export * from './useDepartmentAttendees';
