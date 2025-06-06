@@ -27,7 +27,7 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md">
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative"> {/* Aggiunto relative */}
         {/* Banda Tricolore (Verde, Bianca, Rossa) */}
         <div className="flex w-full h-4 mb-2 rounded-sm overflow-hidden">
           <div className="bg-green-600 w-1/3"></div>
@@ -36,7 +36,6 @@ function Login() {
         </div>
 
         <div className="text-center mb-8">
-          {/* L'attributo alt è stato rimosso o lasciato vuoto come richiesto */}
           <img src="/images/login-logo.png" alt="" className="max-w-sm mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-blue-800">Gestione Formazione Sezione Corsi</h1>
         </div>
@@ -83,6 +82,11 @@ function Login() {
             },
           }}
         />
+
+        {/* Aggiunto il testo della versione in basso a destra */}
+        <div className="absolute bottom-2 right-4 text-xs text-gray-500">
+          Ver.6.1.Giu, VAI
+        </div>
       </div>
     </div>
   );
