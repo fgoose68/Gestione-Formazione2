@@ -27,7 +27,7 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative"> {/* Aggiunto relative */}
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative">
         {/* Banda Tricolore (Verde, Bianca, Rossa) */}
         <div className="flex w-full h-4 mb-2 rounded-sm overflow-hidden">
           <div className="bg-green-600 w-1/3"></div>
@@ -83,9 +83,9 @@ function Login() {
           }}
         />
 
-        {/* Aggiunto il testo della versione in basso a destra */}
+        {/* Versione corretta */}
         <div className="absolute bottom-2 right-4 text-xs text-gray-500">
-          Ver.6.1.Giu, VAI
+          Ver.6.1.Giu
         </div>
       </div>
     </div>
