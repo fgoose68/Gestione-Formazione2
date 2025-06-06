@@ -8,6 +8,7 @@ import { useEvents, useDeadlines } from '@/hooks';
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner'; // Importa toast per i messaggi
 
 const IndexPage = () => {
   const navigate = useNavigate();
@@ -46,9 +47,11 @@ const IndexPage = () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error("Errore durante il logout:", error);
-      // Potresti mostrare un toast di errore qui se necessario
+      toast.error("Errore durante il logout"); // Mostra un toast di errore
     } else {
       console.log("Logout effettuato con successo.");
+      // Reindirizza alla pagina di login dopo il logout
+      navigate('/login');
     }
   };
 
