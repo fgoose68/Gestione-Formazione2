@@ -21,7 +21,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
     // Scadenze per corsi E-learning
     eventDeadlines.push({
       type: 'discenti_elearning',
-      date: subDays(startDate, 8),
+      date: subDays(startDate, 8), // Modificato da 5 a 8 giorni prima
       message: `Richiesta discenti (E-learning) per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('richiesta_discenti_elearning_fatta') || false,
@@ -30,16 +30,26 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'comunicazione_scuola',
-      date: subDays(startDate, 7),
+      date: subDays(startDate, 7), // Modificato a 7 giorni prima
       message: `Comunicazione alla Scuola PEF/Altro per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('comunicazione_scuola_fatta') || false,
       eventTitle: event.title,
     });
 
-    // Altre scadenze E-learning...
+    // Altre scadenze E-learning rimangono invariate
+    eventDeadlines.push({
+      type: 'lettera_abilitazione',
+      date: subDays(startDate, 1),
+      message: `Lettera Abilitazione al Corso per "${event.title}"`,
+      eventId: event.id,
+      completed: event.completed_tasks?.includes('lettera_abilitazione_fatta') || false,
+      eventTitle: event.title,
+    });
+
+    // ... (altre scadenze rimangono invariate)
   } else {
-    // Scadenze per corsi standard
+    // Scadenze per corsi standard rimangono invariate
     eventDeadlines.push({
       type: 'docente',
       date: subDays(startDate, 30),
@@ -49,7 +59,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
       eventTitle: event.title,
     });
 
-    // Altre scadenze standard...
+    // ... (altre scadenze standard rimangono invariate)
   }
 
   return eventDeadlines;
