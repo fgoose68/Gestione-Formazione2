@@ -143,9 +143,9 @@ const IndexPage = () => {
                         <TableCell>{event.location || 'N/D'}</TableCell>
                         <TableCell>
                            <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${ 
-                             event.displayStatus === 'concluso' ? 'bg-yellow-200 text-yellow-800' : // Giallo per concluso
-                             event.displayStatus === 'in_programma' ? 'bg-green-200 text-green-800' : // Verde per in programma
-                             event.displayStatus === 'in_corso' ? 'bg-red-200 text-red-800' : // Rosso per in corso
+                             event.displayStatus === 'concluso' ? 'bg-yellow-600 text-white' : // Giallo per concluso
+                             event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' : // Verde per in programma
+                             event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' : // Rosso intenso per in corso
                              'bg-gray-200 text-gray-800' // Fallback
                            }`}>
                              {event.displayStatus?.replace('_', ' ') || 'N/D'}
