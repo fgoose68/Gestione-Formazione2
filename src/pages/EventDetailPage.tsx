@@ -214,7 +214,7 @@ const EventDetailPage = () => {
               <div>
                 <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Info className="mr-2 h-5 w-5 text-orange-500" />Stato</h3>
                 <p className={`font-medium capitalize px-3 py-1 inline-block rounded-full ${ 
-                  event.displayStatus === 'concluso' ? 'bg-yellow-600 text-white' : // Giallo per concluso
+                  event.displayStatus === 'concluso' ? 'bg-yellow-700 text-white' : // Giallo intenso per concluso
                   event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' : // Verde per in programma
                   event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' : // Rosso intenso per in corso
                   'bg-gray-200 text-gray-800' // Fallback
