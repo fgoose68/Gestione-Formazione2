@@ -73,7 +73,7 @@ function Login() {
                 password_label: 'La tua Password',
               },
               sign_up: {
-                email_label: 'Indirizzo Email',
+                email_label: 'Crea Password',
                 password_label: 'Crea Password',
               },
               forgotten_password: {
@@ -83,9 +83,9 @@ function Login() {
           }}
         />
 
-        {/* Versione aggiornata */}
+        {/* Versione aggiornata senza virgola */}
         <div className="absolute bottom-2 right-4 text-xs text-gray-500">
-          Ver.14.1Giu,
+          Ver.14.1Giu
         </div>
       </div>
     </div>
