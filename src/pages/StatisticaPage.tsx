@@ -10,6 +10,7 @@ import { it } from 'date-fns/locale';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
+import { getEventDisplayStatus } from '@/utils/eventStatus'; // Importa la nuova utility
 
 // Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO
 const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'E-learning'];
@@ -46,11 +47,16 @@ const StatisticaPage = () => {
 
       if (eventsError) throw eventsError;
 
-      // Filter events for the current month
-      const monthlyEvents = eventsData.filter(event => {
-        const startDate = parseISO(event.start_date);
-        return isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
-      });
+      // Filter events for the current month and add displayStatus
+      const monthlyEvents = (eventsData || [])
+        .filter(event => {
+          const startDate = parseISO(event.start_date);
+          return isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
+        })
+        .map(event => ({
+          ...event,
+          displayStatus: getEventDisplayStatus(event), // Aggiungi il displayStatus
+        }));
 
       setEvents(monthlyEvents || []);
 

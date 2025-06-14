@@ -12,6 +12,7 @@ import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
 import { useEvents } from '@/hooks/useEvents'; // Mantieni useEvents
 import { useDepartmentAttendees } from '@/hooks/useDepartmentAttendees';
+import { getEventDisplayStatus, isEventEndingSoon } from '@/utils/eventStatus'; // Importa le nuove utility
 import {
   AlertDialog,
   AlertDialogAction,
@@ -145,7 +146,7 @@ const EventDetailPage = () => {
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
-        {event && event.status !== 'archiviato' && ( // Mostra i pulsanti solo se l'evento non è già archiviato
+        {event && event.status !== 'archiviato' && ( // Mostra i pulsanti solo se l'evento non è già archiviato nel DB
           <div className="flex space-x-3">
             <Button onClick={handleNavigateToEdit} variant="default" className="bg-orange-500 hover:bg-orange-600 text-white">
               <Edit className="mr-2 h-5 w-5" />
@@ -177,7 +178,7 @@ const EventDetailPage = () => {
             </AlertDialog>
           </div>
         )}
-         {event && event.status === 'archiviato' && ( // Mostra un messaggio se l'evento è archiviato
+         {event && event.status === 'archiviato' && ( // Mostra un messaggio se l'evento è archiviato nel DB
             <div className="flex items-center text-gray-600 font-medium">
                <Archive className="mr-2 h-5 w-5" /> Evento Archiviato
             </div>
@@ -212,7 +213,15 @@ const EventDetailPage = () => {
               {event.teachers?.length > 0 && <div><h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Users className="mr-2 h-5 w-5 text-orange-500" />Docenti</h3><ul className="list-disc list-inside pl-5 bg-slate-100 p-3 rounded-md">{event.teachers.map((t, i) => <li key={i}>{t}</li>)}</ul></div>}
               <div>
                 <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Info className="mr-2 h-5 w-5 text-orange-500" />Stato</h3>
-                <p className={`font-medium capitalize px-3 py-1 inline-block rounded-full ${ event.status === 'in_preparazione' ? 'bg-yellow-200 text-yellow-800' : event.status === 'completato' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800'}`}>{event.status.replace('_', ' ')}</p>
+                <p className={`font-medium capitalize px-3 py-1 inline-block rounded-full ${ 
+                  event.displayStatus === 'in_programma' ? 'bg-blue-200 text-blue-800' :
+                  event.displayStatus === 'in_corso' ? (isEventEndingSoon(event) ? 'bg-orange-200 text-orange-800' : 'bg-green-200 text-green-800') :
+                  event.displayStatus === 'concluso' ? 'bg-gray-200 text-gray-800' :
+                  'bg-gray-200 text-gray-800' // Fallback
+                }`}>
+                  {event.displayStatus?.replace('_', ' ') || 'N/D'}
+                  {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
+                </p>
               </div>
             </CardContent>
           </Card>

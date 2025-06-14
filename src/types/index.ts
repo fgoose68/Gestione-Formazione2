@@ -6,11 +6,12 @@ export interface Event {
   end_date: string;   // ISO string
   location?: string;
   teachers: string[];
-  // students: string[]; // Questo campo è stato rimosso
-  status: 'in_preparazione' | 'completato' | 'archiviato';
+  status: 'in_preparazione' | 'completato' | 'archiviato'; // Questo è lo stato del database
+  displayStatus?: 'concluso' | 'in_corso' | 'in_programma' | 'archiviato'; // Questo è lo stato calcolato per la visualizzazione
   user_id: string | null; // Reso nullable
   created_at: string; // ISO string
   type?: 'Centralizzato' | 'Periferico' | 'Iniziativa' | 'E-learning' | 'Didattica a distanza (DAD)'; // Nuovo campo per il tipo di corso, aggiornato a 'Didattica a distanza (DAD)'
+  completed_tasks?: string[]; // Aggiunto per le scadenze
 }
 
 export interface Deadline {

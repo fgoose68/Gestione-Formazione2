@@ -2,15 +2,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { showError, showSuccess } from '@/utils/toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Event } from '@/types';
+import { getEventDisplayStatus } from '@/utils/eventStatus'; // Importa la nuova utility
 
 // Definisci il tipo di ritorno dello hook per maggiore chiarezza
 interface UseEventsReturn {
   events: Event[];
   loading: boolean;
-  addEvent: (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status'>) => Promise<Event | null>;
+  addEvent: (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status' | 'displayStatus'>) => Promise<Event | null>;
   fetchEvents: () => Promise<void>;
   updateEventStatus: (eventId: string, status: Event['status']) => Promise<Event | null>;
-  updateEvent: (eventId: string, eventData: Partial<Omit<Event, 'user_id' | 'created_at'>>) => Promise<Event | null>;
+  updateEvent: (eventId: string, eventData: Partial<Omit<Event, 'user_id' | 'created_at' | 'displayStatus'>>) => Promise<Event | null>;
   deleteEvent: (eventId: string) => Promise<boolean>;
 }
 
@@ -40,8 +41,15 @@ export const useEvents = (): UseEventsReturn => {
         console.error('useEvents: Error fetching events:', error);
         throw error;
       }
-      console.log('useEvents: Events fetched successfully:', data);
-      setEvents(data || []);
+      
+      // Mappa gli eventi per aggiungere il displayStatus
+      const eventsWithDisplayStatus: Event[] = (data || []).map(event => ({
+        ...event,
+        displayStatus: getEventDisplayStatus(event),
+      }));
+
+      console.log('useEvents: Events fetched successfully with displayStatus:', eventsWithDisplayStatus);
+      setEvents(eventsWithDisplayStatus);
     } catch (error: any) {
       showError(`Errore nel caricamento eventi: ${error.message}`);
       console.error("useEvents: Errore fetchEvents:", error);
@@ -52,7 +60,7 @@ export const useEvents = (): UseEventsReturn => {
     }
   }, []);
 
-  const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status'>) => {
+  const addEvent = async (eventData: Omit<Event, 'id' | 'user_id' | 'created_at' | 'status' | 'displayStatus'>) => {
     setLoading(true);
     try {
       const { data: { user } = {} } = await supabase.auth.getUser();
@@ -66,14 +74,14 @@ export const useEvents = (): UseEventsReturn => {
         .insert({
           ...eventData,
           user_id: user.id,
-          status: 'in_preparazione',
+          status: 'in_preparazione', // Nuovo evento inizia sempre 'in_preparazione'
         })
         .select()
         .single();
 
       if (error) throw error;
       showSuccess('Evento creato con successo!');
-      await fetchEvents();
+      await fetchEvents(); // Ricarica gli eventi per aggiornare la UI con il nuovo displayStatus
       return data as Event;
     } catch (error: any) {
       showError(`Errore nel salvataggio evento: ${error.message}`);
@@ -84,7 +92,7 @@ export const useEvents = (): UseEventsReturn => {
     }
   };
   
-  const updateEvent = async (eventId: string, eventData: Partial<Omit<Event, 'user_id' | 'created_at'>>) => {
+  const updateEvent = async (eventId: string, eventData: Partial<Omit<Event, 'user_id' | 'created_at' | 'displayStatus'>>) => {
      setLoading(true);
      try {
        const { data: { user } = {} } = await supabase.auth.getUser();
@@ -93,8 +101,8 @@ export const useEvents = (): UseEventsReturn => {
          return null;
        }
 
-       // Assicurati di non sovrascrivere user_id o created_at
-       const { user_id, created_at, ...dataToUpdate } = eventData;
+       // Assicurati di non sovrascrivere user_id, created_at o displayStatus
+       const { user_id, created_at, displayStatus, ...dataToUpdate } = eventData;
 
        const { data, error } = await supabase
          .from('events')
@@ -106,7 +114,7 @@ export const useEvents = (): UseEventsReturn => {
 
        if (error) throw error;
        showSuccess('Evento aggiornato con successo!');
-       await fetchEvents(); // Ricarica gli eventi dopo l'aggiornamento
+       await fetchEvents(); // Ricarica gli eventi dopo l'aggiornamento per ricalcolare displayStatus
        return data as Event;
      } catch (error: any) {
        showError(`Errore nell'aggiornamento evento: ${error.message}`);
@@ -128,7 +136,7 @@ export const useEvents = (): UseEventsReturn => {
        }
       const { data, error } = await supabase
         .from('events')
-        .update({ status })
+        .update({ status }) // Aggiorna lo stato nel DB
         .eq('id', eventId)
         .eq('user_id', user.id) // Assicura che l'utente possa modificare solo i propri eventi
         .select()
@@ -136,7 +144,7 @@ export const useEvents = (): UseEventsReturn => {
 
       if (error) throw error;
       showSuccess('Stato evento aggiornato!');
-      await fetchEvents();
+      await fetchEvents(); // Ricarica per aggiornare il displayStatus
       return data as Event;
     } catch (error: any) {
       showError(`Errore aggiornamento stato: ${error.message}`);

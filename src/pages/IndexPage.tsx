@@ -8,6 +8,7 @@ import { useEvents, useDeadlines } from '@/hooks';
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
+import { isEventEndingSoon } from '@/utils/eventStatus'; // Importa la nuova utility
 
 const IndexPage = () => {
   const navigate = useNavigate();
@@ -16,7 +17,10 @@ const IndexPage = () => {
 
   // Filtra gli eventi non archiviati per la dashboard e per le scadenze
   const activeEvents = useMemo(() => {
-    return events.filter(event => event.status !== 'archiviato');
+    // Gli eventi con displayStatus 'archiviato' sono già filtrati via dalla logica di useEvents
+    // se il filtro iniziale è `event.status !== 'archiviato'`.
+    // Qui usiamo direttamente gli eventi con il displayStatus già calcolato.
+    return events.filter(event => event.displayStatus !== 'archiviato');
   }, [events]);
 
   // Usa l'hook useDeadlines passando SOLO gli eventi attivi
@@ -138,8 +142,14 @@ const IndexPage = () => {
                         <TableCell>{format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}</TableCell>
                         <TableCell>{event.location || 'N/D'}</TableCell>
                         <TableCell>
-                           <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${ event.status === 'in_preparazione' ? 'bg-yellow-200 text-yellow-800' : event.status === 'completato' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800'}`}>
-                             {event.status.replace('_', ' ')}
+                           <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${ 
+                             event.displayStatus === 'in_programma' ? 'bg-blue-200 text-blue-800' :
+                             event.displayStatus === 'in_corso' ? (isEventEndingSoon(event) ? 'bg-orange-200 text-orange-800' : 'bg-green-200 text-green-800') :
+                             event.displayStatus === 'concluso' ? 'bg-gray-200 text-gray-800' :
+                             'bg-gray-200 text-gray-800' // Fallback
+                           }`}>
+                             {event.displayStatus?.replace('_', ' ') || 'N/D'}
+                             {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
                            </span>
                         </TableCell>
                         <TableCell className="text-right">
