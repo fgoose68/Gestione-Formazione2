@@ -16,7 +16,7 @@ function Login() {
       } else if (event === 'SIGNED_OUT') {
         setAuthError(null);
       } else if (event === 'TOKEN_REFRESH_FAILED') {
-        setAuthError('Errore di autenticazione. Per favore, effettua il login nuovamente.');
+        setAuthError('Errore di autenticazione. Per favor, effettua il login nuovamente.');
       }
     });
 
@@ -83,9 +83,9 @@ function Login() {
           }}
         />
 
-        {/* Versione corretta */}
+        {/* Versione aggiornata */}
         <div className="absolute bottom-2 right-4 text-xs text-gray-500">
-          Ver.6.1.Giu
+          Ver.14.1Giu,
         </div>
       </div>
     </div>
