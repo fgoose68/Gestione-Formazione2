@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag, Archive } from 'lucide-react'; // Importa Archive
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importa i componenti Select
+import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag, Archive, CheckCircle, XCircle } from 'lucide-react'; // Importa Archive, CheckCircle, XCircle
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
@@ -25,12 +26,21 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"; // Importa AlertDialog
 
+// Definisci le scadenze standard e le loro chiavi per il campo completed_tasks
+const STANDARD_DEADLINE_TASKS = [
+  { label: 'Richiesta Docenti', key: 'richiesta_docente_fatta' },
+  { label: 'Richiesta Discenti', key: 'richiesta_discenti_fatta' },
+  { label: 'Avvio Corso', key: 'avvio_corso_fatto' },
+  { label: 'Gestione Registri', key: 'gestione_registri_fatta' },
+  { label: 'Raccolta Feedback', key: 'raccolta_feedback_fatta' },
+  { label: 'Generazione Modello L', key: 'generazione_modello_l_fatta' },
+];
+
 const EventDetailPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  // Non destrutturare deleteEvent qui, useremo updateEventStatus
-  const { events, loading: eventLoading, updateEventStatus } = useEvents(); 
+  const { events, loading: eventLoading, updateEventStatus, updateEvent } = useEvents(); 
   const [event, setEvent] = useState<Event | null>(null);
 
   const { 
@@ -61,8 +71,6 @@ const EventDetailPage = () => {
     }
   };
 
-  // 'expected' è ora calcolato e gestito dall'hook useDepartmentAttendees
-  // 'absent' è calcolato qui per la visualizzazione
   const attendeesWithCalculatedAbsent = useMemo(() => {
     return departmentAttendees.map(att => ({
       ...att,
@@ -90,17 +98,38 @@ const EventDetailPage = () => {
     if(eventId) navigate(`/evento/${eventId}/modifica`);
   };
 
-  // Funzione per archiviare l'evento
   const handleArchiveEvent = async () => {
     if (eventId) {
-      // Chiama updateEventStatus per cambiare lo stato in 'archiviato'
       const result = await updateEventStatus(eventId, 'archiviato');
       if (result) {
         showSuccess("Evento archiviato con successo!");
-        navigate('/'); // Torna alla dashboard dopo l'archiviazione
+        navigate('/');
       } else {
         showError("Errore durante l'archiviazione dell'evento.");
       }
+    }
+  };
+
+  // Funzione per gestire il cambio di stato di una scadenza
+  const handleDeadlineStatusChange = async (deadlineKey: string, value: 'SI' | 'NO') => {
+    if (!event || !eventId) return;
+
+    const currentCompletedTasks = new Set(event.completed_tasks || []);
+    let updatedCompletedTasks: string[];
+
+    if (value === 'SI') {
+      currentCompletedTasks.add(deadlineKey);
+    } else {
+      currentCompletedTasks.delete(deadlineKey);
+    }
+    updatedCompletedTasks = Array.from(currentCompletedTasks);
+
+    const result = await updateEvent(eventId, { completed_tasks: updatedCompletedTasks });
+    if (result) {
+      showSuccess(`Stato scadenza "${STANDARD_DEADLINE_TASKS.find(d => d.key === deadlineKey)?.label}" aggiornato!`);
+      // L'hook useEvents dovrebbe già aggiornare lo stato locale dopo il fetch
+    } else {
+      showError(`Errore nell'aggiornamento dello stato della scadenza "${STANDARD_DEADLINE_TASKS.find(d => d.key === deadlineKey)?.label}".`);
     }
   };
 
@@ -113,11 +142,11 @@ const EventDetailPage = () => {
     );
   }
 
-  if (!event && !eventLoading && eventId) { // Controlla anche eventLoading per evitare flash di "non trovato"
+  if (!event && !eventLoading && eventId) {
     return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">Evento non trovato.</p>
-        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black"> {/* Modificato qui */}
+        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black">
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
@@ -125,11 +154,11 @@ const EventDetailPage = () => {
     );
   }
   
-  if (!event && !eventId) { // Caso in cui non c'è eventId (es. navigazione diretta errata)
+  if (!event && !eventId) {
      return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">ID Evento non specificato.</p>
-        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black"> {/* Modificato qui */}
+        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black">
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
@@ -141,12 +170,11 @@ const EventDetailPage = () => {
   return (
     <div className="container mx-auto p-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        {/* Modificato qui */}
         <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
-        {event && event.status !== 'archiviato' && ( // Mostra i pulsanti solo se l'evento non è già archiviato nel DB
+        {event && event.status !== 'archiviato' && (
           <div className="flex space-x-3">
             <Button onClick={handleNavigateToEdit} variant="default" className="bg-orange-500 hover:bg-orange-600 text-white">
               <Edit className="mr-2 h-5 w-5" />
@@ -155,7 +183,6 @@ const EventDetailPage = () => {
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                {/* Cambiato il testo del pulsante */}
                 <Button variant="secondary" className="bg-gray-300 hover:bg-gray-400 text-gray-800">
                   <Archive className="mr-2 h-5 w-5" />
                   Archivia Evento
@@ -163,7 +190,6 @@ const EventDetailPage = () => {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  {/* Cambiato il testo del titolo e della descrizione */}
                   <AlertDialogTitle>Sei sicuro di voler archiviare questo evento?</AlertDialogTitle>
                   <AlertDialogDescription>
                     L'evento verrà spostato nella sezione Archivio e non sarà più visibile nella Dashboard principale. Potrai gestirlo dall'archivio.
@@ -171,14 +197,13 @@ const EventDetailPage = () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  {/* Cambiato il testo dell'azione e la funzione chiamata */}
                   <AlertDialogAction onClick={handleArchiveEvent} className="bg-gray-600 hover:bg-gray-700">Archivia</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
         )}
-         {event && event.status === 'archiviato' && ( // Mostra un messaggio se l'evento è archiviato nel DB
+         {event && event.status === 'archiviato' && (
             <div className="flex items-center text-gray-600 font-medium">
                <Archive className="mr-2 h-5 w-5" /> Evento Archiviato
             </div>
@@ -196,9 +221,7 @@ const EventDetailPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-orange-500" />Periodo</h3>
-                  {/* Modificato il formato data qui */}
                   <p><span className="font-medium">Inizio:</span> {format(parseISO(event.start_date), "PPP", { locale: it })}</p>
-                  {/* Modificato il formato data qui */}
                   <p><span className="font-medium">Fine:</span> {format(parseISO(event.end_date), "PPP", { locale: it })}</p>
                 </div>
                 {event.location && <div><h3 className="text-lg font-semibold text-blue-700 flex items-center"><MapPin className="mr-2 h-5 w-5 text-orange-500" />Luogo</h3><p>{event.location}</p></div>}
@@ -214,10 +237,10 @@ const EventDetailPage = () => {
               <div>
                 <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Info className="mr-2 h-5 w-5 text-orange-500" />Stato</h3>
                 <p className={`font-medium capitalize px-3 py-1 inline-block rounded-full ${ 
-                  event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' : // Blu per concluso
-                  event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' : // Verde per in programma
-                  event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' : // Rosso intenso per in corso
-                  'bg-gray-200 text-gray-800' // Fallback
+                  event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' : 
+                  event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' : 
+                  event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' : 
+                  'bg-gray-200 text-gray-800' 
                 }`}>
                   {event.displayStatus?.replace('_', ' ') || 'N/D'}
                   {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
@@ -225,6 +248,45 @@ const EventDetailPage = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* NUOVA SEZIONE: Scadenze Previste (solo per corsi Standard) */}
+          {event.type !== 'E-learning' && event.type !== 'Didattica a distanza (DAD)' && (
+            <Card className="shadow-xl mb-8">
+              <CardHeader>
+                <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
+                  <Clock className="mr-3 h-7 w-7" /> Scadenze Previste
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {STANDARD_DEADLINE_TASKS.map((deadline) => (
+                  <div key={deadline.key} className="flex items-center justify-between p-3 border rounded-md bg-slate-50">
+                    <span className="font-medium text-gray-800">{deadline.label}</span>
+                    <Select
+                      value={event.completed_tasks?.includes(deadline.key) ? 'SI' : 'NO'}
+                      onValueChange={(value: 'SI' | 'NO') => handleDeadlineStatusChange(deadline.key, value)}
+                      disabled={event.status === 'archiviato'} // Disabilita se l'evento è archiviato
+                    >
+                      <SelectTrigger className="w-[100px]">
+                        <SelectValue placeholder="Seleziona" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="SI">
+                          <div className="flex items-center">
+                            <CheckCircle className="h-4 w-4 mr-2 text-green-600" /> SI
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="NO">
+                          <div className="flex items-center">
+                            <XCircle className="h-4 w-4 mr-2 text-red-600" /> NO
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          )}
 
           <Card className="shadow-xl">
             <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Users className="mr-3 h-7 w-7" />Gestione Discenti per Reparto</CardTitle></CardHeader>
@@ -242,7 +304,7 @@ const EventDetailPage = () => {
                         <TableHead className="text-center font-semibold">Mil./App.</TableHead>
                         <TableHead className="text-center font-semibold bg-blue-50">Previsti</TableHead>
                         <TableHead className="text-center font-semibold">Effettivi</TableHead>
-                        <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead> {/* Aggiunta colonna Assenti */}
+                        <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -251,14 +313,14 @@ const EventDetailPage = () => {
                           <TableCell className="font-medium">{att.department_name}</TableCell>
                           {(['officers', 'inspectors', 'superintendents', 'militari'] as const).map(field => (
                             <TableCell key={field} className="text-center">
-                              <Input type="number" min="0" value={att[field] || 0} onChange={(e) => handleAttendeeChange(att.department_name, field, e.target.value)} className="w-20 text-center mx-auto" disabled={attendeesLoading}/>
+                              <Input type="number" min="0" value={att[field] || 0} onChange={(e) => handleAttendeeChange(att.department_name, field, e.target.value)} className="w-20 text-center mx-auto" disabled={attendeesLoading || event.status === 'archiviato'}/>
                             </TableCell>
                           ))}
                           <TableCell className="text-center font-medium bg-blue-50">{att.expected || 0}</TableCell>
                           <TableCell className="text-center">
-                             <Input type="number" min="0" value={att.actual || 0} onChange={(e) => handleAttendeeChange(att.department_name, 'actual', e.target.value)} className="w-20 text-center mx-auto" disabled={attendeesLoading}/>
+                             <Input type="number" min="0" value={att.actual || 0} onChange={(e) => handleAttendeeChange(att.department_name, 'actual', e.target.value)} className="w-20 text-center mx-auto" disabled={attendeesLoading || event.status === 'archiviato'}/>
                           </TableCell>
-                          <TableCell className="text-center font-medium bg-red-50">{att.absent}</TableCell> {/* Cella per Assenti */}
+                          <TableCell className="text-center font-medium bg-red-50">{att.absent}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -271,7 +333,7 @@ const EventDetailPage = () => {
                         <TableCell className="text-center font-bold text-slate-800">{totals.militari}</TableCell>
                         <TableCell className="text-center font-bold text-slate-800 bg-blue-100">{totals.expected}</TableCell>
                         <TableCell className="text-center font-bold text-slate-800">{totals.actual}</TableCell>
-                        <TableCell className="text-center font-bold text-slate-800 bg-red-100">{totals.absent}</TableCell> {/* Cella per Totale Assenti */}
+                        <TableCell className="text-center font-bold text-slate-800 bg-red-100">{totals.absent}</TableCell>
                       </TableRow>
                     </TableFooter>
                   </Table>
@@ -279,7 +341,7 @@ const EventDetailPage = () => {
               )}
             </CardContent>
             <CardFooter className="flex justify-end">
-              <Button onClick={saveAttendees} disabled={attendeesLoading || !initialDataLoaded} className="bg-green-600 hover:bg-green-700 text-white">
+              <Button onClick={saveAttendees} disabled={attendeesLoading || !initialDataLoaded || event.status === 'archiviato'} className="bg-green-600 hover:bg-green-700 text-white">
                 <Save className="mr-2 h-5 w-5" />Salva Modifiche Discenti
               </Button>
             </CardFooter>
