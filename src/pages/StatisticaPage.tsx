@@ -11,7 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
 import { getEventDisplayStatus } from '@/utils/eventStatus'; // Importa la nuova utility
-import { exportDepartmentAttendeesToExcel } from '@/utils/excelExport'; // Importa la funzione di esportazione
+import { exportDepartmentAttendeesToExcel, exportCourseTypeStatsToExcel } from '@/utils/excelExport'; // Importa la funzione di esportazione
 
 // Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO
 const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'E-learning'];
@@ -213,10 +213,17 @@ const StatisticaPage = () => {
       );
   }, [monthlyDepartmentRankTotals]);
 
-  // Funzione per gestire il download dell'Excel
-  const handleDownloadExcel = () => {
+  // Funzione per gestire il download dell'Excel del Riepilogo Discenti
+  const handleDownloadDepartmentAttendeesExcel = () => {
     const monthYearString = format(currentMonth, "MMMM yyyy", { locale: it });
     exportDepartmentAttendeesToExcel(monthlyDepartmentRankTotals, monthlyDepartmentRankGrandTotals, monthYearString);
+  };
+
+  // Funzione per gestire il download dell'Excel delle Statistiche per Tipo di Corso
+  const handleDownloadCourseTypeStatsExcel = () => {
+    const monthYearString = format(currentMonth, "MMMM yyyy", { locale: it });
+    // Passa l'ordine dei tipi di corso per garantire la coerenza con la tabella
+    exportCourseTypeStatsToExcel(statsByType, [...COURSE_TYPES, 'Non Specificato'], monthYearString);
   };
 
 
@@ -245,14 +252,18 @@ const StatisticaPage = () => {
           <BarChart2 className="mr-3 h-8 w-8" />
           Statistiche Eventi
         </h1>
-        <div className="flex space-x-3"> {/* Contenitore per i pulsanti */}
+        <div className="flex flex-col space-y-3"> {/* Contenitore per i pulsanti */}
           <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
             <Home className="mr-2 h-4 w-4" />
             Torna alla Dashboard
           </Button>
-          <Button onClick={handleDownloadExcel} className="bg-green-600 hover:bg-green-700 text-white">
+          <Button onClick={handleDownloadDepartmentAttendeesExcel} className="bg-green-600 hover:bg-green-700 text-white">
             <Download className="mr-2 h-4 w-4" />
-            Scarica Excel
+            Scarica Riepilogo Discenti
+          </Button>
+          <Button onClick={handleDownloadCourseTypeStatsExcel} className="bg-red-600 hover:bg-red-700 text-white">
+            <Download className="mr-2 h-4 w-4" />
+            Scarica Statistiche per Tipo
           </Button>
         </div>
       </div>
