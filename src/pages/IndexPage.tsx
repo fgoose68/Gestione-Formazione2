@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Clock, PlusCircle, CalendarDays, Archive, BarChart2, Info, LogOut } from 'lucide-react';
-import { useEvents, useDeadlines } from '@/hooks';
+import { useEvents, useDeadlines } => '@/hooks';
 import { format, parseISO, isPast, isToday } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,7 +116,7 @@ const IndexPage = () => {
         <Card className="shadow-lg mb-8"> {/* Aggiunto mb-8 per spaziatura */}
           <CardHeader>
             <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
-               <CalendarDays className="mr-3 h-7 w-7" /> Eventi Attivi
+               <CalendarDays className="mr-3 h-7 w-7" /> Eventi didattici
             </CardTitle>
           </CardHeader>
           <CardContent>
