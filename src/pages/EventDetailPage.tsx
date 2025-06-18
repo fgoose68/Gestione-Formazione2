@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importa i componenti Select
-import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag, Archive, CheckCircle, XCircle } from 'lucide-react'; // Importa Archive, CheckCircle, XCircle
+import { CalendarDays, MapPin, Users, Info, ArrowLeftCircle, Edit, Save, Tag, Archive, CheckCircle, XCircle, Clock } from 'lucide-react'; // Importa Archive, CheckCircle, XCircle, e Clock
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
