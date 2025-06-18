@@ -15,7 +15,7 @@ export interface Event {
 }
 
 export interface Deadline {
-  type: 'docente' | 'discenti' | 'avvio' | 'giorno_evento_registri' | 'post_evento_feedback' | 'post_evento_modello_l';
+  type: 'docente' | 'discenti_standard' | 'avvio_standard' | 'giorno_evento_registri' | 'post_evento_feedback' | 'post_evento_modello_l' | 'discenti_elearning' | 'comunicazione_scuola' | 'lettera_abilitazione' | 'mail_sollecito_1' | 'mail_sollecito_2' | 'avviso_proroga' | 'relazione_finale'; // Tipi di scadenza più specifici
   date: Date;
   message: string;
   eventId: string;

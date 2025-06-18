@@ -41,14 +41,22 @@ const DeadlinesPage = () => {
     upcomingDeadlines.sort((a, b) => a.date.getTime() - b.date.getTime()), 
     [upcomingDeadlines]
   );
-  const sortedPastDeadlines = useMemo(() => 
-    pastDeadlines.sort((a, b) => b.date.getTime() - a.date.getTime()), // Ordine decrescente per le scadenze passate
-    [pastDeadlines]
-  );
   const sortedTodayDeadlines = useMemo(() => 
     todayDeadlines.sort((a, b) => a.date.getTime() - b.date.getTime()), 
     [todayDeadlines]
   );
+
+  // Filtra le scadenze imminenti per tipo di corso
+  const standardUpcomingDeadlines = useMemo(() => {
+    const standardTypes: Deadline['type'][] = ['docente', 'discenti_standard', 'avvio_standard', 'giorno_evento_registri', 'post_evento_feedback', 'post_evento_modello_l'];
+    return sortedUpcomingDeadlines.filter(d => standardTypes.includes(d.type));
+  }, [sortedUpcomingDeadlines]);
+
+  const elearningUpcomingDeadlines = useMemo(() => {
+    const elearningTypes: Deadline['type'][] = ['discenti_elearning', 'comunicazione_scuola', 'lettera_abilitazione', 'mail_sollecito_1', 'mail_sollecito_2', 'avviso_proroga', 'relazione_finale'];
+    return sortedUpcomingDeadlines.filter(d => elearningTypes.includes(d.type));
+  }, [sortedUpcomingDeadlines]);
+
 
   if (eventsLoading) {
     return (
@@ -161,13 +169,13 @@ const DeadlinesPage = () => {
           </CardContent>
         </Card>
 
-        {/* Scadenze Imminenti */}
+        {/* Scadenze Imminenti Corsi Standard */}
         <Card className="shadow-lg">
-          <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze Imminenti</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze Imminenti Corsi Standard</CardTitle></CardHeader>
           <CardContent>
-            {sortedUpcomingDeadlines.length > 0 ? (
+            {standardUpcomingDeadlines.length > 0 ? (
               <div className="space-y-4">
-                {sortedUpcomingDeadlines.map((deadline, index) => (
+                {standardUpcomingDeadlines.map((deadline, index) => (
                   <div key={index} className="border rounded-lg p-4 bg-slate-50 border-gray-200 hover:bg-slate-100 transition-colors cursor-pointer"
                        onClick={() => navigate(`/evento/${deadline.eventId}`)}>
                     <p className="font-medium text-gray-800">{deadline.message}</p>
@@ -179,30 +187,30 @@ const DeadlinesPage = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-center text-gray-600">Nessuna scadenza imminente.</p>
+              <p className="text-center text-gray-600">Nessuna scadenza imminente per corsi standard.</p>
             )}
           </CardContent>
         </Card>
 
-        {/* Scadenze Passate */}
+        {/* Scadenze Imminenti Corsi E-learning */}
         <Card className="shadow-lg">
-          <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze Passate</CardTitle></CardHeader>
+          <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze Imminenti Corsi E-learning</CardTitle></CardHeader>
           <CardContent>
-            {sortedPastDeadlines.length > 0 ? (
+            {elearningUpcomingDeadlines.length > 0 ? (
               <div className="space-y-4">
-                {sortedPastDeadlines.map((deadline, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-gray-100 border-gray-300 hover:bg-gray-200 transition-colors cursor-pointer"
+                {elearningUpcomingDeadlines.map((deadline, index) => (
+                  <div key={index} className="border rounded-lg p-4 bg-slate-50 border-gray-200 hover:bg-slate-100 transition-colors cursor-pointer"
                        onClick={() => navigate(`/evento/${deadline.eventId}`)}>
-                    <p className="font-medium text-gray-700">{deadline.message}</p>
+                    <p className="font-medium text-gray-800">{deadline.message}</p>
                     <p className="text-sm text-gray-500">
-                      Scaduta il: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
+                      Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
                     </p>
                     <p className="text-xs text-gray-600">Evento: {deadline.eventTitle}</p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-center text-gray-600">Nessuna scadenza passata.</p>
+              <p className="text-center text-gray-600">Nessuna scadenza imminente per corsi E-learning.</p>
             )}
           </CardContent>
         </Card>
