@@ -259,11 +259,11 @@ const StatisticaPage = () => {
           </Button>
           <Button onClick={handleDownloadDepartmentAttendeesExcel} className="bg-green-600 hover:bg-green-700 text-white">
             <Download className="mr-2 h-4 w-4" />
-            Scarica Riepilogo Discenti
+            Riepilogo Discenti
           </Button>
           <Button onClick={handleDownloadCourseTypeStatsExcel} className="bg-red-600 hover:bg-red-700 text-white">
             <Download className="mr-2 h-4 w-4" />
-            Scarica Statistiche per Tipo
+            Riepilogo Corsi
           </Button>
         </div>
       </div>
