@@ -12,6 +12,7 @@ import EventDetailPage from "@/pages/EventDetailPage";
 import EditEventPage from "@/pages/EditEventPage";
 import StatisticaPage from "@/pages/StatisticaPage";
 import Login from "@/pages/Login"; // Importa la pagina di Login
+import DeadlinesPage from "@/pages/DeadlinesPage"; // Importa la nuova pagina delle scadenze
 import { SessionContextProvider, useSession } from '@supabase/auth-helpers-react'; // Importa il provider e l'hook
 import { supabase } from '@/integrations/supabase/client'; // Importa il client Supabase
 
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/evento/:id" element={<ProtectedRoute><EventDetailPage /></ProtectedRoute>} />
             <Route path="/evento/:id/modifica" element={<ProtectedRoute><EditEventPage /></ProtectedRoute>} />
             <Route path="/statistica" element={<ProtectedRoute><StatisticaPage /></ProtectedRoute>} />
+            <Route path="/scadenze" element={<ProtectedRoute><DeadlinesPage /></ProtectedRoute>} /> {/* Nuova rotta */}
             
             {/* Rotta 404 */}
             <Route path="*" element={<NotFound />} />
