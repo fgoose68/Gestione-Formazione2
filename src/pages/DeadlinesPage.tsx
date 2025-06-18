@@ -41,6 +41,10 @@ const DeadlinesPage = () => {
     upcomingDeadlines.sort((a, b) => a.date.getTime() - b.date.getTime()), 
     [upcomingDeadlines]
   );
+  const sortedPastDeadlines = useMemo(() => 
+    pastDeadlines.sort((a, b) => b.date.getTime() - a.date.getTime()), // Ordine decrescente per le scadenze passate
+    [pastDeadlines]
+  );
   const sortedTodayDeadlines = useMemo(() => 
     todayDeadlines.sort((a, b) => a.date.getTime() - b.date.getTime()), 
     [todayDeadlines]
@@ -169,51 +173,54 @@ const DeadlinesPage = () => {
           </CardContent>
         </Card>
 
-        {/* Scadenze Imminenti Corsi Standard */}
-        <Card className="shadow-lg">
-          <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze Imminenti Corsi Standard</CardTitle></CardHeader>
-          <CardContent>
-            {standardUpcomingDeadlines.length > 0 ? (
-              <div className="space-y-4">
-                {standardUpcomingDeadlines.map((deadline, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-slate-50 border-gray-200 hover:bg-slate-100 transition-colors cursor-pointer"
-                       onClick={() => navigate(`/evento/${deadline.eventId}`)}>
-                    <p className="font-medium text-gray-800">{deadline.message}</p>
-                    <p className="text-sm text-gray-500">
-                      Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
-                    </p>
-                    <p className="text-xs text-gray-600">Evento: {deadline.eventTitle}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-600">Nessuna scadenza imminente per corsi standard.</p>
-            )}
-          </CardContent>
-        </Card>
+        {/* Scadenze Imminenti: Affiancate */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"> {/* Nuovo div per affiancare */}
+          {/* Scadenze Imminenti Corsi Standard */}
+          <Card className="shadow-lg">
+            <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze Imminenti Corsi Standard</CardTitle></CardHeader>
+            <CardContent>
+              {standardUpcomingDeadlines.length > 0 ? (
+                <div className="space-y-4">
+                  {standardUpcomingDeadlines.map((deadline, index) => (
+                    <div key={index} className="border rounded-lg p-4 bg-slate-50 border-gray-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                         onClick={() => navigate(`/evento/${deadline.eventId}`)}>
+                      <p className="font-medium text-gray-800">{deadline.message}</p>
+                      <p className="text-sm text-gray-500">
+                        Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
+                      </p>
+                      <p className="text-xs text-gray-600">Evento: {deadline.eventTitle}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-600">Nessuna scadenza imminente per corsi standard.</p>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Scadenze Imminenti Corsi E-learning */}
-        <Card className="shadow-lg">
-          <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze Imminenti Corsi E-learning</CardTitle></CardHeader>
-          <CardContent>
-            {elearningUpcomingDeadlines.length > 0 ? (
-              <div className="space-y-4">
-                {elearningUpcomingDeadlines.map((deadline, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-slate-50 border-gray-200 hover:bg-slate-100 transition-colors cursor-pointer"
-                       onClick={() => navigate(`/evento/${deadline.eventId}`)}>
-                    <p className="font-medium text-gray-800">{deadline.message}</p>
-                    <p className="text-sm text-gray-500">
-                      Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
-                    </p>
-                    <p className="text-xs text-gray-600">Evento: {deadline.eventTitle}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-center text-gray-600">Nessuna scadenza imminente per corsi E-learning.</p>
-            )}
-          </CardContent>
-        </Card>
+          {/* Scadenze Imminenti Corsi E-learning */}
+          <Card className="shadow-lg">
+            <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze Imminenti Corsi E-learning</CardTitle></CardHeader>
+            <CardContent>
+              {elearningUpcomingDeadlines.length > 0 ? (
+                <div className="space-y-4">
+                  {elearningUpcomingDeadlines.map((deadline, index) => (
+                    <div key={index} className="border rounded-lg p-4 bg-slate-50 border-gray-200 hover:bg-slate-100 transition-colors cursor-pointer"
+                         onClick={() => navigate(`/evento/${deadline.eventId}`)}>
+                      <p className="font-medium text-gray-800">{deadline.message}</p>
+                      <p className="text-sm text-gray-500">
+                        Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
+                      </p>
+                      <p className="text-xs text-gray-600">Evento: {deadline.eventTitle}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-gray-600">Nessuna scadenza imminente per corsi E-learning.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
