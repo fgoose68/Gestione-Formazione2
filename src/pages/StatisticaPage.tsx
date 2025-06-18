@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Home, BarChart2, CalendarDays, Users, Info, Tag } from "lucide-react";
+import { Home, BarChart2, CalendarDays, Users, Info, Tag, Download } from "lucide-react"; // Aggiunto Download
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from '@/integrations/supabase/client';
 import { Event, DepartmentAttendee } from '@/types';
@@ -11,6 +11,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
 import { getEventDisplayStatus } from '@/utils/eventStatus'; // Importa la nuova utility
+import { exportDepartmentAttendeesToExcel } from '@/utils/excelExport'; // Importa la funzione di esportazione
 
 // Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO
 const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'E-learning'];
@@ -212,6 +213,12 @@ const StatisticaPage = () => {
       );
   }, [monthlyDepartmentRankTotals]);
 
+  // Funzione per gestire il download dell'Excel
+  const handleDownloadExcel = () => {
+    const monthYearString = format(currentMonth, "MMMM yyyy", { locale: it });
+    exportDepartmentAttendeesToExcel(monthlyDepartmentRankTotals, monthlyDepartmentRankGrandTotals, monthYearString);
+  };
+
 
   // Funzioni per cambiare mese
   const goToPreviousMonth = () => {
@@ -238,10 +245,16 @@ const StatisticaPage = () => {
           <BarChart2 className="mr-3 h-8 w-8" />
           Statistiche Eventi
         </h1>
-        <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
-          <Home className="mr-2 h-4 w-4" />
-          Torna alla Dashboard
-        </Button>
+        <div className="flex space-x-3"> {/* Contenitore per i pulsanti */}
+          <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
+            <Home className="mr-2 h-4 w-4" />
+            Torna alla Dashboard
+          </Button>
+          <Button onClick={handleDownloadExcel} className="bg-green-600 hover:bg-green-700 text-white">
+            <Download className="mr-2 h-4 w-4" />
+            Scarica Excel
+          </Button>
+        </div>
       </div>
 
       {/* Navigazione Mese */}
