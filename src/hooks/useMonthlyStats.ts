@@ -4,7 +4,8 @@ import { Event, DepartmentAttendee } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments';
-import { getEventDisplayStatus } from '@/utils/eventStatus';
+import { getEventDisplayStatus }
+ from '@/utils/eventStatus';
 import { COURSE_TYPES } from '@/constants/courseTypes';
 
 interface MonthlyStats {
@@ -70,6 +71,9 @@ export const useMonthlyStats = (currentMonth: Date): MonthlyStats => {
           ...event,
           displayStatus: getEventDisplayStatus(event),
         }));
+
+      // Aggiunto console.log per debug
+      console.log(`[useMonthlyStats] Eventi filtrati per ${format(currentMonth, 'MMMM yyyy')}:`, monthlyEvents.map(e => ({ title: e.title, type: e.type, startDate: e.start_date, status: e.status })));
 
       setEvents(monthlyEvents || []);
 
