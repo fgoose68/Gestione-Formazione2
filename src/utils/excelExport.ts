@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { DepartmentAttendee } from '@/types';
+import { COURSE_TYPES_MAP } from '@/constants/courseTypes'; // Importa la mappa
 
 interface MonthlyDepartmentRankTotal {
   department_name: string;
@@ -136,7 +137,7 @@ export const exportCourseTypeStatsToExcel = (
   courseTypesOrder.forEach(type => {
     const data = stats[type] || { count: 0, totalActual: 0 };
     worksheetData.push([
-      type,
+      COURSE_TYPES_MAP[type] || type, // Usa la mappa qui, con fallback al tipo originale
       data.count,
       data.totalActual,
     ]);

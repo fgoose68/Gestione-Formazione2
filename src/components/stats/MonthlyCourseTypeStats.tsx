@@ -1,7 +1,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tag } from 'lucide-react';
-import { COURSE_TYPES } from '@/constants/courseTypes';
+import { COURSE_TYPES, COURSE_TYPES_MAP } from '@/constants/courseTypes'; // Importa anche COURSE_TYPES_MAP
 
 interface MonthlyCourseTypeStatsProps {
   statsByType: { [key: string]: { count: number; totalActual: number } };
@@ -27,7 +27,7 @@ export const MonthlyCourseTypeStats = ({ statsByType, loading }: MonthlyCourseTy
             <TableBody>
               {[...COURSE_TYPES, 'Non Specificato'].map(type => (
                 <TableRow key={type}>
-                  <TableCell className="font-medium">{type}</TableCell>
+                  <TableCell className="font-medium">{COURSE_TYPES_MAP[type]}</TableCell> {/* Usa la mappa qui */}
                   <TableCell className="text-center">{statsByType[type]?.count || 0}</TableCell>
                   <TableCell className="text-center">{statsByType[type]?.totalActual || 0}</TableCell>
                 </TableRow>
