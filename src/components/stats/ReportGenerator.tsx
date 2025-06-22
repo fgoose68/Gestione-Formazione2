@@ -14,7 +14,7 @@ import { COURSE_TYPES } from '@/constants/courseTypes';
 
 export const ReportGenerator = () => {
   const [reportDateRange, setReportDateRange] = useState<DateRange | undefined>(undefined);
-  const { reportEvents, reportLoading, reportStatsByType, reportDepartmentRankTotals, reportDepartmentRankGrandTotals } = useReportStats(reportDateRange);
+  const { reportEvents, reportLoading, reportStatsByType, reportDepartmentRankTotals, reportDepartmentRankGrandTotals, totalReportCourses } = useReportStats(reportDateRange);
 
   const handleDownloadCourseTypeStatsExcel = () => {
     if (!reportDateRange?.from || !reportDateRange?.to) {
@@ -93,7 +93,7 @@ export const ReportGenerator = () => {
             {reportLoading ? (
               <p>Caricamento corsi...</p>
             ) : (
-              <p>Trovati <span className="text-blue-600 font-bold">{reportEvents.length}</span> corsi nel periodo selezionato.</p>
+              <p>Trovati <span className="text-blue-600 font-bold">{totalReportCourses}</span> corsi nel periodo selezionato.</p>
             )}
           </div>
         )}

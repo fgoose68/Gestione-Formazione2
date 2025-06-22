@@ -27,6 +27,7 @@ interface ReportStats {
     militari: number;
     actualTotal: number;
   };
+  totalReportCourses: number; // Nuovo campo per il conteggio totale dei corsi
   fetchReportData: () => Promise<void>;
 }
 
@@ -189,14 +190,17 @@ export const useReportStats = (reportDateRange: DateRange | undefined): ReportSt
       );
   }, [reportDepartmentRankTotals]);
 
+  // Calcola il numero totale di corsi nel periodo del report
+  const totalReportCourses = reportEvents.length;
 
   return {
     reportEvents,
     reportAttendees,
     reportLoading,
     reportStatsByType,
-    reportDepartmentRankTotals, // Esporta i nuovi totali
-    reportDepartmentRankGrandTotals, // Esporta i nuovi totali
+    reportDepartmentRankTotals,
+    reportDepartmentRankGrandTotals,
+    totalReportCourses, // Esporta il nuovo conteggio
     fetchReportData,
   };
 };
