@@ -1,3 +1,5 @@
 export * from './useEvents';
-export * from './useDeadlines'; // Aggiungi questa riga
+export * from './useDeadlines';
 export * from './useDepartmentAttendees';
+export * from './useMonthlyStats'; // Nuovo export
+export * from './useReportStats';   // Nuovo export
