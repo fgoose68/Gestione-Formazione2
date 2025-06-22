@@ -41,7 +41,7 @@ export const useMonthlyStats = (currentMonth: Date): MonthlyStats => {
 
   const startOfCurrentMonth = startOfMonth(currentMonth);
   const endOfCurrentMonth = endOfMonth(currentMonth);
-  // Calcola l'inizio e la fine del mese successivo
+  // Calcola l'inizio e la fine del mese successivo (mantenuto per completezza, ma non più usato nel filtro principale)
   const startOfNextMonth = addMonths(startOfCurrentMonth, 1);
   const endOfNextMonth = endOfMonth(startOfNextMonth);
 
@@ -69,22 +69,8 @@ export const useMonthlyStats = (currentMonth: Date): MonthlyStats => {
       const monthlyEvents = (eventsData || [])
         .filter(event => {
           const startDate = parseISO(event.start_date);
-          const endDate = parseISO(event.end_date); // Assumiamo che end_date sia sempre presente e valido
-
-          const isElearningOrDad = event.type === 'E-learning' || event.type === 'Didattica a distanza (DAD)';
-
-          if (isElearningOrDad) {
-            // Regola 1: Iniziato nel mese corrente
-            const startedInCurrentMonth = isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
-            // Regola 2: Termina nel mese successivo
-            const endsInNextMonth = isWithinInterval(endDate, { start: startOfNextMonth, end: endOfNextMonth });
-
-            // Includi se è iniziato nel mese corrente OPPURE termina nel mese successivo.
-            return startedInCurrentMonth || endsInNextMonth;
-          } else {
-            // Per gli altri tipi, mantieni la logica originale (iniziato nel mese corrente)
-            return isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
-          }
+          // La nuova regola: includi solo se la data di inizio è nel mese corrente, per tutti i tipi di corso.
+          return isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
         })
         .map(event => ({
           ...event,
