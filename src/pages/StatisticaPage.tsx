@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { Home, BarChart2, CalendarDays, Users, Info, Tag, Download } from "lucide-react"; // Aggiunto Download
+import { Home, BarChart2, CalendarDays, Users, Info, Tag, Download } from "lucide-react";
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from '@/integrations/supabase/client';
 import { Event, DepartmentAttendee } from '@/types';
@@ -9,13 +9,13 @@ import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval, getMonth,
 import { it } from 'date-fns/locale';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
-import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
-import { getEventDisplayStatus } from '@/utils/eventStatus'; // Importa la nuova utility
-import { exportDepartmentAttendeesToExcel, exportCourseTypeStatsToExcel } from '@/utils/excelExport'; // Importa la funzione di esportazione
-
-// Tipi di corso disponibili (usati per raggruppare le statistiche) - AGGIORNATO
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'E-learning'];
-
+import { DEFAULT_DEPARTMENTS } from '@/constants/departments';
+import { getEventDisplayStatus } from '@/utils/eventStatus';
+import { exportDepartmentAttendeesToExcel, exportCourseTypeStatsToExcel } from '@/utils/excelExport';
+import { Calendar } from '@/components/ui/calendar'; // Importa Calendar
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"; // Importa Popover
+import { DateRange } from 'react-day-picker'; // Importa DateRange
+import { COURSE_TYPES } from '@/constants/courseTypes'; // Importa la costante
 
 const StatisticaPage = () => {
   const navigate = useNavigate();
@@ -23,6 +23,13 @@ const StatisticaPage = () => {
   const [attendees, setAttendees] = useState<DepartmentAttendee[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentMonth, setCurrentMonth] = useState(new Date()); // Stato per il mese visualizzato
+
+  // Nuovi stati per il filtro del report
+  const [reportDateRange, setReportDateRange] = useState<DateRange | undefined>(undefined);
+  const [reportEvents, setReportEvents] = useState<Event[]>([]);
+  const [reportAttendees, setReportAttendees] = useState<DepartmentAttendee[]>([]);
+  const [reportLoading, setReportLoading] = useState(false);
+
 
   const startOfCurrentMonth = startOfMonth(currentMonth);
   const endOfCurrentMonth = endOfMonth(currentMonth);
@@ -38,17 +45,15 @@ const StatisticaPage = () => {
          return;
       }
 
-      // Fetch events (includi il campo 'type')
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
-        .select('*, type') // Seleziona anche il campo 'type'
-        .eq('user_id', user.id) // Filtra per utente loggato
-        .neq('status', 'archiviato') // ESCLUDI eventi archiviati
+        .select('*, type')
+        .eq('user_id', user.id)
+        .neq('status', 'archiviato')
         .order('start_date', { ascending: true });
 
       if (eventsError) throw eventsError;
 
-      // Filter events for the current month and add displayStatus
       const monthlyEvents = (eventsData || [])
         .filter(event => {
           const startDate = parseISO(event.start_date);
@@ -56,26 +61,24 @@ const StatisticaPage = () => {
         })
         .map(event => ({
           ...event,
-          displayStatus: getEventDisplayStatus(event), // Aggiungi il displayStatus
+          displayStatus: getEventDisplayStatus(event),
         }));
 
       setEvents(monthlyEvents || []);
 
-      // Fetch attendees for the events in the current month
       if (monthlyEvents.length > 0) {
          const eventIds = monthlyEvents.map(event => event.id);
          const { data: attendeesData, error: attendeesError } = await supabase
            .from('department_attendees')
            .select('*')
            .in('event_id', eventIds)
-           .eq('user_id', user.id); // Filtra per utente loggato
+           .eq('user_id', user.id);
 
          if (attendeesError) throw attendeesError;
          setAttendees(attendeesData || []);
       } else {
          setAttendees([]);
       }
-
 
     } catch (err: any) {
       toast({
@@ -91,9 +94,78 @@ const StatisticaPage = () => {
     }
   };
 
+  // Nuova funzione per il fetch dei dati del report basato sul range di date
+  const fetchReportData = async () => {
+    if (!reportDateRange?.from || !reportDateRange?.to) {
+      setReportEvents([]);
+      setReportAttendees([]);
+      return;
+    }
+
+    setReportLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setReportEvents([]);
+        setReportAttendees([]);
+        setReportLoading(false);
+        return;
+      }
+
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*, type')
+        .eq('user_id', user.id)
+        .neq('status', 'archiviato')
+        .gte('start_date', reportDateRange.from.toISOString())
+        .lte('end_date', reportDateRange.to.toISOString())
+        .order('start_date', { ascending: true });
+
+      if (eventsError) throw eventsError;
+
+      const filteredReportEvents = (eventsData || []).map(event => ({
+        ...event,
+        displayStatus: getEventDisplayStatus(event),
+      }));
+      setReportEvents(filteredReportEvents);
+
+      if (filteredReportEvents.length > 0) {
+        const eventIds = filteredReportEvents.map(event => event.id);
+        const { data: attendeesData, error: attendeesError } = await supabase
+          .from('department_attendees')
+          .select('*')
+          .in('event_id', eventIds)
+          .eq('user_id', user.id);
+
+        if (attendeesError) throw attendeesError;
+        setReportAttendees(attendeesData || []);
+      } else {
+        setReportAttendees([]);
+      }
+
+    } catch (err: any) {
+      toast({
+        title: "Errore",
+        description: `Errore caricamento dati report: ${err.message}`,
+        variant: "destructive",
+      });
+      console.error("Errore fetchReportData:", err);
+      setReportEvents([]);
+      setReportAttendees([]);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
+
   useEffect(() => {
     fetchStatsData();
-  }, [currentMonth]); // Riesegui il fetch quando cambia il mese
+  }, [currentMonth]);
+
+  useEffect(() => {
+    fetchReportData();
+  }, [reportDateRange]); // Riesegui il fetch quando cambia il range di date del report
+
 
   // Calcola statistiche aggregate per il mese corrente
   const totalCoursesMonth = events.length;
@@ -101,28 +173,23 @@ const StatisticaPage = () => {
     return attendees.reduce((total, att) => total + (att.actual || 0), 0);
   }, [attendees]);
 
-  // Calcola statistiche per tipo di corso
+  // Calcola statistiche per tipo di corso (per il mese corrente)
   const statsByType = useMemo(() => {
     const typeStats: { [key: string]: { count: number; totalActual: number } } = {};
 
-    // Inizializza con tutti i tipi di corso per mostrare anche quelli con 0 eventi
-    // Inizializza anche 'Non Specificato'
     [...COURSE_TYPES, 'Non Specificato'].forEach(type => {
-       if (type) { // Assicura che type non sia undefined prima di usarlo come chiave
+       if (type) {
          typeStats[type] = { count: 0, totalActual: 0 };
        }
     });
 
-
     events.forEach(event => {
       const type = event.type || 'Non Specificato';
-      // Assicurati che la chiave esista prima di incrementare
       if (!typeStats[type]) {
          typeStats[type] = { count: 0, totalActual: 0 };
       }
       typeStats[type].count++;
 
-      // Trova i discenti per questo evento e somma gli effettivi
       const eventAttendees = attendees.filter(att => att.event_id === event.id);
       const eventTotalActual = eventAttendees.reduce((total, att) => total + (att.actual || 0), 0);
       typeStats[type].totalActual += eventTotalActual;
@@ -130,6 +197,32 @@ const StatisticaPage = () => {
 
     return typeStats;
   }, [events, attendees]);
+
+
+  // Calcola statistiche per tipo di corso (per il report)
+  const reportStatsByType = useMemo(() => {
+    const typeStats: { [key: string]: { count: number; totalActual: number } } = {};
+
+    [...COURSE_TYPES, 'Non Specificato'].forEach(type => {
+       if (type) {
+         typeStats[type] = { count: 0, totalActual: 0 };
+       }
+    });
+
+    reportEvents.forEach(event => {
+      const type = event.type || 'Non Specificato';
+      if (!typeStats[type]) {
+         typeStats[type] = { count: 0, totalActual: 0 };
+      }
+      typeStats[type].count++;
+
+      const eventAttendees = reportAttendees.filter(att => att.event_id === event.id);
+      const eventTotalActual = eventAttendees.reduce((total, att) => total + (att.actual || 0), 0);
+      typeStats[type].totalActual += eventTotalActual;
+    });
+
+    return typeStats;
+  }, [reportEvents, reportAttendees]);
 
 
   // Raggruppa discenti per evento per la visualizzazione dettagliata
@@ -153,11 +246,10 @@ const StatisticaPage = () => {
         inspectors: number;
         superintendents: number;
         militari: number;
-        actualTotal: number; // Total actual for this department across all events in the month
+        actualTotal: number;
       };
     } = {};
 
-    // Initialize with all default departments to ensure they appear even if 0 attendees
     DEFAULT_DEPARTMENTS.forEach(deptName => {
         totalsMap[deptName] = {
             department_name: deptName,
@@ -169,10 +261,8 @@ const StatisticaPage = () => {
         };
     });
 
-    // Aggregate actual attendees by department and rank
     attendees.forEach(att => {
       const deptName = att.department_name;
-      // Ensure the department exists in the map (should be covered by initialization, but good practice)
       if (!totalsMap[deptName]) {
            totalsMap[deptName] = {
               department_name: deptName,
@@ -184,19 +274,16 @@ const StatisticaPage = () => {
            };
       }
 
-      // Add actual counts for each rank (these are PREVISTI from the DB structure)
       totalsMap[deptName].officers += att.officers || 0;
       totalsMap[deptName].inspectors += att.inspectors || 0;
       totalsMap[deptName].superintendents += att.superintendents || 0;
       totalsMap[deptName].militari += att.militari || 0;
-      // Add total actual for the department
       totalsMap[deptName].actualTotal += att.actual || 0;
     });
 
-    // Convert map to array, ORDERED by DEFAULT_DEPARTMENTS
     return DEFAULT_DEPARTMENTS.map(deptName => totalsMap[deptName]);
 
-  }, [attendees]); // Depends on the attendees data for the current month
+  }, [attendees]);
 
   // Calcola i totali complessivi per la nuova tabella
   const monthlyDepartmentRankGrandTotals = useMemo(() => {
@@ -219,11 +306,18 @@ const StatisticaPage = () => {
     exportDepartmentAttendeesToExcel(monthlyDepartmentRankTotals, monthlyDepartmentRankGrandTotals, monthYearString);
   };
 
-  // Funzione per gestire il download dell'Excel delle Statistiche per Tipo di Corso
+  // Funzione per gestire il download dell'Excel delle Statistiche per Tipo di Corso (per il report)
   const handleDownloadCourseTypeStatsExcel = () => {
-    const monthYearString = format(currentMonth, "MMMM yyyy", { locale: it });
-    // Passa l'ordine dei tipi di corso per garantire la coerenza con la tabella
-    exportCourseTypeStatsToExcel(statsByType, [...COURSE_TYPES, 'Non Specificato'], monthYearString);
+    if (!reportDateRange?.from || !reportDateRange?.to) {
+      toast({
+        title: "Attenzione",
+        description: "Seleziona un intervallo di date valido per il report.",
+        variant: "warning",
+      });
+      return;
+    }
+    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
+    exportCourseTypeStatsToExcel(reportStatsByType, [...COURSE_TYPES, 'Non Specificato'], dateRangeString);
   };
 
 
@@ -247,23 +341,19 @@ const StatisticaPage = () => {
 
   return (
     <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
         <h1 className="text-3xl font-bold text-blue-800 flex items-center">
           <BarChart2 className="mr-3 h-8 w-8" />
           Statistiche Eventi
         </h1>
-        <div className="flex flex-col space-y-3"> {/* Contenitore per i pulsanti */}
+        <div className="flex flex-col space-y-3">
           <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
             <Home className="mr-2 h-4 w-4" />
             Torna alla Dashboard
           </Button>
           <Button onClick={handleDownloadDepartmentAttendeesExcel} className="bg-green-600 hover:bg-green-700 text-white">
             <Download className="mr-2 h-4 w-4" />
-            Riepilogo Discenti
-          </Button>
-          <Button onClick={handleDownloadCourseTypeStatsExcel} className="bg-red-600 hover:bg-red-700 text-white">
-            <Download className="mr-2 h-4 w-4" />
-            Riepilogo Corsi
+            Riepilogo Discenti Mensile
           </Button>
         </div>
       </div>
@@ -289,9 +379,9 @@ const StatisticaPage = () => {
         </Card>
       </div>
 
-      {/* Statistiche per Tipo di Corso */}
+      {/* Statistiche per Tipo di Corso (Mese Corrente) */}
       <Card className="shadow-lg mb-8">
-         <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Tag className="mr-3 h-7 w-7" /> Statistiche per Tipo di Corso</CardTitle></CardHeader>
+         <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Tag className="mr-3 h-7 w-7" /> Statistiche per Tipo di Corso (Mese Corrente)</CardTitle></CardHeader>
          <CardContent>
            {Object.keys(statsByType).length > 0 ? (
              <Table>
@@ -303,7 +393,6 @@ const StatisticaPage = () => {
                  </TableRow>
                </TableHeader>
                <TableBody>
-                 {/* Ordina le chiavi per visualizzare i tipi nell'ordine desiderato */}
                  {[...COURSE_TYPES, 'Non Specificato'].map(type => (
                    <TableRow key={type}>
                      <TableCell className="font-medium">{type}</TableCell>
@@ -314,14 +403,81 @@ const StatisticaPage = () => {
                </TableBody>
              </Table>
            ) : (
-             <p className="text-gray-600">Nessun dato disponibile per le statistiche per tipo.</p>
+             <p className="text-gray-600">Nessun dato disponibile per le statistiche per tipo nel mese corrente.</p>
            )}
          </CardContent>
       </Card>
 
-      {/* NUOVA TABELLA: Riepilogo Mensile Discenti per Reparto e Grado */}
+      {/* NUOVA SEZIONE: Report per Periodo Selezionato */}
       <Card className="shadow-lg mb-8">
-         <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Users className="mr-3 h-7 w-7" /> Riepilogo Mensile Discenti per Reparto e Grado</CardTitle></CardHeader> {/* Modificato titolo */}
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
+            <Download className="mr-3 h-7 w-7" /> Genera Report per Periodo
+          </CardTitle>
+          <CardDescription>Seleziona un intervallo di date per generare un report Excel dei corsi per tipo.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Seleziona Intervallo Date</label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={`w-full justify-start text-left font-normal ${!reportDateRange && "text-muted-foreground"}`}
+                  disabled={reportLoading}
+                >
+                  <CalendarDays className="mr-2 h-4 w-4" />
+                  {reportDateRange?.from ? (
+                    reportDateRange.to ? (
+                      <>
+                        {format(reportDateRange.from, "PPP", { locale: it })} -{" "}
+                        {format(reportDateRange.to, "PPP", { locale: it })}
+                      </>
+                    ) : (
+                      format(reportDateRange.from, "PPP", { locale: it })
+                    )
+                  ) : (
+                    <span>Seleziona le date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  initialFocus
+                  mode="range"
+                  defaultMonth={reportDateRange?.from}
+                  selected={reportDateRange}
+                  onSelect={setReportDateRange}
+                  numberOfMonths={2}
+                  locale={it}
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          {reportDateRange?.from && reportDateRange?.to && (
+            <div className="text-center text-lg font-medium text-gray-700">
+              {reportLoading ? (
+                <p>Caricamento corsi...</p>
+              ) : (
+                <p>Trovati <span className="text-blue-600 font-bold">{reportEvents.length}</span> corsi nel periodo selezionato.</p>
+              )}
+            </div>
+          )}
+          <Button
+            onClick={handleDownloadCourseTypeStatsExcel}
+            disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
+            className="w-full bg-red-600 hover:bg-red-700 text-white"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Scarica Report Corsi per Tipo
+          </Button>
+        </CardContent>
+      </Card>
+
+
+      {/* Riepilogo Mensile Discenti per Reparto e Grado */}
+      <Card className="shadow-lg mb-8">
+         <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Users className="mr-3 h-7 w-7" /> Riepilogo Mensile Discenti per Reparto e Grado</CardTitle></CardHeader>
          <CardContent>
            {loading ? (
              <p className="text-center text-gray-600">Caricamento dati discenti...</p>
@@ -337,12 +493,11 @@ const StatisticaPage = () => {
                      <TableHead className="text-center font-semibold">Mil./App. (Previsti)</TableHead>
                      <TableHead className="text-center font-semibold bg-blue-50">Totale Previsti</TableHead>
                      <TableHead className="text-center font-semibold bg-green-50">Totale Effettivi</TableHead>
-                     <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead> {/* Aggiunta colonna Assenti */}
+                     <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead>
                    </TableRow>
                  </TableHeader>
                  <TableBody>
                    {monthlyDepartmentRankTotals.map(att => {
-                      // Calcola gli assenti per questo reparto nel mese
                       const totalExpectedForDept = att.officers + att.inspectors + att.superintendents + att.militari;
                       const absentForDept = Math.max(0, totalExpectedForDept - att.actualTotal);
 
@@ -353,9 +508,9 @@ const StatisticaPage = () => {
                             <TableCell className="text-center">{att.inspectors}</TableCell>
                             <TableCell className="text-center">{att.superintendents}</TableCell>
                             <TableCell className="text-center">{att.militari}</TableCell>
-                            <TableCell className="text-center font-medium bg-blue-50">{totalExpectedForDept}</TableCell> {/* Calcola Totale Previsti */}
+                            <TableCell className="text-center font-medium bg-blue-50">{totalExpectedForDept}</TableCell>
                             <TableCell className="text-center font-medium bg-green-50">{att.actualTotal}</TableCell>
-                            <TableCell className="text-center font-medium bg-red-50">{absentForDept}</TableCell> {/* Cella per Assenti */}
+                            <TableCell className="text-center font-medium bg-red-50">{absentForDept}</TableCell>
                          </TableRow>
                       );
                    })}
@@ -367,9 +522,8 @@ const StatisticaPage = () => {
                      <TableCell className="text-center font-bold text-slate-800">{monthlyDepartmentRankGrandTotals.inspectors}</TableCell>
                      <TableCell className="text-center font-bold text-slate-800">{monthlyDepartmentRankGrandTotals.superintendents}</TableCell>
                      <TableCell className="text-center font-bold text-slate-800">{monthlyDepartmentRankGrandTotals.militari}</TableCell>
-                     <TableCell className="text-center font-bold text-slate-800 bg-blue-100">{monthlyDepartmentRankGrandTotals.officers + monthlyDepartmentRankGrandTotals.inspectors + monthlyDepartmentRankGrandTotals.superintendents + monthlyDepartmentRankGrandTotals.militari}</TableCell> {/* Totale Previsti Complessivo */}
+                     <TableCell className="text-center font-bold text-slate-800 bg-blue-100">{monthlyDepartmentRankGrandTotals.officers + monthlyDepartmentRankGrandTotals.inspectors + monthlyDepartmentRankGrandTotals.superintendents + monthlyDepartmentRankGrandTotals.militari}</TableCell>
                      <TableCell className="text-center font-bold text-slate-800 bg-green-100">{monthlyDepartmentRankGrandTotals.actualTotal}</TableCell>
-                     {/* Calcola Totale Assenti Complessivo */}
                      <TableCell className="text-center font-bold text-slate-800 bg-red-100">
                         {Math.max(0, (monthlyDepartmentRankGrandTotals.officers + monthlyDepartmentRankGrandTotals.inspectors + monthlyDepartmentRankGrandTotals.superintendents + monthlyDepartmentRankGrandTotals.militari) - monthlyDepartmentRankGrandTotals.actualTotal)}
                      </TableCell>
@@ -386,7 +540,7 @@ const StatisticaPage = () => {
 
       {/* Dettaglio Discenti per Corso (esistente) */}
       <Card className="shadow-lg">
-        <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Info className="mr-2 h-7 w-7" /> Dettaglio Discenti per Corso</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><Info className="mr-2 h-7 w-7" /> Dettaglio Discenti per Corso (Mese Corrente)</CardTitle></CardHeader>
         <CardContent>
           {events.length > 0 ? (
             <div className="space-y-8">

@@ -13,9 +13,7 @@ import { showError, showSuccess } from '@/utils/toast';
 import { format, parseISO } from 'date-fns';
 import { DateRange } from 'react-day-picker';
 import { it } from 'date-fns/locale';
-
-// Tipi di corso disponibili (copiato da NewEvent.tsx) - AGGIORNATO L'ORDINE
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'E-learning'];
+import { COURSE_TYPES } from '@/constants/courseTypes'; // Importa la costante dal nuovo file
 
 // Opzioni per il menu a tendina Luogo (copiato da NewEvent.tsx)
 const LOCATIONS = [

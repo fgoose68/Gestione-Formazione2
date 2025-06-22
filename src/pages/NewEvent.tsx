@@ -13,12 +13,10 @@ import { useEvents } from '@/hooks';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { showError, showSuccess } from '@/utils/toast';
-import { DepartmentAttendee, Event } from '@/types'; // Importa anche Event per il tipo del corso
+import { DepartmentAttendee, Event } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
-import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa la costante
-
-// Tipi di corso disponibili - AGGIORNATO L'ORDINE
-const COURSE_TYPES: Event['type'][] = ['Centralizzato', 'Periferico', 'Iniziativa', 'Didattica a distanza (DAD)', 'E-learning'];
+import { DEFAULT_DEPARTMENTS } from '@/constants/departments';
+import { COURSE_TYPES } from '@/constants/courseTypes'; // Importa la costante dal nuovo file
 
 // Opzioni per il menu a tendina Luogo
 const LOCATIONS = [
