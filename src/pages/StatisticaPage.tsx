@@ -30,10 +30,11 @@ const StatisticaPage = () => {
   } = useMonthlyStats(currentMonth);
 
   // Funzione per gestire il download dell'Excel del Riepilogo Discenti
-  const handleDownloadDepartmentAttendeesExcel = () => {
-    const monthYearString = format(currentMonth, "MMMM yyyy", { locale: it });
-    exportDepartmentAttendeesToExcel(monthlyDepartmentRankTotals, monthlyDepartmentRankGrandTotals, monthYearString);
-  };
+  // Questa funzione non è più necessaria qui, in quanto il download è gestito dal ReportGenerator
+  // const handleDownloadDepartmentAttendeesExcel = () => {
+  //   const monthYearString = format(currentMonth, "MMMM yyyy", { locale: it });
+  //   exportDepartmentAttendeesToExcel(monthlyDepartmentRankTotals, monthlyDepartmentRankGrandTotals, monthYearString);
+  // };
 
   // Funzioni per cambiare mese
   const goToPreviousMonth = () => {
@@ -56,10 +57,7 @@ const StatisticaPage = () => {
             <Home className="mr-2 h-4 w-4" />
             Torna alla Dashboard
           </Button>
-          <Button onClick={handleDownloadDepartmentAttendeesExcel} className="bg-green-600 hover:bg-green-700 text-white">
-            <Download className="mr-2 h-4 w-4" />
-            Riepilogo Discenti Mensile
-          </Button>
+          {/* Il pulsante "Riepilogo Discenti Mensile" è stato rimosso */}
         </div>
       </div>
 
