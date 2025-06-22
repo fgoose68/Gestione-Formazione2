@@ -59,7 +59,7 @@ export const useReportStats = (reportDateRange: DateRange | undefined): ReportSt
         .eq('user_id', user.id)
         .neq('status', 'archiviato')
         .gte('start_date', reportDateRange.from.toISOString())
-        .lte('end_date', reportDateRange.to.toISOString())
+        .lte('start_date', reportDateRange.to.toISOString()) // Modificato qui: filtra solo per start_date
         .order('start_date', { ascending: true });
 
       if (eventsError) throw eventsError;
