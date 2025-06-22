@@ -89,11 +89,14 @@ export const ReportGenerator = () => {
           </Popover>
         </div>
         {reportDateRange?.from && reportDateRange?.to && (
-          <div className="text-center text-lg font-medium text-gray-700">
+          <div className="text-center text-lg font-medium text-gray-700 space-y-2">
             {reportLoading ? (
-              <p>Caricamento corsi...</p>
+              <p>Caricamento dati...</p>
             ) : (
-              <p>Trovati <span className="text-blue-600 font-bold">{totalReportCourses}</span> corsi nel periodo selezionato.</p>
+              <>
+                <p>Trovati <span className="text-blue-600 font-bold">{totalReportCourses}</span> corsi nel periodo selezionato.</p>
+                <p>Totale <span className="text-blue-600 font-bold">{reportDepartmentRankGrandTotals.actualTotal}</span> discenti effettivi nel periodo selezionato.</p>
+              </>
             )}
           </div>
         )}
