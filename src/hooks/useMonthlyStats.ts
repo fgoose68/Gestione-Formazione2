@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Event, DepartmentAttendee } from '@/types';
 import { toast } from '@/hooks/use-toast';
-import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
+import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval, addMonths } from 'date-fns';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments';
 import { getEventDisplayStatus }
  from '@/utils/eventStatus';
@@ -41,6 +41,10 @@ export const useMonthlyStats = (currentMonth: Date): MonthlyStats => {
 
   const startOfCurrentMonth = startOfMonth(currentMonth);
   const endOfCurrentMonth = endOfMonth(currentMonth);
+  // Calcola l'inizio e la fine del mese successivo
+  const startOfNextMonth = addMonths(startOfCurrentMonth, 1);
+  const endOfNextMonth = endOfMonth(startOfNextMonth);
+
 
   const fetchStats = useCallback(async () => {
     setLoading(true);
@@ -65,7 +69,22 @@ export const useMonthlyStats = (currentMonth: Date): MonthlyStats => {
       const monthlyEvents = (eventsData || [])
         .filter(event => {
           const startDate = parseISO(event.start_date);
-          return isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
+          const endDate = parseISO(event.end_date); // Assumiamo che end_date sia sempre presente e valido
+
+          const isElearningOrDad = event.type === 'E-learning' || event.type === 'Didattica a distanza (DAD)';
+
+          if (isElearningOrDad) {
+            // Regola 1: Iniziato nel mese corrente
+            const startedInCurrentMonth = isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
+            // Regola 2: Termina nel mese successivo
+            const endsInNextMonth = isWithinInterval(endDate, { start: startOfNextMonth, end: endOfNextMonth });
+
+            // Includi se è iniziato nel mese corrente OPPURE termina nel mese successivo.
+            return startedInCurrentMonth || endsInNextMonth;
+          } else {
+            // Per gli altri tipi, mantieni la logica originale (iniziato nel mese corrente)
+            return isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
+          }
         })
         .map(event => ({
           ...event,
@@ -73,7 +92,7 @@ export const useMonthlyStats = (currentMonth: Date): MonthlyStats => {
         }));
 
       // Aggiunto console.log per debug
-      console.log(`[useMonthlyStats] Eventi filtrati per ${format(currentMonth, 'MMMM yyyy')}:`, monthlyEvents.map(e => ({ title: e.title, type: e.type, startDate: e.start_date, status: e.status })));
+      console.log(`[useMonthlyStats] Eventi filtrati per ${format(currentMonth, 'MMMM yyyy')}:`, monthlyEvents.map(e => ({ title: e.title, type: e.type, startDate: e.start_date, endDate: e.end_date, status: e.status })));
 
       setEvents(monthlyEvents || []);
 
