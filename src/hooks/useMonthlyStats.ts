@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Event, DepartmentAttendee } from '@/types';
 import { toast } from '@/hooks/use-toast';
-import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval, isBefore, isAfter, isSameDay } from 'date-fns'; // Aggiunto isBefore, isAfter, isSameDay
+import { format, startOfMonth, endOfMonth, parseISO, isWithinInterval } from 'date-fns';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments';
 import { getEventDisplayStatus } from '@/utils/eventStatus';
 import { COURSE_TYPES } from '@/constants/courseTypes';
@@ -52,7 +52,6 @@ export const useMonthlyStats = (currentMonth: Date): MonthlyStats => {
          return;
       }
 
-      // Recupera tutti gli eventi non archiviati dell'utente
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*, type')
@@ -62,17 +61,10 @@ export const useMonthlyStats = (currentMonth: Date): MonthlyStats => {
 
       if (eventsError) throw eventsError;
 
-      // Filtra gli eventi che si sovrappongono al mese corrente
       const monthlyEvents = (eventsData || [])
         .filter(event => {
           const startDate = parseISO(event.start_date);
-          const endDate = parseISO(event.end_date);
-          
-          // Condizione di sovrapposizione:
-          // L'evento inizia prima o nello stesso giorno della fine del mese corrente
-          // E l'evento finisce dopo o nello stesso giorno dell'inizio del mese corrente
-          return (isBefore(startDate, endOfCurrentMonth) || isSameDay(startDate, endOfCurrentMonth)) &&
-                 (isAfter(endDate, startOfCurrentMonth) || isSameDay(endDate, startOfCurrentMonth));
+          return isWithinInterval(startDate, { start: startOfCurrentMonth, end: endOfCurrentMonth });
         })
         .map(event => ({
           ...event,
