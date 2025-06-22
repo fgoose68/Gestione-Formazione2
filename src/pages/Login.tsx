@@ -85,7 +85,7 @@ function Login() {
 
         {/* Versione aggiornata */}
         <div className="absolute bottom-2 right-4 text-xs text-gray-500">
-          Ver.18.1.Giu25
+          Ver.23.1.Giu25
         </div>
       </div>
     </div>
