@@ -51,14 +51,14 @@ const IndexPage = () => {
             <Button onClick={() => navigate('/calendario')} variant="outline">
               <CalendarDays className="mr-2 h-5 w-5" /> Calendario
             </Button>
-            <Button onClick={() => navigate('/archivio')} variant="outline">
-              <Archive className="mr-2 h-5 w-5" /> Archivio
-            </Button>
             <Button onClick={() => navigate('/statistica')} variant="outline">
               <BarChart2 className="mr-2 h-5 w-5" /> Statistiche
             </Button>
             <Button onClick={() => navigate('/scadenze')} variant="outline"> {/* Nuovo pulsante per le scadenze */}
               <Clock className="mr-2 h-5 w-5" /> Scadenze
+            </Button>
+            <Button onClick={() => navigate('/archivio')} variant="outline">
+              <Archive className="mr-2 h-5 w-5" /> Archivio
             </Button>
             <Button onClick={handleLogout} variant="destructive">
               <LogOut className="mr-2 h-5 w-5" /> Log Out
