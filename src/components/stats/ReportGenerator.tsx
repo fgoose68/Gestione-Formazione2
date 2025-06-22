@@ -9,12 +9,12 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { useReportStats } from '@/hooks/useReportStats';
-import { exportCourseTypeStatsToExcel } from '@/utils/excelExport';
+import { exportCourseTypeStatsToExcel, exportDepartmentAttendeesToExcel } from '@/utils/excelExport'; // Importa anche exportDepartmentAttendeesToExcel
 import { COURSE_TYPES } from '@/constants/courseTypes';
 
 export const ReportGenerator = () => {
   const [reportDateRange, setReportDateRange] = useState<DateRange | undefined>(undefined);
-  const { reportEvents, reportLoading, reportStatsByType } = useReportStats(reportDateRange);
+  const { reportEvents, reportLoading, reportStatsByType, reportDepartmentRankTotals, reportDepartmentRankGrandTotals } = useReportStats(reportDateRange);
 
   const handleDownloadCourseTypeStatsExcel = () => {
     if (!reportDateRange?.from || !reportDateRange?.to) {
@@ -29,13 +29,26 @@ export const ReportGenerator = () => {
     exportCourseTypeStatsToExcel(reportStatsByType, [...COURSE_TYPES, 'Non Specificato'], dateRangeString);
   };
 
+  const handleDownloadDepartmentAttendeesExcel = () => {
+    if (!reportDateRange?.from || !reportDateRange?.to) {
+      toast({
+        title: "Attenzione",
+        description: "Seleziona un intervallo di date valido per il report.",
+        variant: "warning",
+      });
+      return;
+    }
+    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
+    exportDepartmentAttendeesToExcel(reportDepartmentRankTotals, reportDepartmentRankGrandTotals, dateRangeString);
+  };
+
   return (
     <Card className="shadow-lg mb-8">
       <CardHeader>
         <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
           <Download className="mr-3 h-7 w-7" /> Genera Report per Periodo
         </CardTitle>
-        <CardDescription>Seleziona un intervallo di date per generare un report Excel dei corsi per tipo.</CardDescription>
+        <CardDescription>Seleziona un intervallo di date per generare un report Excel dei corsi per tipo e del riepilogo discenti.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -91,6 +104,14 @@ export const ReportGenerator = () => {
         >
           <Download className="mr-2 h-4 w-4" />
           Scarica Report Corsi per Tipo
+        </Button>
+        <Button
+          onClick={handleDownloadDepartmentAttendeesExcel}
+          disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
+          className="w-full bg-green-600 hover:bg-green-700 text-white"
+        >
+          <Download className="mr-2 h-4 w-4" />
+          Scarica Riepilogo Discenti
         </Button>
       </CardContent>
     </Card>

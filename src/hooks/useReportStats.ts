@@ -5,12 +5,28 @@ import { toast } from '@/hooks/use-toast';
 import { getEventDisplayStatus } from '@/utils/eventStatus';
 import { COURSE_TYPES } from '@/constants/courseTypes';
 import { DateRange } from 'react-day-picker';
+import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa i reparti di default
 
 interface ReportStats {
   reportEvents: Event[];
   reportAttendees: DepartmentAttendee[];
   reportLoading: boolean;
   reportStatsByType: { [key: string]: { count: number; totalActual: number } };
+  reportDepartmentRankTotals: { // Nuovo campo
+    department_name: string;
+    officers: number;
+    inspectors: number;
+    superintendents: number;
+    militari: number;
+    actualTotal: number;
+  }[];
+  reportDepartmentRankGrandTotals: { // Nuovo campo
+    officers: number;
+    inspectors: number;
+    superintendents: number;
+    militari: number;
+    actualTotal: number;
+  };
   fetchReportData: () => Promise<void>;
 }
 
@@ -110,11 +126,77 @@ export const useReportStats = (reportDateRange: DateRange | undefined): ReportSt
     return typeStats;
   }, [reportEvents, reportAttendees]);
 
+  // NUOVA AGGREGAZIONE: Totali effettivi per Reparto e Grado nel periodo del report
+  const reportDepartmentRankTotals = useMemo(() => {
+    const totalsMap: {
+      [key: string]: {
+        department_name: string;
+        officers: number;
+        inspectors: number;
+        superintendents: number;
+        militari: number;
+        actualTotal: number;
+      };
+    } = {};
+
+    DEFAULT_DEPARTMENTS.forEach(deptName => {
+        totalsMap[deptName] = {
+            department_name: deptName,
+            officers: 0,
+            inspectors: 0,
+            superintendents: 0,
+            militari: 0,
+            actualTotal: 0,
+        };
+    });
+
+    reportAttendees.forEach(att => {
+      const deptName = att.department_name;
+      if (!totalsMap[deptName]) {
+           totalsMap[deptName] = {
+              department_name: deptName,
+              officers: 0,
+              inspectors: 0,
+              superintendents: 0,
+              militari: 0,
+              actualTotal: 0,
+           };
+      }
+
+      totalsMap[deptName].officers += att.officers || 0;
+      totalsMap[deptName].inspectors += att.inspectors || 0;
+      totalsMap[deptName].superintendents += att.superintendents || 0;
+      totalsMap[deptName].militari += att.militari || 0;
+      totalsMap[deptName].actualTotal += att.actual || 0;
+    });
+
+    return DEFAULT_DEPARTMENTS.map(deptName => totalsMap[deptName]);
+
+  }, [reportAttendees]);
+
+  // Calcola i totali complessivi per la nuova tabella del report
+  const reportDepartmentRankGrandTotals = useMemo(() => {
+      return reportDepartmentRankTotals.reduce(
+          (acc, curr) => {
+              acc.officers += curr.officers;
+              acc.inspectors += curr.inspectors;
+              acc.superintendents += curr.superintendents;
+              acc.militari += curr.militari;
+              acc.actualTotal += curr.actualTotal;
+              return acc;
+          },
+          { officers: 0, inspectors: 0, superintendents: 0, militari: 0, actualTotal: 0 }
+      );
+  }, [reportDepartmentRankTotals]);
+
+
   return {
     reportEvents,
     reportAttendees,
     reportLoading,
     reportStatsByType,
+    reportDepartmentRankTotals, // Esporta i nuovi totali
+    reportDepartmentRankGrandTotals, // Esporta i nuovi totali
     fetchReportData,
   };
 };
