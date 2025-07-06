@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Clock, PlusCircle, CalendarDays, Archive, BarChart2, Info, LogOut } from 'lucide-react';
+import { Clock, PlusCircle, CalendarDays, Archive, BarChart2, Info, LogOut, FileText } from 'lucide-react';
 import { useEvents } from '@/hooks';
 import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
@@ -106,6 +106,9 @@ const IndexPage = () => {
             </Button>
             <Button onClick={() => navigate('/scadenze')} variant="outline">
               <Clock className="mr-2 h-5 w-5" /> Scadenze
+            </Button>
+            <Button onClick={() => navigate('/modelli-l')} variant="outline">
+              <FileText className="mr-2 h-5 w-5" /> Modelli L
             </Button>
             <Button onClick={() => navigate('/archivio')} variant="outline">
               <Archive className="mr-2 h-5 w-5" /> Archivio

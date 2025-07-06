@@ -15,8 +15,6 @@ function Login() {
         navigate('/');
       } else if (event === 'SIGNED_OUT') {
         setAuthError(null);
-      } else if (event === 'TOKEN_REFRESH_FAILED') {
-        setAuthError('Errore di autenticazione. Per favor, effettua il login nuovamente.');
       }
     });
 

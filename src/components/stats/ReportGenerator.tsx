@@ -21,7 +21,7 @@ export const ReportGenerator = () => {
       toast({
         title: "Attenzione",
         description: "Seleziona un intervallo di date valido per il report.",
-        variant: "warning",
+        variant: "destructive",
       });
       return;
     }
@@ -34,7 +34,7 @@ export const ReportGenerator = () => {
       toast({
         title: "Attenzione",
         description: "Seleziona un intervallo di date valido per il report.",
-        variant: "warning",
+        variant: "destructive",
       });
       return;
     }

@@ -32,7 +32,7 @@ export const exportDepartmentAttendeesToExcel = (
   grandTotals: MonthlyDepartmentRankGrandTotals,
   monthYear: string
 ) => {
-  const worksheetData = [
+  const worksheetData: (string | number)[][] = [
     ["Riepilogo Mensile Discenti per Reparto e Grado - " + monthYear],
     [], // Empty row for spacing
     ["Reparto", "Uff. (Previsti)", "Isp. (Previsti)", "Sovr. (Previsti)", "Mil./App. (Previsti)", "Totale Previsti", "Totale Effettivi", "Assenti"],
@@ -124,7 +124,7 @@ export const exportCourseTypeStatsToExcel = (
   courseTypesOrder: string[], // Array con l'ordine desiderato dei tipi di corso
   monthYear: string
 ) => {
-  const worksheetData = [
+  const worksheetData: (string | number)[][] = [
     ["Statistiche per Tipo di Corso - " + monthYear],
     [], // Empty row for spacing
     ["Tipo Corso", "Numero Corsi", "Totale Discenti Effettivi"],

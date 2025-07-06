@@ -102,8 +102,8 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
       }
 
       const upsertData = attendees.map(att => {
-        // Escludi 'absent' e 'id' se non presente (per nuovi record)
-        const { absent, id, ...dataToSave } = att;
+        // Escludi 'id' se non presente (per nuovi record)
+        const { id, ...dataToSave } = att;
         return {
           ...dataToSave,
           event_id: eventId,

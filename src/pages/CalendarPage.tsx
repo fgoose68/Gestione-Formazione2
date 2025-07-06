@@ -19,7 +19,7 @@ const CalendarPage = () => {
       const eventDate = parseISO(event.start_date);
       return (
         eventDate.getMonth() === date.getMonth() &&
-        eventDate.getYear() === date.getYear()
+        eventDate.getFullYear() === date.getFullYear()
       );
     });
   }, [events, date]);

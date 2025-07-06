@@ -101,12 +101,9 @@ export const useEvents = (): UseEventsReturn => {
          return null;
        }
 
-       // Assicurati di non sovrascrivere user_id, created_at o displayStatus
-       const { user_id, created_at, displayStatus, ...dataToUpdate } = eventData;
-
        const { data, error } = await supabase
          .from('events')
-         .update(dataToUpdate)
+         .update(eventData)
          .eq('id', eventId)
          .eq('user_id', user.id) // Assicura che l'utente possa modificare solo i propri eventi
          .select()
