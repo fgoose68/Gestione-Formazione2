@@ -5,8 +5,8 @@ import { Home, FileText } from "lucide-react";
 const ModelliLPage = () => {
   const navigate = useNavigate();
   
-  // Sostituisci questo URL con quello della tua web app esterna
-  const externalAppUrl = "https://URL_DELLA_TUA_WEBAPP_ESTERNA";
+  // URL dell'applicazione esterna da integrare
+  const externalAppUrl = "https://gestione-matricolare-lug25.vercel.app";
 
   return (
     <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
