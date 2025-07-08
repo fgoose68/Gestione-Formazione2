@@ -4,6 +4,9 @@ import { Home, FileText } from "lucide-react";
 
 const ModelliLPage = () => {
   const navigate = useNavigate();
+  
+  // Sostituisci questo URL con quello della tua web app esterna
+  const externalAppUrl = "https://URL_DELLA_TUA_WEBAPP_ESTERNA";
 
   return (
     <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
@@ -18,8 +21,13 @@ const ModelliLPage = () => {
         </Button>
       </div>
 
-      <div className="bg-white rounded-lg shadow-xl p-6">
-        <p className="text-gray-600 text-center">Contenuto della pagina Modelli L in costruzione.</p>
+      <div className="bg-white rounded-lg shadow-xl p-2 md:p-4 h-[80vh]">
+        <iframe
+          src={externalAppUrl}
+          title="Applicazione Esterna - Modelli L"
+          className="w-full h-full border-0 rounded-md"
+          allowFullScreen
+        ></iframe>
       </div>
     </div>
   );
