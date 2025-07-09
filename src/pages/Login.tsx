@@ -27,7 +27,7 @@ function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative overflow-hidden">
         <div 
-          className="absolute inset-0 bg-no-repeat bg-center opacity-10 pointer-events-none"
+          className="absolute inset-0 bg-no-repeat bg-center opacity-20 pointer-events-none"
           style={{ backgroundImage: "url('/images/grifo.png')", backgroundSize: 'contain' }}
         ></div>
         
