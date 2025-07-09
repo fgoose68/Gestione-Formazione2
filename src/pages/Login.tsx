@@ -28,7 +28,7 @@ function Login() {
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative">
         
         {/* Logo Guardia di Finanza */}
-        <img src="/images/grifo.png" alt="Guardia di Finanza" className="mx-auto mb-4" />
+        <img src="/images/grifo.png" alt="Guardia di Finanza" className="mx-auto mb-4 w-40 h-auto" />
 
         {/* Banda Tricolore (Verde, Bianca, Rossa) */}
         <div className="flex w-full h-4 mb-2 rounded-sm overflow-hidden">
