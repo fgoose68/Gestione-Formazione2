@@ -39,9 +39,8 @@ function Login() {
             <div className="bg-red-600 w-1/3"></div>
           </div>
 
-          <div className="text-center py-6">
-            <img src="/images/gdf-logo.png" alt="Guardia di Finanza Logo" className="mx-auto mb-4 h-16" />
-            <h1 className="text-2xl font-bold text-blue-800">Gestione Formazione Sezione Corsi</h1>
+          <div className="text-center py-8">
+            <h1 className="text-3xl font-bold text-blue-800">Gestione Formazione Sezione Corsi</h1>
           </div>
 
           {/* Banda Gialla e Verde */}
