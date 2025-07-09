@@ -25,64 +25,70 @@ function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative">
+      <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-no-repeat bg-center opacity-10 pointer-events-none"
+          style={{ backgroundImage: "url('/images/grifo.png')", backgroundSize: 'contain' }}
+        ></div>
         
-        {/* Banda Tricolore (Verde, Bianca, Rossa) */}
-        <div className="flex w-full h-4 rounded-sm overflow-hidden">
-          <div className="bg-green-600 w-1/3"></div>
-          <div className="bg-white w-1/3"></div>
-          <div className="bg-red-600 w-1/3"></div>
-        </div>
-
-        <div className="text-center py-8">
-          <h1 className="text-3xl font-bold text-blue-800">Gestione Formazione Sezione Corsi</h1>
-        </div>
-
-        {/* Banda Gialla e Verde */}
-        <div className="flex w-full h-3 mb-4 rounded-sm overflow-hidden">
-          <div className="bg-yellow-400 w-1/2"></div>
-          <div className="bg-green-600 w-1/2"></div>
-        </div>
-
-        {authError && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
-            {authError}
+        <div className="relative z-10">
+          {/* Banda Tricolore (Verde, Bianca, Rossa) */}
+          <div className="flex w-full h-4 rounded-sm overflow-hidden">
+            <div className="bg-green-600 w-1/3"></div>
+            <div className="bg-white w-1/3"></div>
+            <div className="bg-red-600 w-1/3"></div>
           </div>
-        )}
-        <Auth
-          supabaseClient={supabase}
-          providers={[]}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: 'hsl(210 40% 96.1%)',
-                  brandAccent: 'hsl(222.2 47.4% 11.2%)',
+
+          <div className="text-center py-8">
+            <h1 className="text-3xl font-bold text-blue-800">Gestione Formazione Sezione Corsi</h1>
+          </div>
+
+          {/* Banda Gialla e Verde */}
+          <div className="flex w-full h-3 mb-4 rounded-sm overflow-hidden">
+            <div className="bg-yellow-400 w-1/2"></div>
+            <div className="bg-green-600 w-1/2"></div>
+          </div>
+
+          {authError && (
+            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-md">
+              {authError}
+            </div>
+          )}
+          <Auth
+            supabaseClient={supabase}
+            providers={[]}
+            appearance={{
+              theme: ThemeSupa,
+              variables: {
+                default: {
+                  colors: {
+                    brand: 'hsl(210 40% 96.1%)',
+                    brandAccent: 'hsl(222.2 47.4% 11.2%)',
+                  },
                 },
               },
-            },
-          }}
-          theme="light"
-          localization={{
-            variables: {
-              sign_in: {
-                email_label: 'Indirizzo Email',
-                password_label: 'La tua Password',
+            }}
+            theme="light"
+            localization={{
+              variables: {
+                sign_in: {
+                  email_label: 'Indirizzo Email',
+                  password_label: 'La tua Password',
+                },
+                sign_up: {
+                  email_label: 'Indirizzo Email',
+                  password_label: 'Crea Password',
+                },
+                forgotten_password: {
+                  email_label: 'Indirizzo Email',
+                },
               },
-              sign_up: {
-                email_label: 'Indirizzo Email',
-                password_label: 'Crea Password',
-              },
-              forgotten_password: {
-                email_label: 'Indirizzo Email',
-              },
-            },
-          }}
-        />
-
+            }}
+          />
+        </div>
+        
         {/* Versione aggiornata */}
-        <div className="absolute bottom-2 right-4 text-xs text-gray-500">
+        <div className="absolute bottom-2 right-4 text-xs text-gray-500 z-20">
           Ver.9.1Lug25
         </div>
       </div>
