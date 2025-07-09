@@ -102,8 +102,8 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
       }
 
       const upsertData = attendees.map(att => {
-        // Escludi 'id' se non presente (per nuovi record)
-        const { id, ...dataToSave } = att;
+        // Escludi 'id' e 'absent' (che è calcolato) prima dell'upsert
+        const { id, absent, ...dataToSave } = att as any;
         return {
           ...dataToSave,
           event_id: eventId,
@@ -113,7 +113,7 @@ export const useDepartmentAttendees = (eventId: string | undefined) => {
         };
       });
       
-      console.log("Dati inviati per upsert (escluso absent):", upsertData);
+      console.log("Dati inviati per upsert:", upsertData);
 
       const { error } = await supabase
         .from('department_attendees')
