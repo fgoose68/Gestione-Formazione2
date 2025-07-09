@@ -109,7 +109,7 @@ const EditEventPage = () => {
 
 
     setLoading(true);
-    const updatedEventData = {
+    const updatedEventData: Partial<Event> = {
       ...event, // Mantieni gli altri campi come id, user_id, status, etc.
       title: formData.title,
       description: formData.description,
@@ -122,7 +122,10 @@ const EditEventPage = () => {
       type: courseType, // Includi il tipo di corso aggiornato
     };
 
-    const result = await updateEvent(eventId, updatedEventData);
+    // Rimuovi il campo calcolato 'displayStatus' prima di inviare i dati a Supabase
+    const { displayStatus, ...dataToUpdate } = updatedEventData;
+
+    const result = await updateEvent(eventId, dataToUpdate);
     setLoading(false);
 
     if (result) {
