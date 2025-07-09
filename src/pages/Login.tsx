@@ -33,7 +33,7 @@ function Login() {
         
         <div className="relative z-10">
           {/* Banda Tricolore (Verde, Bianca, Rossa) */}
-          <div className="flex w-full h-4 rounded-sm overflow-hidden">
+          <div className="flex w-full h-6 rounded-sm overflow-hidden">
             <div className="bg-green-600 w-1/3"></div>
             <div className="bg-white w-1/3"></div>
             <div className="bg-red-600 w-1/3"></div>
@@ -44,7 +44,7 @@ function Login() {
           </div>
 
           {/* Banda Gialla e Verde */}
-          <div className="flex w-full h-3 mb-4 rounded-sm overflow-hidden">
+          <div className="flex w-full h-5 mb-4 rounded-sm overflow-hidden">
             <div className="bg-yellow-400 w-1/2"></div>
             <div className="bg-green-600 w-1/2"></div>
           </div>
