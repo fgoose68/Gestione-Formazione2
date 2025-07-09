@@ -26,16 +26,12 @@ function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="w-full max-w-md bg-white p-8 rounded-lg shadow-md relative overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-no-repeat bg-center opacity-20 pointer-events-none"
+          style={{ backgroundImage: "url('/images/grifo.png')", backgroundSize: 'contain' }}
+        ></div>
+        
         <div className="relative z-10">
-          {/* Logo Section */}
-          <div className="flex justify-center items-center mb-6 p-4 bg-slate-700 rounded-md">
-            <img src="/images/grifo.png" alt="Logo Grifo" className="h-16 w-auto" />
-            <div className="ml-4 text-white">
-              <p className="text-2xl font-bold tracking-wider">GUARDIA</p>
-              <p className="text-2xl font-bold tracking-wider">DI FINANZA</p>
-            </div>
-          </div>
-
           {/* Banda Tricolore (Verde, Bianca, Rossa) */}
           <div className="flex w-full h-4 rounded-sm overflow-hidden">
             <div className="bg-green-600 w-1/3"></div>
