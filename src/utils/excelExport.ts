@@ -201,9 +201,9 @@ export const exportCourseTypeStatsToExcel = (
 };
 
 export const exportCoursesByDepartmentToExcel = (
-  events: Event[],
-  attendeesByEvent: Map<string, DepartmentAttendee[]>,
-  grandTotals: MonthlyDepartmentRankGrandTotals, // Questi sono i totali complessivi dei discenti per il periodo
+  events: Event[], // Questi sono gli eventi già filtrati
+  attendeesByEvent: Map<string, DepartmentAttendee[]>, // Questa mappa contiene solo i discenti del reparto selezionato per gli eventi filtrati
+  grandTotals: MonthlyDepartmentRankGrandTotals, // Questi sono i totali complessivi dei discenti per il periodo e reparto
   dateRangeString: string,
   selectedDepartmentName?: string // Nuovo parametro opzionale
 ) => {
@@ -219,17 +219,11 @@ export const exportCoursesByDepartmentToExcel = (
   const headerRow = ["Reparto", "Uff.", "Isp.", "Sovr.", "Mil./App.", "Previsti", "Effettivi", "Assenti"];
 
   events.forEach(event => {
-    const eventAttendees = attendeesByEvent.get(event.id) || [];
+    // Ora attendeesByEvent contiene già solo i discenti del reparto selezionato per questo evento
+    const filteredEventAttendees = attendeesByEvent.get(event.id) || [];
     
-    // Se è stato selezionato un reparto, filtra gli attendees per quel reparto
-    const filteredEventAttendees = selectedDepartmentName
-      ? eventAttendees.filter(att => att.department_name === selectedDepartmentName)
-      : eventAttendees;
-
-    // Se non ci sono attendees per il reparto selezionato in questo evento, salta l'evento
-    if (selectedDepartmentName && filteredEventAttendees.length === 0) {
-      return;
-    }
+    // Non è più necessario il controllo filteredEventAttendees.length === 0 qui,
+    // perché gli eventi passati a questa funzione sono già stati filtrati per avere discenti effettivi.
 
     worksheetData.push([`Corso: ${event.title}`]);
     worksheetData.push([`Periodo: ${format(parseISO(event.start_date), "PPP", { locale: it })} - ${format(parseISO(event.end_date), "PPP", { locale: it })}`]);
@@ -284,38 +278,18 @@ export const exportCoursesByDepartmentToExcel = (
     worksheetData.push([]); // Another empty row for more spacing
   });
 
-  // Add grand totals for the entire report period (these should be for the filtered data)
-  // If a department is selected, these grand totals should reflect only that department's totals across all relevant events.
-  // Otherwise, they reflect the grand totals passed in (which are for all departments in the period).
-  let finalGrandTotals = grandTotals;
-  if (selectedDepartmentName) {
-    const departmentSpecificTotals = events.reduce((acc, event) => {
-      const eventAttendees = attendeesByEvent.get(event.id) || [];
-      const departmentAttendee = eventAttendees.find(att => att.department_name === selectedDepartmentName);
-      if (departmentAttendee) {
-        acc.officers += departmentAttendee.officers || 0;
-        acc.inspectors += departmentAttendee.inspectors || 0;
-        acc.superintendents += departmentAttendee.superintendents || 0;
-        acc.militari += departmentAttendee.militari || 0;
-        acc.actualTotal += departmentAttendee.actual || 0;
-      }
-      return acc;
-    }, { officers: 0, inspectors: 0, superintendents: 0, militari: 0, actualTotal: 0 });
-    finalGrandTotals = departmentSpecificTotals;
-  }
-
-
-  const grandTotalExpected = finalGrandTotals.officers + finalGrandTotals.inspectors + finalGrandTotals.superintendents + finalGrandTotals.militari;
-  const grandTotalAbsent = Math.max(0, grandTotalExpected - finalGrandTotals.actualTotal);
+  // grandTotals è già il totale complessivo per il reparto selezionato
+  const grandTotalExpected = grandTotals.officers + grandTotals.inspectors + grandTotals.superintendents + grandTotals.militari;
+  const grandTotalAbsent = Math.max(0, grandTotalExpected - grandTotals.actualTotal);
 
   worksheetData.push([
     "TOTALE COMPLESSIVO PERIODO",
-    finalGrandTotals.officers,
-    finalGrandTotals.inspectors,
-    finalGrandTotals.superintendents,
-    finalGrandTotals.militari,
+    grandTotals.officers,
+    grandTotals.inspectors,
+    grandTotals.superintendents,
+    grandTotals.militari,
     grandTotalExpected,
-    finalGrandTotals.actualTotal,
+    grandTotals.actualTotal,
     grandTotalAbsent,
   ]);
 
