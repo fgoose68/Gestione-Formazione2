@@ -133,14 +133,18 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
   // Aggiungi la scadenza dalla checklist se presente
   if (event.completed_tasks && Array.isArray(event.completed_tasks)) {
+    console.log(`[useDeadlines] Processing event ${event.title}, completed_tasks:`, event.completed_tasks);
     const risposteTask = event.completed_tasks.find(task => 
       typeof task === 'string' && task.startsWith('checklist_risposte_reparti_entro:')
     );
+    console.log(`[useDeadlines] risposteTask found:`, risposteTask);
     if (risposteTask) {
       const dateString = risposteTask.split(':')[1];
+      console.log(`[useDeadlines] dateString extracted:`, dateString);
       if (dateString) {
         try {
           const deadlineDate = parseISO(dateString);
+          console.log(`[useDeadlines] Parsed deadlineDate:`, deadlineDate);
           eventDeadlines.push({
             type: 'risposte_reparti',
             date: deadlineDate,
@@ -149,11 +153,18 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
             completed: false, // Questa scadenza è solo una notifica
             eventTitle: event.title,
           });
+          console.log(`[useDeadlines] Added 'risposte_reparti' deadline for ${event.title}`);
         } catch (e) {
-          console.error(`Formato data non valido per la scadenza della checklist: ${dateString}`, e);
+          console.error(`[useDeadlines] Formato data non valido per la scadenza della checklist: ${dateString}`, e);
         }
+      } else {
+        console.log(`[useDeadlines] dateString is empty for risposteTask:`, risposteTask);
       }
+    } else {
+      console.log(`[useDeadlines] No 'checklist_risposte_reparti_entro:' task found in completed_tasks.`);
     }
+  } else {
+    console.log(`[useDeadlines] event.completed_tasks is not an array or is empty for event ${event.title}.`);
   }
 
   return eventDeadlines;
