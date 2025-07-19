@@ -64,10 +64,16 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     setRisposteRepartiDate(dateValue);
   }, [safeCompletedTasks]);
 
-  const saveChecklist = useCallback(
-    debounce(async (currentChecked: Set<string>, currentDate: string, currentSafeCompletedTasks: string[]) => {
+  // Funzione di salvataggio debounced
+  const saveChecklistDebounced = useCallback(
+    debounce(async () => {
       setIsSaving(true);
       
+      // Accedi ai valori più recenti dello stato direttamente
+      const currentChecked = checkedTasks; 
+      const currentDate = risposteRepartiDate;
+      const currentSafeCompletedTasks = safeCompletedTasks; // Questo è già un useMemo, quindi è aggiornato
+
       // Filtra le task iniziali che non fanno parte della checklist definita
       const otherTasks = currentSafeCompletedTasks
         .filter(task => typeof task === 'string')
@@ -93,7 +99,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
 
       const finalTasks = [...otherTasks, ...newChecklistTasks];
-      console.log("[StandardCourseChecklist] Saving completed_tasks:", finalTasks); // Nuovo log qui
+      console.log("[StandardCourseChecklist] Saving completed_tasks:", finalTasks);
 
       const result = await updateEvent(eventId, { completed_tasks: finalTasks });
       if (result) {
@@ -103,35 +109,39 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
       setIsSaving(false);
     }, 1000),
-    [eventId, updateEvent]
+    [eventId, updateEvent, checkedTasks, risposteRepartiDate, safeCompletedTasks] // Dipendenze per useCallback
   );
 
   const handleCheckChange = (taskId: string, checked: boolean) => {
-    const newCheckedTasks = new Set(checkedTasks);
-    if (checked) {
-      newCheckedTasks.add(taskId);
-    } else {
-      newCheckedTasks.delete(taskId);
-      // Se deselezioni la checkbox della data, resetta anche il campo data
-      if (taskId === REPARTI_RISPOSTE_ID) {
-        setRisposteRepartiDate('');
+    setCheckedTasks(prev => {
+      const newCheckedTasks = new Set(prev);
+      if (checked) {
+        newCheckedTasks.add(taskId);
+      } else {
+        newCheckedTasks.delete(taskId);
+        // Se deselezioni la checkbox della data, resetta anche il campo data
+        if (taskId === REPARTI_RISPOSTE_ID) {
+          setRisposteRepartiDate('');
+        }
       }
-    }
-    setCheckedTasks(newCheckedTasks);
-    saveChecklist(newCheckedTasks, taskId === REPARTI_RISPOSTE_ID ? '' : risposteRepartiDate, safeCompletedTasks);
+      return newCheckedTasks;
+    });
+    saveChecklistDebounced(); // Chiama la funzione debounced
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = e.target.value;
     setRisposteRepartiDate(newDate);
-    const newCheckedTasks = new Set(checkedTasks);
-    if (newDate) {
-      newCheckedTasks.add(REPARTI_RISPOSTE_ID);
-    } else {
-      newCheckedTasks.delete(REPARTI_RISPOSTE_ID); // Se la data viene svuotata, deseleziona la checkbox
-    }
-    setCheckedTasks(newCheckedTasks);
-    saveChecklist(newCheckedTasks, newDate, safeCompletedTasks);
+    setCheckedTasks(prev => {
+      const newCheckedTasks = new Set(prev);
+      if (newDate) {
+        newCheckedTasks.add(REPARTI_RISPOSTE_ID);
+      } else {
+        newCheckedTasks.delete(REPARTI_RISPOSTE_ID); // Se la data viene svuotata, deseleziona la checkbox
+      }
+      return newCheckedTasks;
+    });
+    saveChecklistDebounced(); // Chiama la funzione debounced
   };
 
   return (
