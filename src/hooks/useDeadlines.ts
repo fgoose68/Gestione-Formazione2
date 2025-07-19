@@ -1,4 +1,4 @@
-import { parseISO, subDays, isBefore, isToday, addDays } from 'date-fns';
+import { parseISO, subDays, isBefore, isToday, addDays, startOfDay } from 'date-fns';
 import { Event } from '@/types';
 import { Deadline } from '@/types';
 
@@ -143,10 +143,16 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
       console.log(`[useDeadlines] dateString extracted:`, dateString);
       if (dateString) {
         try {
-          const deadlineDate = parseISO(dateString);
-          console.log(`[useDeadlines] Parsed deadlineDate:`, deadlineDate);
-          console.log(`[useDeadlines] Current date for comparison:`, new Date());
-          console.log(`[useDeadlines] Is deadlineDate today?`, isToday(deadlineDate));
+          // Parse the date string
+          let deadlineDate = parseISO(dateString);
+          // Normalize to the start of the day to avoid time component issues
+          deadlineDate = startOfDay(deadlineDate);
+
+          const todayNormalized = startOfDay(new Date());
+
+          console.log(`[useDeadlines] Parsed & Normalized deadlineDate:`, deadlineDate);
+          console.log(`[useDeadlines] Normalized current date:`, todayNormalized);
+          console.log(`[useDeadlines] Is deadlineDate today (normalized)?`, isToday(deadlineDate)); // This should now be more reliable
 
           eventDeadlines.push({
             type: 'risposte_reparti',
