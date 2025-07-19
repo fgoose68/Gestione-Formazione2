@@ -30,7 +30,6 @@ const EventDetailPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   
-  // Non destrutturare deleteEvent qui, useremo updateEventStatus
   const { events, loading: eventLoading, updateEventStatus } = useEvents(); 
   const [event, setEvent] = useState<Event | null>(null);
 
@@ -48,7 +47,6 @@ const EventDetailPage = () => {
       setEvent(currentEvent || null);
       if (!currentEvent) {
         showError("Evento non trovato.");
-        // Considera se navigare via o mostrare messaggio
       }
     }
   }, [eventId, events, navigate]);
@@ -62,8 +60,6 @@ const EventDetailPage = () => {
     }
   };
 
-  // 'expected' è ora calcolato e gestito dall'hook useDepartmentAttendees
-  // 'absent' è calcolato qui per la visualizzazione
   const attendeesWithCalculatedAbsent = useMemo(() => {
     return departmentAttendees.map(att => ({
       ...att,
@@ -91,20 +87,17 @@ const EventDetailPage = () => {
     if(eventId) navigate(`/evento/${eventId}/modifica`);
   };
 
-  // Funzione per archiviare l'evento
   const handleArchiveEvent = async () => {
     if (eventId) {
-      // Chiama updateEventStatus per cambiare lo stato in 'archiviato'
       const result = await updateEventStatus(eventId, 'archiviato');
       if (result) {
         showSuccess("Evento archiviato con successo!");
-        navigate('/'); // Torna alla dashboard dopo l'archiviazione
+        navigate('/');
       } else {
         showError("Errore durante l'archiviazione dell'evento.");
       }
     }
   };
-
 
   if (eventLoading || (attendeesLoading && !initialDataLoaded && eventId)) {
     return (
@@ -114,11 +107,11 @@ const EventDetailPage = () => {
     );
   }
 
-  if (!event && !eventLoading && eventId) { // Controlla anche eventLoading per evitare flash di "non trovato"
+  if (!event && !eventLoading && eventId) {
     return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">Evento non trovato.</p>
-        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black"> {/* Modificato qui */}
+        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black">
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
@@ -126,11 +119,11 @@ const EventDetailPage = () => {
     );
   }
   
-  if (!event && !eventId) { // Caso in cui non c'è eventId (es. navigazione diretta errata)
+  if (!event && !eventId) {
      return (
       <div className="container mx-auto p-6 text-center">
         <p className="text-xl text-red-600">ID Evento non specificato.</p>
-        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black"> {/* Modificato qui */}
+        <Button onClick={() => navigate('/')} className="mt-4 bg-yellow-400 hover:bg-yellow-500 text-black">
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
@@ -138,16 +131,14 @@ const EventDetailPage = () => {
     );
   }
 
-
   return (
     <div className="container mx-auto p-6 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center mb-6">
-        {/* Modificato qui */}
         <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
           <ArrowLeftCircle className="mr-2 h-5 w-5" />
           Torna alla Dashboard
         </Button>
-        {event && event.status !== 'archiviato' && ( // Mostra i pulsanti solo se l'evento non è già archiviato nel DB
+        {event && event.status !== 'archiviato' && (
           <div className="flex space-x-3">
             <Button onClick={handleNavigateToEdit} variant="default" className="bg-orange-500 hover:bg-orange-600 text-white">
               <Edit className="mr-2 h-5 w-5" />
@@ -156,7 +147,6 @@ const EventDetailPage = () => {
             
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                {/* Cambiato il testo del pulsante */}
                 <Button variant="secondary" className="bg-gray-300 hover:bg-gray-400 text-gray-800">
                   <Archive className="mr-2 h-5 w-5" />
                   Archivia Evento
@@ -164,7 +154,6 @@ const EventDetailPage = () => {
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  {/* Cambiato il testo del titolo e della descrizione */}
                   <AlertDialogTitle>Sei sicuro di voler archiviare questo evento?</AlertDialogTitle>
                   <AlertDialogDescription>
                     L'evento verrà spostato nella sezione Archivio e non sarà più visibile nella Dashboard principale. Potrai gestirlo dall'archivio.
@@ -172,14 +161,13 @@ const EventDetailPage = () => {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  {/* Cambiato il testo dell'azione e la funzione chiamata */}
                   <AlertDialogAction onClick={handleArchiveEvent} className="bg-gray-600 hover:bg-gray-700">Archivia</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           </div>
         )}
-         {event && event.status === 'archiviato' && ( // Mostra un messaggio se l'evento è archiviato nel DB
+         {event && event.status === 'archiviato' && (
             <div className="flex items-center text-gray-600 font-medium">
                <Archive className="mr-2 h-5 w-5" /> Evento Archiviato
             </div>
@@ -194,24 +182,15 @@ const EventDetailPage = () => {
               {event.description && <CardDescription className="text-blue-100 mt-2 text-base">{event.description}</CardDescription>}
             </CardHeader>
             <CardContent className="p-6">
-              {event.type !== 'E-learning' && (
-                <StandardCourseChecklist 
-                    eventId={event.id} 
-                    completedTasks={event.completed_tasks || []} 
-                />
-              )}
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h3 className="text-lg font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-orange-500" />Periodo</h3>
-                    {/* Modificato il formato data qui */}
                     <p><span className="font-medium">Inizio:</span> {format(parseISO(event.start_date), "PPP", { locale: it })}</p>
-                    {/* Modificato il formato data qui */}
                     <p><span className="font-medium">Fine:</span> {format(parseISO(event.end_date), "PPP", { locale: it })}</p>
                   </div>
                   {event.location && <div><h3 className="text-lg font-semibold text-blue-700 flex items-center"><MapPin className="mr-2 h-5 w-5 text-orange-500" />Luogo</h3><p>{event.location}</p></div>}
                 </div>
-                {/* Visualizzazione Tipo Corso */}
                 {event.type && (
                    <div>
                      <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Tag className="mr-2 h-5 w-5 text-orange-500" />Tipo Corso</h3>
@@ -222,15 +201,21 @@ const EventDetailPage = () => {
                 <div>
                   <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Info className="mr-2 h-5 w-5 text-orange-500" />Stato</h3>
                   <p className={`font-medium capitalize px-3 py-1 inline-block rounded-full ${ 
-                    event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' : // Blu per concluso
-                    event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' : // Verde per in programma
-                    event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' : // Rosso intenso per in corso
-                    'bg-gray-200 text-gray-800' // Fallback
+                    event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' :
+                    event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' :
+                    event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' :
+                    'bg-gray-200 text-gray-800'
                   }`}>
                     {event.displayStatus?.replace('_', ' ') || 'N/D'}
                     {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
                   </p>
                 </div>
+                {event.type !== 'E-learning' && (
+                  <StandardCourseChecklist 
+                      eventId={event.id} 
+                      completedTasks={event.completed_tasks || []} 
+                  />
+                )}
               </div>
             </CardContent>
           </Card>
@@ -251,7 +236,7 @@ const EventDetailPage = () => {
                         <TableHead className="text-center font-semibold">Mil./App.</TableHead>
                         <TableHead className="text-center font-semibold bg-blue-50">Previsti</TableHead>
                         <TableHead className="text-center font-semibold">Effettivi</TableHead>
-                        <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead> {/* Aggiunta colonna Assenti */}
+                        <TableHead className="text-center font-semibold bg-red-50">Assenti</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -267,7 +252,7 @@ const EventDetailPage = () => {
                           <TableCell className="text-center">
                              <Input type="number" min="0" value={att.actual || 0} onChange={(e) => handleAttendeeChange(att.department_name, 'actual', e.target.value)} className="w-20 text-center mx-auto" disabled={attendeesLoading}/>
                           </TableCell>
-                          <TableCell className="text-center font-medium bg-red-50">{att.absent}</TableCell> {/* Cella per Assenti */}
+                          <TableCell className="text-center font-medium bg-red-50">{att.absent}</TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -280,7 +265,7 @@ const EventDetailPage = () => {
                         <TableCell className="text-center font-bold text-slate-800">{totals.militari}</TableCell>
                         <TableCell className="text-center font-bold text-slate-800 bg-blue-100">{totals.expected}</TableCell>
                         <TableCell className="text-center font-bold text-slate-800">{totals.actual}</TableCell>
-                        <TableCell className="text-center font-bold text-slate-800 bg-red-100">{totals.absent}</TableCell> {/* Cella per Totale Assenti */}
+                        <TableCell className="text-center font-bold text-slate-800 bg-red-100">{totals.absent}</TableCell>
                       </TableRow>
                     </TableFooter>
                   </Table>
