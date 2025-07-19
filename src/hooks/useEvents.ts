@@ -42,21 +42,11 @@ export const useEvents = (): UseEventsReturn => {
         throw error;
       }
       
-      console.log('useEvents: Raw data from Supabase:', data); // Nuovo log qui
-
-      // Mappa gli eventi per aggiungere il displayStatus e assicurare il tipo corretto per completed_tasks
-      const eventsWithDisplayStatus: Event[] = (data || []).map(event => {
-        // Assicurati che completed_tasks sia sempre un array di stringhe
-        const completedTasksArray = Array.isArray(event.completed_tasks) 
-          ? event.completed_tasks.filter((task: any) => typeof task === 'string') as string[]
-          : [];
-
-        return {
-          ...event,
-          completed_tasks: completedTasksArray, // Forza il tipo a string[]
-          displayStatus: getEventDisplayStatus(event),
-        };
-      });
+      // Mappa gli eventi per aggiungere il displayStatus
+      const eventsWithDisplayStatus: Event[] = (data || []).map(event => ({
+        ...event,
+        displayStatus: getEventDisplayStatus(event),
+      }));
 
       console.log('useEvents: Events fetched successfully with displayStatus:', eventsWithDisplayStatus);
       setEvents(eventsWithDisplayStatus);
