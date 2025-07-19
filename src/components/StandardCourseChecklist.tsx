@@ -65,7 +65,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
   }, [safeCompletedTasks]);
 
   const saveChecklist = useCallback(
-    debounce(async (currentChecked: Set<string>, currentDate: string, currentSafeCompletedTasks: string[]) => {
+    debounce(async (currentChecked: Set<string>, currentDateValue: string, currentSafeCompletedTasks: string[]) => {
       setIsSaving(true);
       
       // Filtra le task iniziali che non fanno parte della checklist definita
@@ -85,9 +85,10 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
         }
       });
 
-      if (currentChecked.has(REPARTI_RISPOSTE_ID) && currentDate) {
-        newChecklistTasks.push(`${REPARTI_RISPOSTE_ID}:${currentDate}`);
-      } else if (currentChecked.has(REPARTI_RISPOSTE_ID) && !currentDate) {
+      // Gestisci REPARTI_RISPOSTE_ID specificamente
+      if (currentChecked.has(REPARTI_RISPOSTE_ID) && currentDateValue) {
+        newChecklistTasks.push(`${REPARTI_RISPOSTE_ID}:${currentDateValue}`);
+      } else if (currentChecked.has(REPARTI_RISPOSTE_ID) && !currentDateValue) {
         // Se la checkbox è spuntata ma la data è vuota, salva solo l'ID senza data
         newChecklistTasks.push(REPARTI_RISPOSTE_ID);
       }
@@ -117,7 +118,8 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
     }
     setCheckedTasks(newCheckedTasks);
-    saveChecklist(newCheckedTasks, taskId === REPARTI_RISPOSTE_ID ? '' : risposteRepartiDate, safeCompletedTasks);
+    // Passa lo stato corrente di entrambi per il salvataggio
+    saveChecklist(newCheckedTasks, risposteRepartiDate, safeCompletedTasks);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -125,11 +127,12 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     setRisposteRepartiDate(newDate);
     const newCheckedTasks = new Set(checkedTasks);
     if (newDate) {
-      newCheckedTasks.add(REPARTI_RISPOSTE_ID);
+      newCheckedTasks.add(REPARTI_RISPOSTE_ID); // Assicurati che la checkbox sia spuntata se la data è impostata
     } else {
       newCheckedTasks.delete(REPARTI_RISPOSTE_ID); // Se la data viene svuotata, deseleziona la checkbox
     }
     setCheckedTasks(newCheckedTasks);
+    // Passa lo stato corrente di entrambi per il salvataggio
     saveChecklist(newCheckedTasks, newDate, safeCompletedTasks);
   };
 
