@@ -143,20 +143,21 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
       console.log(`[useDeadlines] dateString extracted:`, dateString);
       if (dateString) {
         try {
-          // Parse the date string
-          let deadlineDate = parseISO(dateString);
-          // Normalize to the start of the day to avoid time component issues
-          deadlineDate = startOfDay(deadlineDate);
+          // Estrai anno, mese, giorno dalla stringa YYYY-MM-DD
+          const [year, month, day] = dateString.split('-').map(Number);
+          // Crea un nuovo oggetto Date nel fuso orario locale, impostando l'ora a mezzanotte
+          // Il mese è 0-indexed nel costruttore Date (es. Luglio è 6)
+          const deadlineDate = new Date(year, month - 1, day); 
+          
+          const todayNormalized = startOfDay(new Date()); // Questo è l'inizio del giorno locale
 
-          const todayNormalized = startOfDay(new Date());
-
-          console.log(`[useDeadlines] Parsed & Normalized deadlineDate:`, deadlineDate);
-          console.log(`[useDeadlines] Normalized current date:`, todayNormalized);
-          console.log(`[useDeadlines] Is deadlineDate today (normalized)?`, isToday(deadlineDate)); // This should now be more reliable
+          console.log(`[useDeadlines] Created deadlineDate (local midnight):`, deadlineDate);
+          console.log(`[useDeadlines] Normalized current date (local midnight):`, todayNormalized);
+          console.log(`[useDeadlines] Is deadlineDate today (local normalized)?`, isToday(deadlineDate));
 
           eventDeadlines.push({
             type: 'risposte_reparti',
-            date: deadlineDate,
+            date: deadlineDate, // Usa la data localmente normalizzata
             message: `Risposte dei Reparti per "${event.title}"`,
             eventId: event.id,
             completed: false, // Questa scadenza è solo una notifica
@@ -184,7 +185,7 @@ export const useDeadlines = (events: Event[]) => {
   
   return {
     deadlines,
-    upcomingDeadlines: deadlines.filter(d => !d.completed && !isBefore(d.date, new Date())),
+    upcomingDeadlines: deadlines.filter(d => !d.completed && !isBefore(d.date, new Date()) && !isToday(d.date)),
     pastDeadlines: deadlines.filter(d => isBefore(d.date, new Date()) && !isToday(d.date)),
     todayDeadlines: deadlines.filter(d => isToday(d.date))
   };
