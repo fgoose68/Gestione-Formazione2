@@ -24,6 +24,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"; // Importa AlertDialog
+import { StandardCourseChecklist } from '@/components/StandardCourseChecklist';
 
 const EventDetailPage = () => {
   const { id: eventId } = useParams<{ id: string }>();
@@ -192,36 +193,44 @@ const EventDetailPage = () => {
               <CardTitle className="text-3xl font-bold flex items-center"><Info className="mr-3 h-8 w-8" />{event.title}</CardTitle>
               {event.description && <CardDescription className="text-blue-100 mt-2 text-base">{event.description}</CardDescription>}
             </CardHeader>
-            <CardContent className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-orange-500" />Periodo</h3>
-                  {/* Modificato il formato data qui */}
-                  <p><span className="font-medium">Inizio:</span> {format(parseISO(event.start_date), "PPP", { locale: it })}</p>
-                  {/* Modificato il formato data qui */}
-                  <p><span className="font-medium">Fine:</span> {format(parseISO(event.end_date), "PPP", { locale: it })}</p>
-                </div>
-                {event.location && <div><h3 className="text-lg font-semibold text-blue-700 flex items-center"><MapPin className="mr-2 h-5 w-5 text-orange-500" />Luogo</h3><p>{event.location}</p></div>}
-              </div>
-              {/* Visualizzazione Tipo Corso */}
-              {event.type && (
-                 <div>
-                   <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Tag className="mr-2 h-5 w-5 text-orange-500" />Tipo Corso</h3>
-                   <p className="font-medium">{event.type}</p>
-                 </div>
+            <CardContent className="p-6">
+              {event.type !== 'E-learning' && (
+                <StandardCourseChecklist 
+                    eventId={event.id} 
+                    completedTasks={event.completed_tasks || []} 
+                />
               )}
-              {event.teachers?.length > 0 && <div><h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Users className="mr-2 h-5 w-5 text-orange-500" />Docenti</h3><ul className="list-disc list-inside pl-5 bg-slate-100 p-3 rounded-md">{event.teachers.map((t, i) => <li key={i}>{t}</li>)}</ul></div>}
-              <div>
-                <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Info className="mr-2 h-5 w-5 text-orange-500" />Stato</h3>
-                <p className={`font-medium capitalize px-3 py-1 inline-block rounded-full ${ 
-                  event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' : // Blu per concluso
-                  event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' : // Verde per in programma
-                  event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' : // Rosso intenso per in corso
-                  'bg-gray-200 text-gray-800' // Fallback
-                }`}>
-                  {event.displayStatus?.replace('_', ' ') || 'N/D'}
-                  {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
-                </p>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-2 h-5 w-5 text-orange-500" />Periodo</h3>
+                    {/* Modificato il formato data qui */}
+                    <p><span className="font-medium">Inizio:</span> {format(parseISO(event.start_date), "PPP", { locale: it })}</p>
+                    {/* Modificato il formato data qui */}
+                    <p><span className="font-medium">Fine:</span> {format(parseISO(event.end_date), "PPP", { locale: it })}</p>
+                  </div>
+                  {event.location && <div><h3 className="text-lg font-semibold text-blue-700 flex items-center"><MapPin className="mr-2 h-5 w-5 text-orange-500" />Luogo</h3><p>{event.location}</p></div>}
+                </div>
+                {/* Visualizzazione Tipo Corso */}
+                {event.type && (
+                   <div>
+                     <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Tag className="mr-2 h-5 w-5 text-orange-500" />Tipo Corso</h3>
+                     <p className="font-medium">{event.type}</p>
+                   </div>
+                )}
+                {event.teachers?.length > 0 && <div><h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Users className="mr-2 h-5 w-5 text-orange-500" />Docenti</h3><ul className="list-disc list-inside pl-5 bg-slate-100 p-3 rounded-md">{event.teachers.map((t, i) => <li key={i}>{t}</li>)}</ul></div>}
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-700 mb-2 flex items-center"><Info className="mr-2 h-5 w-5 text-orange-500" />Stato</h3>
+                  <p className={`font-medium capitalize px-3 py-1 inline-block rounded-full ${ 
+                    event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' : // Blu per concluso
+                    event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' : // Verde per in programma
+                    event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' : // Rosso intenso per in corso
+                    'bg-gray-200 text-gray-800' // Fallback
+                  }`}>
+                    {event.displayStatus?.replace('_', ' ') || 'N/D'}
+                    {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
+                  </p>
+                </div>
               </div>
             </CardContent>
           </Card>
