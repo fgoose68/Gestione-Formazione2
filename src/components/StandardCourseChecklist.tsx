@@ -48,11 +48,14 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
   const saveChecklist = useCallback(
     debounce(async (currentChecked: Set<string>, currentDate: string) => {
       setIsSaving(true);
-      const otherTasks = (initialCompletedTasks || []).filter(task => {
-        const isStandardChecklistItem = CHECKLIST_ITEMS.some(item => item.id === task);
-        const isRisposteRepartiTask = task.startsWith(REPARTI_RISPOSTE_ID) || task === REPARTI_RISPOSTE_ID;
-        return !isStandardChecklistItem && !isRisposteRepartiTask;
-      });
+      
+      const otherTasks = (initialCompletedTasks || [])
+        .filter(task => typeof task === 'string') // Safeguard to prevent errors
+        .filter(task => {
+          const isStandardChecklistItem = CHECKLIST_ITEMS.some(item => item.id === task);
+          const isRisposteRepartiTask = task.startsWith(REPARTI_RISPOSTE_ID) || task === REPARTI_RISPOSTE_ID;
+          return !isStandardChecklistItem && !isRisposteRepartiTask;
+        });
 
       const newChecklistTasks: string[] = [];
       currentChecked.forEach(task => {
@@ -104,7 +107,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
 
   return (
     <div className="space-y-4 p-4 border rounded-lg bg-slate-50 mb-6">
-        <h4 className="font-semibold text-blue-700">Checklist Corso Standard</h4>
+        <h4 className="font-semibold text-blue-700">Avanzamento progettualità</h4>
         {CHECKLIST_ITEMS.map(item => (
             <div key={item.id} className="flex items-center space-x-2">
                 <Checkbox

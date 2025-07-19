@@ -2,16 +2,6 @@ import { parseISO, subDays, isBefore, isToday, addDays } from 'date-fns'; // Agg
 import { Event } from '@/types';
 import { Deadline } from '@/types'; // Importa Deadline dal tuo types/index.ts
 
-// Definisci l'interfaccia Deadline qui se non è già in types/index.ts
-// export interface Deadline {
-//   type: string; // Questo sarà il tipo specifico (es. 'docente', 'discenti_elearning')
-//   date: Date;
-//   message: string;
-//   eventId: string;
-//   completed: boolean;
-//   eventTitle: string;
-// }
-
 const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
   const eventDeadlines: Deadline[] = [];
   if (!event.start_date) return [];
@@ -139,6 +129,31 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
       completed: event.completed_tasks?.includes('generazione_modello_l_fatta') || false,
       eventTitle: event.title,
     });
+  }
+
+  // Aggiungi la scadenza dalla checklist se presente
+  if (event.completed_tasks && Array.isArray(event.completed_tasks)) {
+    const risposteTask = event.completed_tasks.find(task => 
+      typeof task === 'string' && task.startsWith('checklist_risposte_reparti_entro:')
+    );
+    if (risposteTask) {
+      const dateString = risposteTask.split(':')[1];
+      if (dateString) {
+        try {
+          const deadlineDate = parseISO(dateString);
+          eventDeadlines.push({
+            type: 'risposte_reparti',
+            date: deadlineDate,
+            message: `Risposte dei Reparti per "${event.title}"`,
+            eventId: event.id,
+            completed: false, // Questa scadenza è solo una notifica
+            eventTitle: event.title,
+          });
+        } catch (e) {
+          console.error(`Formato data non valido per la scadenza della checklist: ${dateString}`, e);
+        }
+      }
+    }
   }
 
   return eventDeadlines;
