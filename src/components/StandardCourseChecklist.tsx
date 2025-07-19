@@ -11,12 +11,14 @@ interface StandardCourseChecklistProps {
   completedTasks: string[];
 }
 
-const CHECKLIST_ITEMS = [
-  { id: 'checklist_circolare_indizione', label: 'Circolare indizione' },
-  { id: 'checklist_avvio_corso', label: 'Avvio al corso' },
-  { id: 'checklist_redazione_vm_mod_l', label: 'Redazione V.M. e Mod "L"' },
-  { id: 'checklist_relazione_finale', label: 'Relazione finale' },
-  { id: 'checklist_altro', label: 'Altro' },
+// Definizione di tutti gli elementi della checklist, inclusa la data, nell'ordine desiderato
+const CHECKLIST_DEFINITIONS = [
+  { id: 'checklist_circolare_indizione', label: 'Circolare indizione', type: 'checkbox' },
+  { id: 'checklist_risposte_reparti_entro', label: 'Risposte dei Reparti entro il', type: 'date' },
+  { id: 'checklist_avvio_corso', label: 'Avvio al corso', type: 'checkbox' },
+  { id: 'checklist_redazione_vm_mod_l', label: 'Redazione V.M. e Mod "L"', type: 'checkbox' },
+  { id: 'checklist_relazione_finale', label: 'Relazione finale', type: 'checkbox' },
+  { id: 'checklist_altro', label: 'Altro', type: 'checkbox' },
 ];
 
 const REPARTI_RISPOSTE_ID = 'checklist_risposte_reparti_entro';
@@ -31,13 +33,12 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     const initialChecked = new Set<string>();
     let dateValue = '';
     (initialCompletedTasks || []).forEach(task => {
-      if (task.startsWith(`${REPARTI_RISPOSTE_ID}:`)) {
-        dateValue = task.split(':')[1];
-        initialChecked.add(REPARTI_RISPOSTE_ID);
-      } else {
-        const isChecklistItem = CHECKLIST_ITEMS.some(item => item.id === task);
-        if (isChecklistItem || task === REPARTI_RISPOSTE_ID) {
-            initialChecked.add(task);
+      if (typeof task === 'string') { // Assicurati che l'elemento sia una stringa
+        if (task.startsWith(`${REPARTI_RISPOSTE_ID}:`)) {
+          dateValue = task.split(':')[1];
+          initialChecked.add(REPARTI_RISPOSTE_ID);
+        } else if (CHECKLIST_DEFINITIONS.some(item => item.id === task && item.type === 'checkbox')) {
+          initialChecked.add(task);
         }
       }
     });
@@ -49,24 +50,27 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     debounce(async (currentChecked: Set<string>, currentDate: string) => {
       setIsSaving(true);
       
+      // Filtra le task iniziali che non fanno parte della checklist definita
       const otherTasks = (initialCompletedTasks || [])
-        .filter(task => typeof task === 'string') // Safeguard to prevent errors
+        .filter(task => typeof task === 'string')
         .filter(task => {
-          const isStandardChecklistItem = CHECKLIST_ITEMS.some(item => item.id === task);
-          const isRisposteRepartiTask = task.startsWith(REPARTI_RISPOSTE_ID) || task === REPARTI_RISPOSTE_ID;
-          return !isStandardChecklistItem && !isRisposteRepartiTask;
+          const isDefinedChecklistItem = CHECKLIST_DEFINITIONS.some(item => 
+            item.id === task || (item.id === REPARTI_RISPOSTE_ID && task.startsWith(`${REPARTI_RISPOSTE_ID}:`))
+          );
+          return !isDefinedChecklistItem;
         });
 
       const newChecklistTasks: string[] = [];
-      currentChecked.forEach(task => {
-        if (task !== REPARTI_RISPOSTE_ID) {
-          newChecklistTasks.push(task);
+      currentChecked.forEach(taskId => {
+        if (taskId !== REPARTI_RISPOSTE_ID) {
+          newChecklistTasks.push(taskId);
         }
       });
 
-      if (currentDate && currentChecked.has(REPARTI_RISPOSTE_ID)) {
+      if (currentChecked.has(REPARTI_RISPOSTE_ID) && currentDate) {
         newChecklistTasks.push(`${REPARTI_RISPOSTE_ID}:${currentDate}`);
-      } else if (currentChecked.has(REPARTI_RISPOSTE_ID)) {
+      } else if (currentChecked.has(REPARTI_RISPOSTE_ID) && !currentDate) { // Corretto qui
+        // Se la checkbox è spuntata ma la data è vuota, salva solo l'ID senza data
         newChecklistTasks.push(REPARTI_RISPOSTE_ID);
       }
 
@@ -89,9 +93,13 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       newCheckedTasks.add(taskId);
     } else {
       newCheckedTasks.delete(taskId);
+      // Se deselezioni la checkbox della data, resetta anche il campo data
+      if (taskId === REPARTI_RISPOSTE_ID) {
+        setRisposteRepartiDate('');
+      }
     }
     setCheckedTasks(newCheckedTasks);
-    saveChecklist(newCheckedTasks, risposteRepartiDate);
+    saveChecklist(newCheckedTasks, taskId === REPARTI_RISPOSTE_ID ? '' : risposteRepartiDate); // Passa la data corretta o vuota
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -100,6 +108,8 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     const newCheckedTasks = new Set(checkedTasks);
     if (newDate) {
       newCheckedTasks.add(REPARTI_RISPOSTE_ID);
+    } else {
+      newCheckedTasks.delete(REPARTI_RISPOSTE_ID); // Se la data viene svuotata, deseleziona la checkbox
     }
     setCheckedTasks(newCheckedTasks);
     saveChecklist(newCheckedTasks, newDate);
@@ -108,7 +118,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
   return (
     <div className="space-y-4 p-4 border rounded-lg bg-slate-50 mb-6">
         <h4 className="font-semibold text-blue-700">Avanzamento progettualità</h4>
-        {CHECKLIST_ITEMS.map(item => (
+        {CHECKLIST_DEFINITIONS.map(item => (
             <div key={item.id} className="flex items-center space-x-2">
                 <Checkbox
                     id={item.id}
@@ -119,26 +129,17 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
                 <Label htmlFor={item.id} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                     {item.label}
                 </Label>
+                {item.type === 'date' && (
+                    <Input
+                        type="date"
+                        value={risposteRepartiDate}
+                        onChange={handleDateChange}
+                        className="w-40 h-8"
+                        disabled={isSaving}
+                    />
+                )}
             </div>
         ))}
-        <div className="flex items-center space-x-2">
-            <Checkbox
-                id={REPARTI_RISPOSTE_ID}
-                checked={checkedTasks.has(REPARTI_RISPOSTE_ID)}
-                onCheckedChange={(checked) => handleCheckChange(REPARTI_RISPOSTE_ID, !!checked)}
-                disabled={isSaving}
-            />
-            <Label htmlFor={REPARTI_RISPOSTE_ID} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                Risposte dei Reparti entro il
-            </Label>
-            <Input
-                type="date"
-                value={risposteRepartiDate}
-                onChange={handleDateChange}
-                className="w-40 h-8"
-                disabled={isSaving}
-            />
-        </div>
     </div>
   );
 };

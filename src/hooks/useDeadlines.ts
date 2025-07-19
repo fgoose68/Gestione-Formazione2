@@ -1,6 +1,6 @@
-import { parseISO, subDays, isBefore, isToday, addDays } from 'date-fns'; // Aggiunto addDays
+import { parseISO, subDays, isBefore, isToday, addDays } from 'date-fns';
 import { Event } from '@/types';
-import { Deadline } from '@/types'; // Importa Deadline dal tuo types/index.ts
+import { Deadline } from '@/types';
 
 const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
   const eventDeadlines: Deadline[] = [];
@@ -13,7 +13,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
     // Scadenze per corsi E-learning
     eventDeadlines.push({
       type: 'discenti_elearning',
-      date: subDays(startDate, 8), // Modificato da 5 a 8 giorni prima
+      date: subDays(startDate, 8),
       message: `Richiesta discenti (E-learning) per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('richiesta_discenti_elearning_fatta') || false,
@@ -22,7 +22,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'comunicazione_scuola',
-      date: subDays(startDate, 7), // Modificato a 7 giorni prima
+      date: subDays(startDate, 7),
       message: `Comunicazione alla Scuola PEF/Altro per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('comunicazione_scuola_fatta') || false,
@@ -67,7 +67,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'relazione_finale',
-      date: addDays(startDate, 30), // Basato sull'inizio del corso per E-learning
+      date: addDays(startDate, 30),
       message: `Relazione Finale per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('relazione_finale_fatta') || false,
@@ -86,7 +86,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
     });
 
     eventDeadlines.push({
-      type: 'discenti_standard', // Tipo specifico per standard
+      type: 'discenti_standard',
       date: subDays(startDate, 25),
       message: `Creare richiesta discenti per "${event.title}"`,
       eventId: event.id,
@@ -95,7 +95,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
     });
 
     eventDeadlines.push({
-      type: 'avvio_standard', // Tipo specifico per standard
+      type: 'avvio_standard',
       date: subDays(startDate, 10),
       message: `Preparare Avvio Corso per "${event.title}"`,
       eventId: event.id,
