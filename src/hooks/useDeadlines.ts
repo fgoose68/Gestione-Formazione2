@@ -145,6 +145,9 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
         try {
           const deadlineDate = parseISO(dateString);
           console.log(`[useDeadlines] Parsed deadlineDate:`, deadlineDate);
+          console.log(`[useDeadlines] Current date for comparison:`, new Date());
+          console.log(`[useDeadlines] Is deadlineDate today?`, isToday(deadlineDate));
+
           eventDeadlines.push({
             type: 'risposte_reparti',
             date: deadlineDate,
