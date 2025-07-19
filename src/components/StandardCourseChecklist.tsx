@@ -25,6 +25,7 @@ const REPARTI_RISPOSTE_ID = 'checklist_risposte_reparti_entro';
 
 export const StandardCourseChecklist = ({ eventId, completedTasks: initialCompletedTasks }: StandardCourseChecklistProps) => {
   const { updateEvent } = useEvents();
+  // Correzione qui: usa useState per dichiarare checkedTasks
   const [checkedTasks, setCheckedTasks] = useState<Set<string>>(new Set());
   const [risposteRepartiDate, setRisposteRepartiDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -65,12 +66,11 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
   }, [safeCompletedTasks]);
 
   const saveChecklist = useCallback(
-    debounce(async (currentChecked: Set<string>, currentDateValue: string) => { // Rimosso currentSafeCompletedTasks
+    debounce(async (currentChecked: Set<string>, currentDateValue: string) => {
       setIsSaving(true);
       
-      // Filtra le task iniziali che non fanno parte della checklist definita
-      // Utilizza initialCompletedTasks direttamente dalla prop, che sarà aggiornata da React
-      const otherTasks = initialCompletedTasks 
+      // Usa safeCompletedTasks qui, che è garantito essere un array
+      const otherTasks = safeCompletedTasks 
         .filter(task => typeof task === 'string')
         .filter(task => {
           const isDefinedChecklistItem = CHECKLIST_DEFINITIONS.some(item => 
@@ -105,7 +105,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
       setIsSaving(false);
     }, 1000),
-    [eventId, updateEvent, initialCompletedTasks] // Aggiunto initialCompletedTasks alle dipendenze
+    [eventId, updateEvent, safeCompletedTasks]
   );
 
   const handleCheckChange = (taskId: string, checked: boolean) => {
@@ -121,7 +121,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     }
     setCheckedTasks(newCheckedTasks);
     // Passa lo stato corrente di entrambi per il salvataggio
-    saveChecklist(newCheckedTasks, risposteRepartiDate); // Rimosso safeCompletedTasks
+    saveChecklist(newCheckedTasks, risposteRepartiDate);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,7 +135,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     }
     setCheckedTasks(newCheckedTasks);
     // Passa lo stato corrente di entrambi per il salvataggio
-    saveChecklist(newCheckedTasks, newDate); // Rimosso safeCompletedTasks
+    saveChecklist(newCheckedTasks, newDate);
   };
 
   return (
