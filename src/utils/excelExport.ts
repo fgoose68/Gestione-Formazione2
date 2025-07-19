@@ -204,16 +204,33 @@ export const exportCoursesByDepartmentToExcel = (
   events: Event[],
   attendeesByEvent: Map<string, DepartmentAttendee[]>,
   grandTotals: MonthlyDepartmentRankGrandTotals, // Questi sono i totali complessivi dei discenti per il periodo
-  dateRangeString: string
+  dateRangeString: string,
+  selectedDepartmentName?: string // Nuovo parametro opzionale
 ) => {
+  const title = selectedDepartmentName 
+    ? `Riepilogo Corsi per Reparto: ${selectedDepartmentName} - ${dateRangeString}`
+    : `Riepilogo Corsi per Reparto - ${dateRangeString}`;
+
   const worksheetData: (string | number)[][] = [
-    ["Riepilogo Corsi per Reparto - " + dateRangeString],
+    [title],
     [], // Empty row for spacing
   ];
 
   const headerRow = ["Reparto", "Uff.", "Isp.", "Sovr.", "Mil./App.", "Previsti", "Effettivi", "Assenti"];
 
   events.forEach(event => {
+    const eventAttendees = attendeesByEvent.get(event.id) || [];
+    
+    // Se è stato selezionato un reparto, filtra gli attendees per quel reparto
+    const filteredEventAttendees = selectedDepartmentName
+      ? eventAttendees.filter(att => att.department_name === selectedDepartmentName)
+      : eventAttendees;
+
+    // Se non ci sono attendees per il reparto selezionato in questo evento, salta l'evento
+    if (selectedDepartmentName && filteredEventAttendees.length === 0) {
+      return;
+    }
+
     worksheetData.push([`Corso: ${event.title}`]);
     worksheetData.push([`Periodo: ${format(parseISO(event.start_date), "PPP", { locale: it })} - ${format(parseISO(event.end_date), "PPP", { locale: it })}`]);
     if (event.type) worksheetData.push([`Tipo: ${COURSE_TYPES_MAP[event.type] || event.type}`]);
@@ -222,7 +239,6 @@ export const exportCoursesByDepartmentToExcel = (
 
     worksheetData.push(headerRow);
 
-    const eventAttendees = attendeesByEvent.get(event.id) || [];
     let eventTotalOfficers = 0;
     let eventTotalInspectors = 0;
     let eventTotalSuperintendents = 0;
@@ -231,7 +247,7 @@ export const exportCoursesByDepartmentToExcel = (
     let eventTotalActual = 0;
     let eventTotalAbsent = 0;
 
-    eventAttendees.forEach(att => {
+    filteredEventAttendees.forEach(att => {
       const expected = att.officers + att.inspectors + att.superintendents + att.militari;
       const absent = Math.max(0, expected - att.actual);
       worksheetData.push([
@@ -268,18 +284,38 @@ export const exportCoursesByDepartmentToExcel = (
     worksheetData.push([]); // Another empty row for more spacing
   });
 
-  // Add grand totals for the entire report period
-  const grandTotalExpected = grandTotals.officers + grandTotals.inspectors + grandTotals.superintendents + grandTotals.militari;
-  const grandTotalAbsent = Math.max(0, grandTotalExpected - grandTotals.actualTotal);
+  // Add grand totals for the entire report period (these should be for the filtered data)
+  // If a department is selected, these grand totals should reflect only that department's totals across all relevant events.
+  // Otherwise, they reflect the grand totals passed in (which are for all departments in the period).
+  let finalGrandTotals = grandTotals;
+  if (selectedDepartmentName) {
+    const departmentSpecificTotals = events.reduce((acc, event) => {
+      const eventAttendees = attendeesByEvent.get(event.id) || [];
+      const departmentAttendee = eventAttendees.find(att => att.department_name === selectedDepartmentName);
+      if (departmentAttendee) {
+        acc.officers += departmentAttendee.officers || 0;
+        acc.inspectors += departmentAttendee.inspectors || 0;
+        acc.superintendents += departmentAttendee.superintendents || 0;
+        acc.militari += departmentAttendee.militari || 0;
+        acc.actualTotal += departmentAttendee.actual || 0;
+      }
+      return acc;
+    }, { officers: 0, inspectors: 0, superintendents: 0, militari: 0, actualTotal: 0 });
+    finalGrandTotals = departmentSpecificTotals;
+  }
+
+
+  const grandTotalExpected = finalGrandTotals.officers + finalGrandTotals.inspectors + finalGrandTotals.superintendents + finalGrandTotals.militari;
+  const grandTotalAbsent = Math.max(0, grandTotalExpected - finalGrandTotals.actualTotal);
 
   worksheetData.push([
     "TOTALE COMPLESSIVO PERIODO",
-    grandTotals.officers,
-    grandTotals.inspectors,
-    grandTotals.superintendents,
-    grandTotals.militari,
+    finalGrandTotals.officers,
+    finalGrandTotals.inspectors,
+    finalGrandTotals.superintendents,
+    finalGrandTotals.militari,
     grandTotalExpected,
-    grandTotals.actualTotal,
+    finalGrandTotals.actualTotal,
     grandTotalAbsent,
   ]);
 
@@ -304,5 +340,5 @@ export const exportCoursesByDepartmentToExcel = (
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Riepilogo Corsi per Reparto");
-  XLSX.writeFile(wb, `Riepilogo_Corsi_Reparto_${dateRangeString.replace(/ /g, '_')}.xlsx`);
+  XLSX.writeFile(wb, `Riepilogo_Corsi_Reparto_${selectedDepartmentName ? selectedDepartmentName.replace(/ /g, '_') + '_' : ''}${dateRangeString.replace(/ /g, '_')}.xlsx`);
 };
