@@ -1,6 +1,8 @@
 import * as XLSX from 'xlsx';
-import { DepartmentAttendee } from '@/types';
+import { DepartmentAttendee, Event } from '@/types'; // Importa anche Event
 import { COURSE_TYPES_MAP } from '@/constants/courseTypes'; // Importa la mappa
+import { format, parseISO } from 'date-fns'; // Importa funzioni per formattare date
+import { it } from 'date-fns/locale'; // Importa locale italiano
 
 interface MonthlyDepartmentRankTotal {
   department_name: string;
@@ -196,4 +198,111 @@ export const exportCourseTypeStatsToExcel = (
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Statistiche per Tipo Corso");
   XLSX.writeFile(wb, `Statistiche_Tipo_Corso_${monthYear.replace(/ /g, '_')}.xlsx`);
+};
+
+export const exportCoursesByDepartmentToExcel = (
+  events: Event[],
+  attendeesByEvent: Map<string, DepartmentAttendee[]>,
+  grandTotals: MonthlyDepartmentRankGrandTotals, // Questi sono i totali complessivi dei discenti per il periodo
+  dateRangeString: string
+) => {
+  const worksheetData: (string | number)[][] = [
+    ["Riepilogo Corsi per Reparto - " + dateRangeString],
+    [], // Empty row for spacing
+  ];
+
+  const headerRow = ["Reparto", "Uff.", "Isp.", "Sovr.", "Mil./App.", "Previsti", "Effettivi", "Assenti"];
+
+  events.forEach(event => {
+    worksheetData.push([`Corso: ${event.title}`]);
+    worksheetData.push([`Periodo: ${format(parseISO(event.start_date), "PPP", { locale: it })} - ${format(parseISO(event.end_date), "PPP", { locale: it })}`]);
+    if (event.type) worksheetData.push([`Tipo: ${COURSE_TYPES_MAP[event.type] || event.type}`]);
+    if (event.location) worksheetData.push([`Luogo: ${event.location}`]);
+    worksheetData.push([]); // Empty row for spacing
+
+    worksheetData.push(headerRow);
+
+    const eventAttendees = attendeesByEvent.get(event.id) || [];
+    let eventTotalOfficers = 0;
+    let eventTotalInspectors = 0;
+    let eventTotalSuperintendents = 0;
+    let eventTotalMilitari = 0;
+    let eventTotalExpected = 0;
+    let eventTotalActual = 0;
+    let eventTotalAbsent = 0;
+
+    eventAttendees.forEach(att => {
+      const expected = att.officers + att.inspectors + att.superintendents + att.militari;
+      const absent = Math.max(0, expected - att.actual);
+      worksheetData.push([
+        att.department_name,
+        att.officers,
+        att.inspectors,
+        att.superintendents,
+        att.militari,
+        expected,
+        att.actual,
+        absent,
+      ]);
+      eventTotalOfficers += att.officers;
+      eventTotalInspectors += att.inspectors;
+      eventTotalSuperintendents += att.superintendents;
+      eventTotalMilitari += att.militari;
+      eventTotalExpected += expected;
+      eventTotalActual += att.actual;
+      eventTotalAbsent += absent;
+    });
+
+    // Add event totals row
+    worksheetData.push([
+      "TOTALE Evento",
+      eventTotalOfficers,
+      eventTotalInspectors,
+      eventTotalSuperintendents,
+      eventTotalMilitari,
+      eventTotalExpected,
+      eventTotalActual,
+      eventTotalAbsent,
+    ]);
+    worksheetData.push([]); // Empty row after each event's table
+    worksheetData.push([]); // Another empty row for more spacing
+  });
+
+  // Add grand totals for the entire report period
+  const grandTotalExpected = grandTotals.officers + grandTotals.inspectors + grandTotals.superintendents + grandTotals.militari;
+  const grandTotalAbsent = Math.max(0, grandTotalExpected - grandTotals.actualTotal);
+
+  worksheetData.push([
+    "TOTALE COMPLESSIVO PERIODO",
+    grandTotals.officers,
+    grandTotals.inspectors,
+    grandTotals.superintendents,
+    grandTotals.militari,
+    grandTotalExpected,
+    grandTotals.actualTotal,
+    grandTotalAbsent,
+  ]);
+
+  const ws = XLSX.utils.aoa_to_sheet(worksheetData);
+
+  // Set column widths for better readability
+  const wscols = [
+    { wch: 25 }, // Reparto / Corso Title
+    { wch: 10 }, // Uff.
+    { wch: 10 }, // Isp.
+    { wch: 10 }, // Sovr.
+    { wch: 12 }, // Mil./App.
+    { wch: 12 }, // Previsti
+    { wch: 12 }, // Effettivi
+    { wch: 10 }, // Assenti
+  ];
+  ws['!cols'] = wscols;
+
+  // Apply styles (simplified for this example, full styling would be more complex)
+  // Merge cells for the main title
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headerRow.length - 1 } }];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Riepilogo Corsi per Reparto");
+  XLSX.writeFile(wb, `Riepilogo_Corsi_Reparto_${dateRangeString.replace(/ /g, '_')}.xlsx`);
 };
