@@ -141,6 +141,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
       if (dateString) {
         try {
           const deadlineDate = parseISO(dateString);
+          console.log(`[useDeadlines] Evento: "${event.title}" - Risposte Reparti: Data Stringa: ${dateString}, Data Parsata: ${deadlineDate.toISOString()}, È Oggi?: ${isToday(deadlineDate)}`);
           eventDeadlines.push({
             type: 'risposte_reparti',
             date: deadlineDate,
@@ -150,10 +151,16 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
             eventTitle: event.title,
           });
         } catch (e) {
-          console.error(`Formato data non valido per la scadenza della checklist: ${dateString}`, e);
+          console.error(`[useDeadlines] Formato data non valido per la scadenza della checklist: ${dateString}`, e);
         }
+      } else {
+        console.log(`[useDeadlines] Evento: "${event.title}" - Risposte Reparti: Trovata voce ma data stringa vuota.`);
       }
+    } else {
+      console.log(`[useDeadlines] Evento: "${event.title}" - Risposte Reparti: Voce non trovata in completed_tasks.`);
     }
+  } else {
+    console.log(`[useDeadlines] Evento: "${event.title}" - completed_tasks non è un array o è vuoto.`);
   }
 
   return eventDeadlines;

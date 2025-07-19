@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,6 +60,16 @@ const DeadlinesPage = () => {
     const elearningTypes: Deadline['type'][] = ['discenti_elearning', 'comunicazione_scuola', 'lettera_abilitazione', 'mail_sollecito_1', 'mail_sollecito_2', 'avviso_proroga', 'relazione_finale'];
     return sortedUpcomingDeadlines.filter(d => elearningTypes.includes(d.type));
   }, [sortedUpcomingDeadlines]);
+
+  // Log per debug
+  useEffect(() => {
+    console.log("[DeadlinesPage] Scadenze di Oggi (sortedTodayDeadlines):", sortedTodayDeadlines.map(d => ({
+      message: d.message,
+      date: d.date.toISOString(),
+      isTodayCheck: isToday(d.date), // Verifica esplicita di isToday
+      type: d.type
+    })));
+  }, [sortedTodayDeadlines]);
 
 
   if (eventsLoading) {
