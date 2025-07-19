@@ -1,75 +1,20 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, CalendarDays } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { useReportStats } from '@/hooks/useReportStats';
-import { exportCourseTypeStatsToExcel, exportDepartmentAttendeesToExcel, exportCoursesByDepartmentToExcel } from '@/utils/excelExport';
+import { exportCourseTypeStatsToExcel, exportDepartmentAttendeesToExcel } from '@/utils/excelExport'; // Importa anche exportDepartmentAttendeesToExcel
 import { COURSE_TYPES } from '@/constants/courseTypes';
-import { DEFAULT_DEPARTMENTS } from '@/constants/departments';
-import { DepartmentAttendee } from '@/types';
 
 export const ReportGenerator = () => {
   const [reportDateRange, setReportDateRange] = useState<DateRange | undefined>(undefined);
-  const [selectedDepartment, setSelectedDepartment] = useState<string | undefined>(undefined);
-
-  const { reportEvents, reportLoading, reportStatsByType, reportDepartmentRankTotals, reportDepartmentRankGrandTotals, totalReportCourses, reportAttendees } = useReportStats(reportDateRange);
-
-  const attendeesByEvent = useMemo(() => {
-    const map = new Map<string, DepartmentAttendee[]>();
-    reportAttendees.forEach(att => {
-      if (!map.has(att.event_id)) {
-        map.set(att.event_id, []);
-      }
-      map.get(att.event_id)?.push(att);
-    });
-    return map;
-  }, [reportAttendees]);
-
-  // Filtra gli eventi che hanno discenti del reparto selezionato E con actual > 0
-  const filteredEvents = useMemo(() => {
-    if (!selectedDepartment) return [];
-    return reportEvents.filter(event => {
-      const eventAttendees = attendeesByEvent.get(event.id);
-      return eventAttendees?.some(att => att.department_name === selectedDepartment && (att.actual || 0) > 0);
-    });
-  }, [reportEvents, attendeesByEvent, selectedDepartment]);
-
-  // Crea una nuova mappa di attendeesByEvent che include solo il reparto selezionato per ogni evento
-  const filteredAttendeesByEvent = useMemo(() => {
-    const map = new Map<string, DepartmentAttendee[]>();
-    filteredEvents.forEach(event => {
-      const originalAttendees = attendeesByEvent.get(event.id) || [];
-      const departmentSpecificAttendee = originalAttendees.filter(att => att.department_name === selectedDepartment);
-      if (departmentSpecificAttendee.length > 0) {
-        map.set(event.id, departmentSpecificAttendee);
-      }
-    });
-    return map;
-  }, [filteredEvents, attendeesByEvent, selectedDepartment]);
-
-  // Calcola i totali complessivi solo per il reparto selezionato
-  const departmentSpecificGrandTotals = useMemo(() => {
-    return filteredEvents.reduce((acc, event) => {
-      const eventAttendees = attendeesByEvent.get(event.id) || [];
-      const departmentAttendee = eventAttendees.find(att => att.department_name === selectedDepartment);
-      if (departmentAttendee) {
-        acc.officers += departmentAttendee.officers || 0;
-        acc.inspectors += departmentAttendee.inspectors || 0;
-        acc.superintendents += departmentAttendee.superintendents || 0;
-        acc.militari += departmentAttendee.militari || 0;
-        acc.actualTotal += departmentAttendee.actual || 0;
-      }
-      return acc;
-    }, { officers: 0, inspectors: 0, superintendents: 0, militari: 0, actualTotal: 0 });
-  }, [filteredEvents, attendeesByEvent, selectedDepartment]);
-
+  const { reportEvents, reportLoading, reportStatsByType, reportDepartmentRankTotals, reportDepartmentRankGrandTotals, totalReportCourses } = useReportStats(reportDateRange);
 
   const handleDownloadCourseTypeStatsExcel = () => {
     if (!reportDateRange?.from || !reportDateRange?.to) {
@@ -95,35 +40,6 @@ export const ReportGenerator = () => {
     }
     const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
     exportDepartmentAttendeesToExcel(reportDepartmentRankTotals, reportDepartmentRankGrandTotals, dateRangeString);
-  };
-
-  const handleDownloadCoursesByDepartmentExcel = () => {
-    if (!reportDateRange?.from || !reportDateRange?.to) {
-      toast({
-        title: "Attenzione",
-        description: "Seleziona un intervallo di date valido per il report.",
-        variant: "destructive",
-      });
-      return;
-    }
-    if (!selectedDepartment) {
-      toast({
-        title: "Attenzione",
-        description: "Seleziona un reparto per generare il report specifico.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
-    
-    exportCoursesByDepartmentToExcel(
-      filteredEvents, 
-      filteredAttendeesByEvent, 
-      departmentSpecificGrandTotals, 
-      dateRangeString, 
-      selectedDepartment
-    );
   };
 
   return (
@@ -199,29 +115,6 @@ export const ReportGenerator = () => {
         >
           <Download className="mr-2 h-4 w-4" />
           Scarica Riepilogo Discenti
-        </Button>
-
-        {/* Nuovo Select e Button per Riepilogo Corsi per Reparto */}
-        <div>
-          <label htmlFor="selectDepartment" className="block text-sm font-medium text-gray-700 mb-1">Seleziona Reparto per Report Specifico</label>
-          <Select onValueChange={setSelectedDepartment} value={selectedDepartment} disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to}>
-            <SelectTrigger id="selectDepartment" className="w-full">
-              <SelectValue placeholder="Seleziona un Reparto" />
-            </SelectTrigger>
-            <SelectContent>
-              {DEFAULT_DEPARTMENTS.map(dept => (
-                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <Button
-          onClick={handleDownloadCoursesByDepartmentExcel}
-          disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || !selectedDepartment || filteredEvents.length === 0}
-          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Scarica Riepilogo Corsi per Reparto Selezionato
         </Button>
       </CardContent>
     </Card>

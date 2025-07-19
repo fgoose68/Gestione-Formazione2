@@ -6,7 +6,6 @@ import { getEventDisplayStatus } from '@/utils/eventStatus';
 import { COURSE_TYPES } from '@/constants/courseTypes';
 import { DateRange } from 'react-day-picker';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments'; // Importa i reparti di default
-import { parseISO, isBefore, isAfter, isEqual } from 'date-fns'; // Importa funzioni per il confronto delle date
 
 interface ReportStats {
   reportEvents: Event[];
@@ -54,34 +53,21 @@ export const useReportStats = (reportDateRange: DateRange | undefined): ReportSt
         return;
       }
 
-      // Fetch all non-archived events for the user
       const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select('*, type')
         .eq('user_id', user.id)
         .neq('status', 'archiviato')
+        .gte('start_date', reportDateRange.from.toISOString())
+        .lte('start_date', reportDateRange.to.toISOString()) // Modificato qui: filtra solo per start_date
         .order('start_date', { ascending: true });
 
       if (eventsError) throw eventsError;
 
-      // Filter events based on overlap with the reportDateRange
-      const filteredReportEvents = (eventsData || [])
-        .filter(event => {
-          const eventStartDate = parseISO(event.start_date);
-          const eventEndDate = parseISO(event.end_date);
-          const rangeStart = reportDateRange.from!;
-          const rangeEnd = reportDateRange.to!;
-
-          // Check for overlap: (startA <= endB) && (endA >= startB)
-          const overlaps = (isBefore(eventStartDate, rangeEnd) || isEqual(eventStartDate, rangeEnd)) &&
-                           (isAfter(eventEndDate, rangeStart) || isEqual(eventEndDate, rangeStart));
-          return overlaps;
-        })
-        .map(event => ({
-          ...event,
-          displayStatus: getEventDisplayStatus(event),
-        }));
-      
+      const filteredReportEvents = (eventsData || []).map(event => ({
+        ...event,
+        displayStatus: getEventDisplayStatus(event),
+      }));
       setReportEvents(filteredReportEvents);
 
       if (filteredReportEvents.length > 0) {
