@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,11 +29,29 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
   const [risposteRepartiDate, setRisposteRepartiDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Assicura che initialCompletedTasks sia sempre un array
+  const safeCompletedTasks = useMemo(() => {
+    if (Array.isArray(initialCompletedTasks)) {
+      return initialCompletedTasks;
+    }
+    if (typeof initialCompletedTasks === 'string') {
+      try {
+        const parsed = JSON.parse(initialCompletedTasks);
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch (e) {
+        console.warn("Could not parse completed_tasks string as JSON array:", initialCompletedTasks, e);
+      }
+    }
+    return [];
+  }, [initialCompletedTasks]);
+
   useEffect(() => {
     const initialChecked = new Set<string>();
     let dateValue = '';
-    (initialCompletedTasks || []).forEach(task => {
-      if (typeof task === 'string') { // Assicurati che l'elemento sia una stringa
+    safeCompletedTasks.forEach(task => {
+      if (typeof task === 'string') {
         if (task.startsWith(`${REPARTI_RISPOSTE_ID}:`)) {
           dateValue = task.split(':')[1];
           initialChecked.add(REPARTI_RISPOSTE_ID);
@@ -44,14 +62,14 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     });
     setCheckedTasks(initialChecked);
     setRisposteRepartiDate(dateValue);
-  }, [initialCompletedTasks]);
+  }, [safeCompletedTasks]);
 
   const saveChecklist = useCallback(
-    debounce(async (currentChecked: Set<string>, currentDate: string) => {
+    debounce(async (currentChecked: Set<string>, currentDate: string, currentSafeCompletedTasks: string[]) => {
       setIsSaving(true);
       
       // Filtra le task iniziali che non fanno parte della checklist definita
-      const otherTasks = (initialCompletedTasks || [])
+      const otherTasks = currentSafeCompletedTasks
         .filter(task => typeof task === 'string')
         .filter(task => {
           const isDefinedChecklistItem = CHECKLIST_DEFINITIONS.some(item => 
@@ -69,7 +87,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
 
       if (currentChecked.has(REPARTI_RISPOSTE_ID) && currentDate) {
         newChecklistTasks.push(`${REPARTI_RISPOSTE_ID}:${currentDate}`);
-      } else if (currentChecked.has(REPARTI_RISPOSTE_ID) && !currentDate) { // Corretto qui
+      } else if (currentChecked.has(REPARTI_RISPOSTE_ID) && !currentDate) {
         // Se la checkbox è spuntata ma la data è vuota, salva solo l'ID senza data
         newChecklistTasks.push(REPARTI_RISPOSTE_ID);
       }
@@ -84,7 +102,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
       setIsSaving(false);
     }, 1000),
-    [eventId, initialCompletedTasks, updateEvent]
+    [eventId, updateEvent]
   );
 
   const handleCheckChange = (taskId: string, checked: boolean) => {
@@ -99,7 +117,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
     }
     setCheckedTasks(newCheckedTasks);
-    saveChecklist(newCheckedTasks, taskId === REPARTI_RISPOSTE_ID ? '' : risposteRepartiDate); // Passa la data corretta o vuota
+    saveChecklist(newCheckedTasks, taskId === REPARTI_RISPOSTE_ID ? '' : risposteRepartiDate, safeCompletedTasks);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,7 +130,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       newCheckedTasks.delete(REPARTI_RISPOSTE_ID); // Se la data viene svuotata, deseleziona la checkbox
     }
     setCheckedTasks(newCheckedTasks);
-    saveChecklist(newCheckedTasks, newDate);
+    saveChecklist(newCheckedTasks, newDate, safeCompletedTasks);
   };
 
   return (
