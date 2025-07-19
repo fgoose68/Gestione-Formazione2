@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,8 @@ import { Home, Clock, Info, CalendarDays } from 'lucide-react';
 import { useEvents, useDeadlines } from '@/hooks';
 import { format, parseISO, isToday, isPast, isFuture } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { Event, Deadline } from '@/types'; // Importa i tipi per maggiore chiarezza
+import { Event, Deadline } from '@/types';
+import { TodayDeadlineAlert } from '@/components/TodayDeadlineAlert'; // Import the new component
 
 // Dati statici per la tabella delle scadenze standard (copiati da IndexPage.tsx)
 const staticStandardDeadlines = [
@@ -33,8 +34,27 @@ const staticElearningDeadlines = [
 const DeadlinesPage = () => {
   const navigate = useNavigate();
   const { events, loading: eventsLoading } = useEvents();
-  // Passa tutti gli eventi a useDeadlines per ottenere tutte le scadenze
   const { deadlines, upcomingDeadlines, pastDeadlines, todayDeadlines } = useDeadlines(events);
+
+  // State to manage dismissed alerts
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+
+  // Function to generate a unique key for each deadline alert
+  const getDeadlineAlertKey = (deadline: Deadline) => `${deadline.eventId}-${deadline.type}`;
+
+  // Handler for dismissing an alert
+  const handleDismissAlert = (eventId: string, type: Deadline['type']) => {
+    setDismissedAlerts(prev => {
+      const newSet = new Set(prev);
+      newSet.add(getDeadlineAlertKey({ eventId, type } as Deadline)); // Cast to Deadline for getDeadlineAlertKey
+      return newSet;
+    });
+  };
+
+  // Filter today's deadlines to only show non-dismissed ones
+  const filteredTodayDeadlines = useMemo(() => {
+    return todayDeadlines.filter(deadline => !dismissedAlerts.has(getDeadlineAlertKey(deadline)));
+  }, [todayDeadlines, dismissedAlerts]);
 
   // Ordina le scadenze per una visualizzazione consistente
   const sortedUpcomingDeadlines = useMemo(() => 
@@ -45,10 +65,8 @@ const DeadlinesPage = () => {
     pastDeadlines.sort((a, b) => b.date.getTime() - a.date.getTime()), // Ordine decrescente per le scadenze passate
     [pastDeadlines]
   );
-  const sortedTodayDeadlines = useMemo(() => 
-    todayDeadlines.sort((a, b) => a.date.getTime() - b.date.getTime()), 
-    [todayDeadlines]
-  );
+  // No need to sort filteredTodayDeadlines here, as they are rendered as individual alerts.
+  // If they were in a list, we would sort them.
 
   // Filtra le scadenze imminenti per tipo di corso
   const standardUpcomingDeadlines = useMemo(() => {
@@ -82,6 +100,22 @@ const DeadlinesPage = () => {
           Torna alla Dashboard
         </Button>
       </div>
+
+      {/* Simulation: Today's Deadlines Alerts */}
+      {filteredTodayDeadlines.length > 0 && (
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-red-700 mb-4 flex items-center">
+            <CalendarDays className="mr-3 h-7 w-7" /> Avvisi Scadenze di Oggi
+          </h2>
+          {filteredTodayDeadlines.map(deadline => (
+            <TodayDeadlineAlert
+              key={getDeadlineAlertKey(deadline)}
+              deadline={deadline}
+              onDismiss={handleDismissAlert}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Sezione Regole Statiche */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -150,28 +184,24 @@ const DeadlinesPage = () => {
 
       {/* Sezioni Scadenze Dinamiche */}
       <div className="space-y-8">
-        {/* Scadenze di Oggi */}
-        <Card className="shadow-lg">
-          <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze di Oggi</CardTitle></CardHeader>
-          <CardContent>
-            {sortedTodayDeadlines.length > 0 ? (
-              <div className="space-y-4">
-                {sortedTodayDeadlines.map((deadline, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-yellow-100 border-yellow-400 hover:bg-yellow-200 transition-colors cursor-pointer"
-                       onClick={() => navigate(`/evento/${deadline.eventId}`)}>
-                    <p className="font-medium text-gray-800">{deadline.message}</p>
-                    <p className="text-sm text-yellow-700 font-semibold">
-                      Scadenza: {format(deadline.date, "PPP", { locale: it })} ({format(deadline.date, "EEEE", { locale: it })})
-                    </p>
-                    <p className="text-xs text-gray-600">Evento: {deadline.eventTitle}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
+        {/* Scadenze di Oggi (List) - This section will now only show if filteredTodayDeadlines is empty after alerts */}
+        {filteredTodayDeadlines.length === 0 && todayDeadlines.length > 0 && ( // Only show this if there were deadlines but they are all dismissed
+          <Card className="shadow-lg">
+            <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze di Oggi</CardTitle></CardHeader>
+            <CardContent>
+              <p className="text-center text-gray-600">Tutte le scadenze di oggi sono state visualizzate o non ci sono scadenze attive.</p>
+            </CardContent>
+          </Card>
+        )}
+        {todayDeadlines.length === 0 && ( // If no deadlines at all for today
+          <Card className="shadow-lg">
+            <CardHeader><CardTitle className="text-2xl font-semibold text-blue-700 flex items-center"><CalendarDays className="mr-3 h-7 w-7" /> Scadenze di Oggi</CardTitle></CardHeader>
+            <CardContent>
               <p className="text-center text-gray-600">Nessuna scadenza per oggi.</p>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
+
 
         {/* Scadenze Imminenti: Affiancate */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"> {/* Nuovo div per affiancare */}
