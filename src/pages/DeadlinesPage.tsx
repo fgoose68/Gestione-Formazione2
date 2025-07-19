@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,7 +8,7 @@ import { useEvents, useDeadlines } from '@/hooks';
 import { format, parseISO, isToday, isPast, isFuture } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { Event, Deadline } from '@/types';
-import { TodayDeadlineAlert } from '@/components/TodayDeadlineAlert'; // Import the new component
+import { TodayDeadlineAlert } from '@/components/TodayDeadlineAlert';
 
 // Dati statici per la tabella delle scadenze standard (copiati da IndexPage.tsx)
 const staticStandardDeadlines = [
@@ -31,13 +31,21 @@ const staticElearningDeadlines = [
   { type: 'Relazione Finale', days: '30 giorni dopo inizio', message: 'Relazione Finale' },
 ];
 
+const LOCAL_STORAGE_KEY = 'dismissed_today_deadlines';
+
 const DeadlinesPage = () => {
   const navigate = useNavigate();
   const { events, loading: eventsLoading } = useEvents();
   const { deadlines, upcomingDeadlines, pastDeadlines, todayDeadlines } = useDeadlines(events);
 
-  // State to manage dismissed alerts
-  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(new Set());
+  // State to manage dismissed alerts, initialized from localStorage
+  const [dismissedAlerts, setDismissedAlerts] = useState<Set<string>>(() => {
+    if (typeof window !== 'undefined') {
+      const storedDismissed = localStorage.getItem(LOCAL_STORAGE_KEY);
+      return storedDismissed ? new Set(JSON.parse(storedDismissed)) : new Set();
+    }
+    return new Set();
+  });
 
   // Function to generate a unique key for each deadline alert
   const getDeadlineAlertKey = (deadline: Deadline) => `${deadline.eventId}-${deadline.type}`;
@@ -46,7 +54,9 @@ const DeadlinesPage = () => {
   const handleDismissAlert = (eventId: string, type: Deadline['type']) => {
     setDismissedAlerts(prev => {
       const newSet = new Set(prev);
-      newSet.add(getDeadlineAlertKey({ eventId, type } as Deadline)); // Cast to Deadline for getDeadlineAlertKey
+      const key = getDeadlineAlertKey({ eventId, type } as Deadline);
+      newSet.add(key);
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(Array.from(newSet)));
       return newSet;
     });
   };
@@ -65,8 +75,6 @@ const DeadlinesPage = () => {
     pastDeadlines.sort((a, b) => b.date.getTime() - a.date.getTime()), // Ordine decrescente per le scadenze passate
     [pastDeadlines]
   );
-  // No need to sort filteredTodayDeadlines here, as they are rendered as individual alerts.
-  // If they were in a list, we would sort them.
 
   // Filtra le scadenze imminenti per tipo di corso
   const standardUpcomingDeadlines = useMemo(() => {
