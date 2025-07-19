@@ -93,6 +93,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
 
       const finalTasks = [...otherTasks, ...newChecklistTasks];
+      console.log("[StandardCourseChecklist] Saving completed_tasks:", finalTasks); // Nuovo log qui
 
       const result = await updateEvent(eventId, { completed_tasks: finalTasks });
       if (result) {
