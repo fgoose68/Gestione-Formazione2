@@ -2,6 +2,7 @@ import { defineConfig, Plugin, HtmlTagDescriptor } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import fs from "fs";
+import dyadComponentTagger from '@dyad-sh/react-vite-component-tagger';
 
 export function devErrorAndNavigationPlugin(): Plugin {
   let stacktraceJsContent: string | null = null;
@@ -92,7 +93,7 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
   },
-  plugins: [react(), devErrorAndNavigationPlugin()],
+  plugins: [dyadComponentTagger(), react(), devErrorAndNavigationPlugin()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
