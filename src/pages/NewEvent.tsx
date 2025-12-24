@@ -6,6 +6,8 @@ import { Calendar } from '@/components/ui/calendar'; // Shadcn Calendar
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"; // Importa i componenti Select
+import { Checkbox } from '@/components/ui/checkbox'; // Importa Checkbox
+import { Label } from '@/components/ui/label'; // Importa Label
 import { useState, useMemo, useEffect } from 'react';
 import { DateRange } from 'react-day-picker';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +18,8 @@ import { showError, showSuccess } from '@/utils/toast';
 import { DepartmentAttendee, Event } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { DEFAULT_DEPARTMENTS } from '@/constants/departments';
-import { COURSE_TYPES } from '@/constants/courseTypes'; // Importa la costante dal nuovo file
+import { COURSE_TYPES } from '@/constants/courseTypes';
+import { SSL_COURSE_DEFINITIONS, SSL_COURSE_CODES } from '@/constants/sslCourses'; // Importa le nuove costanti SSL
 
 // Opzioni per il menu a tendina Luogo
 const LOCATIONS = [
@@ -37,10 +40,17 @@ const NewEvent = () => {
   const { addEvent } = useEvents();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  
+  // Stato per i dati del form
   const [formData, setFormData] = useState({
-    title: '',
+    title: '', // Titolo descrittivo (usato solo se isSslCourse è false)
     description: '',
     teachersRaw: '',
+    // Campi per la standardizzazione SSL
+    isSslCourse: false,
+    sslYear: new Date().getFullYear().toString(),
+    sslCourseCode: SSL_COURSE_CODES[0] || '',
+    sslSessionNumber: '01',
   });
 
   // Stato per il tipo di corso selezionato
@@ -80,6 +90,10 @@ const NewEvent = () => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+  
+  const handleSslCheckboxChange = (checked: boolean) => {
+    setFormData(prev => ({ ...prev, isSslCourse: checked }));
+  };
 
   const handleDepartmentAttendeeInputChange = (departmentName: string, field: keyof Omit<DepartmentAttendee, 'id' | 'event_id' | 'user_id' | 'expected'>, value: string) => {
      setDepartmentAttendeesInput(prev =>
@@ -109,10 +123,22 @@ const NewEvent = () => {
       { officers: 0, inspectors: 0, superintendents: 0, militari: 0, expected: 0, actual: 0 }
     );
   }, [departmentAttendeesInput]);
+  
+  // Calcola il titolo finale in base alla modalità (SSL o standard)
+  const finalEventTitle = useMemo(() => {
+    if (formData.isSslCourse) {
+      const courseDef = SSL_COURSE_DEFINITIONS.find(d => d.code === formData.sslCourseCode);
+      const descriptiveTitle = courseDef ? courseDef.title : 'Corso Sconosciuto';
+      const sessionNumber = formData.sslSessionNumber.padStart(2, '0');
+      
+      return `${formData.sslYear} - ${formData.sslCourseCode} - Ed. ${sessionNumber} - ${descriptiveTitle}`;
+    }
+    return formData.title;
+  }, [formData.isSslCourse, formData.sslYear, formData.sslCourseCode, formData.sslSessionNumber, formData.title]);
 
 
   const handleSubmit = async () => {
-    if (!formData.title) {
+    if (!finalEventTitle) {
       showError('Il titolo del corso è obbligatorio.');
       return;
     }
@@ -134,7 +160,7 @@ const NewEvent = () => {
     setLoading(true);
 
     const newEventData = {
-      title: formData.title,
+      title: finalEventTitle, // Usa il titolo generato
       description: formData.description,
       start_date: dateRange.from.toISOString(),
       end_date: dateRange.to.toISOString(),
@@ -192,10 +218,87 @@ const NewEvent = () => {
         <h1 className="text-3xl font-bold text-blue-800 mb-8 border-b pb-4">Crea Nuovo Evento Formativo</h1>
 
         <div className="space-y-6">
-          <div>
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label>
-            <Input id="title" name="title" placeholder="Es: Sicurezza sul Lavoro Avanzato" value={formData.title} onChange={handleInputChange} className="text-lg" disabled={loading}/>
+          
+          {/* Checkbox per la standardizzazione SSL */}
+          <div className="flex items-center space-x-2 p-4 border rounded-md bg-blue-50">
+            <Checkbox 
+              id="ssl-course-checkbox" 
+              checked={formData.isSslCourse} 
+              onCheckedChange={handleSslCheckboxChange}
+              disabled={loading}
+            />
+            <Label htmlFor="ssl-course-checkbox" className="text-base font-semibold text-blue-800">
+              Applica standardizzazione per Corsi Sicurezza sul Lavoro (SSL)
+            </Label>
           </div>
+
+          {/* Campi per la standardizzazione SSL (mostrati se la checkbox è spuntata) */}
+          {formData.isSslCourse ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 border rounded-md bg-yellow-50">
+              {/* Anno Formativo */}
+              <div>
+                <label htmlFor="sslYear" className="block text-sm font-medium text-gray-700 mb-1">Anno Formativo</label>
+                <Input 
+                  id="sslYear" 
+                  name="sslYear" 
+                  type="number"
+                  placeholder="Es. 2025" 
+                  value={formData.sslYear} 
+                  onChange={handleInputChange} 
+                  disabled={loading}
+                />
+              </div>
+              
+              {/* Codice Corso Base */}
+              <div>
+                <label htmlFor="sslCourseCode" className="block text-sm font-medium text-gray-700 mb-1">Codice Corso Base (SSL)</label>
+                <Select 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, sslCourseCode: value }))} 
+                  value={formData.sslCourseCode} 
+                  disabled={loading}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleziona Codice" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SSL_COURSE_DEFINITIONS.map(def => (
+                      <SelectItem key={def.code} value={def.code}>
+                        {def.code} - {def.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {/* Numero Sessione */}
+              <div>
+                <label htmlFor="sslSessionNumber" className="block text-sm font-medium text-gray-700 mb-1">Numero Sessione (Es. 01)</label>
+                <Input 
+                  id="sslSessionNumber" 
+                  name="sslSessionNumber" 
+                  type="number"
+                  min="1"
+                  placeholder="Es. 01" 
+                  value={formData.sslSessionNumber} 
+                  onChange={handleInputChange} 
+                  disabled={loading}
+                />
+              </div>
+              
+              {/* Anteprima Titolo */}
+              <div className="md:col-span-3 mt-2">
+                <p className="text-sm font-medium text-gray-700">Nome Completo Evento (Anteprima):</p>
+                <p className="text-lg font-bold text-green-700 break-words">{finalEventTitle}</p>
+              </div>
+            </div>
+          ) : (
+            /* Campo Titolo Standard (mostrato se la checkbox NON è spuntata) */
+            <div>
+              <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Titolo del Corso</label>
+              <Input id="title" name="title" placeholder="Es: Sicurezza sul Lavoro Avanzato" value={formData.title} onChange={handleInputChange} className="text-lg" disabled={loading}/>
+            </div>
+          )}
+
 
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Descrizione</label>
