@@ -141,11 +141,10 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
       const dateString = risposteTask.split(':')[1];
       if (dateString) {
         try {
-          // Estrai anno, mese, giorno dalla stringa YYYY-MM-DD
-          const [year, month, day] = dateString.split('-').map(Number);
-          // Crea un nuovo oggetto Date nel fuso orario locale, impostando l'ora a mezzanotte
-          // Usiamo startOfDay per garantire che sia esattamente mezzanotte locale
-          const deadlineDate = startOfDay(new Date(year, month - 1, day)); 
+          // Usiamo parseISO per interpretare la stringa YYYY-MM-DD come data UTC a mezzanotte,
+          // e poi la normalizziamo a mezzanotte locale con startOfDay.
+          // Questo è più sicuro che usare il costruttore Date con numeri.
+          const deadlineDate = startOfDay(parseISO(dateString)); 
           
           eventDeadlines.push({
             type: 'risposte_reparti',
