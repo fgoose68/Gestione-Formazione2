@@ -6,17 +6,15 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
   const eventDeadlines: Deadline[] = [];
   if (!event.start_date) return [];
   
-  const startDate = parseISO(event.start_date);
-  const endDate = event.end_date ? parseISO(event.end_date) : startDate;
-
-  // Normalizza la data odierna per confronti consistenti
-  const todayNormalized = startOfDay(new Date());
+  // Normalizziamo le date di inizio e fine evento a mezzanotte locale per calcoli coerenti
+  const startDate = startOfDay(parseISO(event.start_date));
+  const endDate = event.end_date ? startOfDay(parseISO(event.end_date)) : startDate;
 
   if (event.type === 'E-learning') {
     // Scadenze per corsi E-learning
     eventDeadlines.push({
       type: 'discenti_elearning',
-      date: subDays(startDate, 8),
+      date: startOfDay(subDays(startDate, 8)),
       message: `Richiesta discenti (E-learning) per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('richiesta_discenti_elearning_fatta') || false,
@@ -25,7 +23,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'comunicazione_scuola',
-      date: subDays(startDate, 7),
+      date: startOfDay(subDays(startDate, 7)),
       message: `Comunicazione alla Scuola PEF/Altro per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('comunicazione_scuola_fatta') || false,
@@ -34,7 +32,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'lettera_abilitazione',
-      date: subDays(startDate, 1),
+      date: startOfDay(subDays(startDate, 1)),
       message: `Lettera Abilitazione al Corso per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('lettera_abilitazione_fatta') || false,
@@ -43,7 +41,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'mail_sollecito_1',
-      date: addDays(startDate, 15),
+      date: startOfDay(addDays(startDate, 15)),
       message: `Prima mail di sollecito per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('mail_sollecito_1_fatta') || false,
@@ -52,7 +50,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'mail_sollecito_2',
-      date: addDays(startDate, 25),
+      date: startOfDay(addDays(startDate, 25)),
       message: `Seconda mail di sollecito per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('mail_sollecito_2_fatta') || false,
@@ -61,7 +59,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'avviso_proroga',
-      date: addDays(endDate, 1),
+      date: startOfDay(addDays(endDate, 1)),
       message: `Avviso Proroga (eventuale) per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('avviso_proroga_fatto') || false,
@@ -70,7 +68,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'relazione_finale',
-      date: addDays(startDate, 30),
+      date: startOfDay(addDays(startDate, 30)),
       message: `Relazione Finale per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('relazione_finale_fatta') || false,
@@ -81,7 +79,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
     // Scadenze per corsi standard
     eventDeadlines.push({
       type: 'docente',
-      date: subDays(startDate, 30),
+      date: startOfDay(subDays(startDate, 30)),
       message: `Richiesta docenti per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('richiesta_docente_fatta') || false,
@@ -90,7 +88,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'discenti_standard',
-      date: subDays(startDate, 25),
+      date: startOfDay(subDays(startDate, 25)),
       message: `Creare richiesta discenti per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('richiesta_discenti_fatta') || false,
@@ -99,7 +97,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'avvio_standard',
-      date: subDays(startDate, 10),
+      date: startOfDay(subDays(startDate, 10)),
       message: `Preparare Avvio Corso per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('avvio_corso_fatto') || false,
@@ -108,7 +106,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'giorno_evento_registri',
-      date: startDate,
+      date: startDate, // Già normalizzata sopra
       message: `Gestire registri per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('gestione_registri_fatta') || false,
@@ -117,7 +115,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'post_evento_feedback',
-      date: addDays(endDate, 1),
+      date: startOfDay(addDays(endDate, 1)),
       message: `Raccogliere feedback per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('raccolta_feedback_fatta') || false,
@@ -126,7 +124,7 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
     eventDeadlines.push({
       type: 'post_evento_modello_l',
-      date: addDays(endDate, 2),
+      date: startOfDay(addDays(endDate, 2)),
       message: `Generare Modello L per "${event.title}"`,
       eventId: event.id,
       completed: event.completed_tasks?.includes('generazione_modello_l_fatta') || false,
@@ -146,11 +144,12 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
           // Estrai anno, mese, giorno dalla stringa YYYY-MM-DD
           const [year, month, day] = dateString.split('-').map(Number);
           // Crea un nuovo oggetto Date nel fuso orario locale, impostando l'ora a mezzanotte
+          // Usiamo startOfDay per garantire che sia esattamente mezzanotte locale
           const deadlineDate = startOfDay(new Date(year, month - 1, day)); 
           
           eventDeadlines.push({
             type: 'risposte_reparti',
-            date: deadlineDate, // Usa la data localmente normalizzata
+            date: deadlineDate, // Data normalizzata
             message: `Risposte dei Reparti per "${event.title}"`,
             eventId: event.id,
             completed: false, // Questa scadenza è solo una notifica
@@ -174,13 +173,13 @@ export const useDeadlines = (events: Event[]) => {
 
   return {
     deadlines,
-    // Upcoming: non completate, non passate, e non oggi
+    // Upcoming: non completate, non oggi, e nel futuro
     upcomingDeadlines: deadlines.filter(d => 
       !d.completed && 
-      isFuture(d.date) && 
-      !isToday(d.date)
+      !isToday(d.date) &&
+      isFuture(d.date)
     ),
-    // Past: non completate e passate (prima di oggi)
+    // Past: non completate e prima di oggi (usiamo todayNormalized per un confronto rigoroso a mezzanotte)
     pastDeadlines: deadlines.filter(d => 
       !d.completed && 
       isBefore(d.date, todayNormalized)
