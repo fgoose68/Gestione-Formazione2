@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,24 +14,33 @@ const IndexPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { events, loading: eventsLoading } = useEvents();
+  
+  // Stato per il filtro selezionato
+  const [filter, setFilter] = useState<'all' | 'in_corso' | 'in_programma' | 'concluso'>('all');
 
   // Filtra gli eventi non archiviati per la dashboard
   const activeEvents = useMemo(() => {
     return events.filter(event => event.displayStatus !== 'archiviato');
   }, [events]);
 
-  // Suddividi gli eventi attivi per stato di visualizzazione
+  // Applica il filtro selezionato
+  const filteredEvents = useMemo(() => {
+    if (filter === 'all') return activeEvents;
+    return activeEvents.filter(event => event.displayStatus === filter);
+  }, [activeEvents, filter]);
+
+  // Suddividi gli eventi filtrati per stato di visualizzazione (per le sezioni)
   const inCorsoEvents = useMemo(() => {
-    return activeEvents.filter(event => event.displayStatus === 'in_corso');
-  }, [activeEvents]);
+    return filteredEvents.filter(event => event.displayStatus === 'in_corso');
+  }, [filteredEvents]);
 
   const inProgrammaEvents = useMemo(() => {
-    return activeEvents.filter(event => event.displayStatus === 'in_programma');
-  }, [activeEvents]);
+    return filteredEvents.filter(event => event.displayStatus === 'in_programma');
+  }, [filteredEvents]);
 
   const conclusoEvents = useMemo(() => {
-    return activeEvents.filter(event => event.displayStatus === 'concluso');
-  }, [activeEvents]);
+    return filteredEvents.filter(event => event.displayStatus === 'concluso');
+  }, [filteredEvents]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -43,7 +52,7 @@ const IndexPage = () => {
     }
   };
 
-  const renderEventTable = (eventsToRender: typeof activeEvents) => (
+  const renderEventTable = (eventsToRender: typeof filteredEvents) => (
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
@@ -62,11 +71,11 @@ const IndexPage = () => {
               <TableCell>{format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}</TableCell>
               <TableCell>{event.location || 'N/D'}</TableCell>
               <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${ 
-                  event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' : 
-                  event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' : 
-                  event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' : 
-                  'bg-gray-200 text-gray-800' 
+                <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${
+                  event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' :
+                  event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' :
+                  event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' :
+                  'bg-gray-200 text-gray-800'
                 }`}>
                   {event.displayStatus?.replace('_', ' ') || 'N/D'}
                   {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
@@ -85,14 +94,13 @@ const IndexPage = () => {
   );
 
   return (
-    <div
-      className="min-h-screen bg-[url('/images/AULA-UNIVERSITA-Imagoeconomica_359058-k7RD--1020x533@IlSole24Ore-Web.jpg')] bg-cover bg-center bg-fixed"
-    >
+    <div className="min-h-screen bg-[url('/images/AULA-UNIVERSITA-Imagoeconomica_359058-k7RD--1020x533@IlSole24Ore-Web.jpg')] bg-cover bg-center bg-fixed">
       <div className="container mx-auto p-6 bg-white/90 min-h-screen">
         <div className="flex justify-between items-center mb-8 border-b pb-4">
           <h1 className="text-3xl font-bold text-blue-800 flex items-center">
             <Clock className="mr-3 h-8 w-8" />
-            <span className="text-yellow-500">Gestione</span> <span className="text-green-600 ml-2">Formazione</span>
+            <span className="text-yellow-500">Gestione</span>
+            <span className="text-green-600 ml-2">Formazione</span>
           </h1>
           <div className="flex space-x-3">
             <Button onClick={() => navigate('/nuovo-evento')} className="bg-green-600 hover:bg-green-700 text-white">
@@ -117,6 +125,38 @@ const IndexPage = () => {
               <LogOut className="mr-2 h-5 w-5" /> Log Out
             </Button>
           </div>
+        </div>
+
+        {/* Filtri */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          <Button 
+            variant={filter === 'all' ? "default" : "outline"} 
+            onClick={() => setFilter('all')}
+            className={filter === 'all' ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
+          >
+            Tutti gli Eventi
+          </Button>
+          <Button 
+            variant={filter === 'in_corso' ? "default" : "outline"} 
+            onClick={() => setFilter('in_corso')}
+            className={filter === 'in_corso' ? "bg-red-600 hover:bg-red-700 text-white" : ""}
+          >
+            In Corso
+          </Button>
+          <Button 
+            variant={filter === 'in_programma' ? "default" : "outline"} 
+            onClick={() => setFilter('in_programma')}
+            className={filter === 'in_programma' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+          >
+            In Programma
+          </Button>
+          <Button 
+            variant={filter === 'concluso' ? "default" : "outline"} 
+            onClick={() => setFilter('concluso')}
+            className={filter === 'concluso' ? "bg-blue-700 hover:bg-blue-800 text-white" : ""}
+          >
+            Conclusi
+          </Button>
         </div>
 
         {eventsLoading ? (
