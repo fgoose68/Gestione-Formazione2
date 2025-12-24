@@ -30,17 +30,19 @@ const IndexPage = () => {
   }, [activeEvents, filter]);
 
   // Suddividi gli eventi filtrati per stato di visualizzazione (per le sezioni)
+  // Nota: Quando filter è 'all', queste liste contengono tutti gli eventi attivi.
+  // Quando filter è specifico, solo la lista corrispondente avrà elementi.
   const inCorsoEvents = useMemo(() => {
-    return filteredEvents.filter(event => event.displayStatus === 'in_corso');
-  }, [filteredEvents]);
+    return activeEvents.filter(event => event.displayStatus === 'in_corso');
+  }, [activeEvents]);
 
   const inProgrammaEvents = useMemo(() => {
-    return filteredEvents.filter(event => event.displayStatus === 'in_programma');
-  }, [filteredEvents]);
+    return activeEvents.filter(event => event.displayStatus === 'in_programma');
+  }, [activeEvents]);
 
   const conclusoEvents = useMemo(() => {
-    return filteredEvents.filter(event => event.displayStatus === 'concluso');
-  }, [filteredEvents]);
+    return activeEvents.filter(event => event.displayStatus === 'concluso');
+  }, [activeEvents]);
 
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
@@ -52,46 +54,55 @@ const IndexPage = () => {
     }
   };
 
-  const renderEventTable = (eventsToRender: typeof filteredEvents) => (
-    <div className="overflow-x-auto">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Titolo</TableHead>
-            <TableHead>Periodo</TableHead>
-            <TableHead>Luogo</TableHead>
-            <TableHead>Stato</TableHead>
-            <TableHead className="text-right">Azioni</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {eventsToRender.map((event) => (
-            <TableRow key={event.id}>
-              <TableCell className="font-medium">{event.title}</TableCell>
-              <TableCell>{format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}</TableCell>
-              <TableCell>{event.location || 'N/D'}</TableCell>
-              <TableCell>
-                <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${
-                  event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' :
-                  event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' :
-                  event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' :
-                  'bg-gray-200 text-gray-800'
-                }`}>
-                  {event.displayStatus?.replace('_', ' ') || 'N/D'}
-                  {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
-                </span>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>
-                  Dettagli
-                </Button>
-              </TableCell>
+  const renderEventTable = (eventsToRender: typeof activeEvents) => {
+    // Se è attivo un filtro specifico, usiamo filteredEvents, altrimenti usiamo la lista specifica
+    const eventsToDisplay = filter === 'all' ? eventsToRender : filteredEvents.filter(e => e.displayStatus === eventsToRender[0]?.displayStatus || filter === e.displayStatus);
+    
+    if (eventsToDisplay.length === 0) {
+        return <p className="text-center text-gray-600">Nessun evento trovato per questo stato.</p>;
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Titolo</TableHead>
+              <TableHead>Periodo</TableHead>
+              <TableHead>Luogo</TableHead>
+              <TableHead>Stato</TableHead>
+              <TableHead className="text-right">Azioni</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
+          </TableHeader>
+          <TableBody>
+            {eventsToDisplay.map((event) => (
+              <TableRow key={event.id}>
+                <TableCell className="font-medium">{event.title}</TableCell>
+                <TableCell>{format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}</TableCell>
+                <TableCell>{event.location || 'N/D'}</TableCell>
+                <TableCell>
+                  <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${
+                    event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' :
+                    event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' :
+                    event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' :
+                    'bg-gray-200 text-gray-800'
+                  }`}>
+                    {event.displayStatus?.replace('_', ' ') || 'N/D'}
+                    {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
+                  </span>
+                </TableCell>
+                <TableCell className="text-right">
+                  <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>
+                    Dettagli
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-[url('/images/AULA-UNIVERSITA-Imagoeconomica_359058-k7RD--1020x533@IlSole24Ore-Web.jpg')] bg-cover bg-center bg-fixed">
@@ -164,52 +175,58 @@ const IndexPage = () => {
         ) : (
           <div className="space-y-8">
             {/* Sezione Eventi In Corso */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
-                  <CalendarDays className="mr-3 h-7 w-7 text-red-600" /> Eventi In Corso
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {inCorsoEvents.length > 0 ? (
-                  renderEventTable(inCorsoEvents)
-                ) : (
-                  <p className="text-center text-gray-600">Nessun evento in corso.</p>
-                )}
-              </CardContent>
-            </Card>
+            {(filter === 'all' || filter === 'in_corso') && (
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
+                    <CalendarDays className="mr-3 h-7 w-7 text-red-600" /> Eventi In Corso
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {inCorsoEvents.length > 0 ? (
+                    renderEventTable(inCorsoEvents)
+                  ) : (
+                    <p className="text-center text-gray-600">Nessun evento in corso.</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Sezione Eventi In Programma */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
-                  <CalendarDays className="mr-3 h-7 w-7 text-green-600" /> Eventi In Programma
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {inProgrammaEvents.length > 0 ? (
-                  renderEventTable(inProgrammaEvents)
-                ) : (
-                  <p className="text-center text-gray-600">Nessun evento in programma.</p>
-                )}
-              </CardContent>
-            </Card>
+            {(filter === 'all' || filter === 'in_programma') && (
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
+                    <CalendarDays className="mr-3 h-7 w-7 text-green-600" /> Eventi In Programma
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {inProgrammaEvents.length > 0 ? (
+                    renderEventTable(inProgrammaEvents)
+                  ) : (
+                    <p className="text-center text-gray-600">Nessun evento in programma.</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Sezione Eventi Conclusi */}
-            <Card className="shadow-lg">
-              <CardHeader>
-                <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
-                  <CalendarDays className="mr-3 h-7 w-7 text-blue-700" /> Eventi Conclusi
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                {conclusoEvents.length > 0 ? (
-                  renderEventTable(conclusoEvents)
-                ) : (
-                  <p className="text-center text-gray-600">Nessun evento concluso.</p>
-                )}
-              </CardContent>
-            </Card>
+            {(filter === 'all' || filter === 'concluso') && (
+              <Card className="shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
+                    <CalendarDays className="mr-3 h-7 w-7 text-blue-700" /> Eventi Conclusi
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {conclusoEvents.length > 0 ? (
+                    renderEventTable(conclusoEvents)
+                  ) : (
+                    <p className="text-center text-gray-600">Nessun evento concluso.</p>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
       </div>
