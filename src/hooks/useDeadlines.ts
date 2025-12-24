@@ -1,4 +1,4 @@
-import { parseISO, subDays, isBefore, isToday, addDays, startOfDay } from 'date-fns';
+import { parseISO, subDays, isBefore, isToday, addDays, startOfDay, isFuture } from 'date-fns';
 import { Event } from '@/types';
 import { Deadline } from '@/types';
 
@@ -8,6 +8,9 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
   
   const startDate = parseISO(event.start_date);
   const endDate = event.end_date ? parseISO(event.end_date) : startDate;
+
+  // Normalizza la data odierna per confronti consistenti
+  const todayNormalized = startOfDay(new Date());
 
   if (event.type === 'E-learning') {
     // Scadenze per corsi E-learning
@@ -133,28 +136,18 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 
   // Aggiungi la scadenza dalla checklist se presente
   if (event.completed_tasks && Array.isArray(event.completed_tasks)) {
-    console.log(`[useDeadlines] Processing event ${event.title}, completed_tasks:`, event.completed_tasks);
     const risposteTask = event.completed_tasks.find(task => 
       typeof task === 'string' && task.startsWith('checklist_risposte_reparti_entro:')
     );
-    console.log(`[useDeadlines] risposteTask found:`, risposteTask);
     if (risposteTask) {
       const dateString = risposteTask.split(':')[1];
-      console.log(`[useDeadlines] dateString extracted:`, dateString);
       if (dateString) {
         try {
           // Estrai anno, mese, giorno dalla stringa YYYY-MM-DD
           const [year, month, day] = dateString.split('-').map(Number);
           // Crea un nuovo oggetto Date nel fuso orario locale, impostando l'ora a mezzanotte
-          // Il mese è 0-indexed nel costruttore Date (es. Luglio è 6)
-          const deadlineDate = new Date(year, month - 1, day); 
+          const deadlineDate = startOfDay(new Date(year, month - 1, day)); 
           
-          const todayNormalized = startOfDay(new Date()); // Questo è l'inizio del giorno locale
-
-          console.log(`[useDeadlines] Created deadlineDate (local midnight):`, deadlineDate);
-          console.log(`[useDeadlines] Normalized current date (local midnight):`, todayNormalized);
-          console.log(`[useDeadlines] Is deadlineDate today (local normalized)?`, isToday(deadlineDate));
-
           eventDeadlines.push({
             type: 'risposte_reparti',
             date: deadlineDate, // Usa la data localmente normalizzata
@@ -163,18 +156,11 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
             completed: false, // Questa scadenza è solo una notifica
             eventTitle: event.title,
           });
-          console.log(`[useDeadlines] Added 'risposte_reparti' deadline for ${event.title}`);
         } catch (e) {
           console.error(`[useDeadlines] Formato data non valido per la scadenza della checklist: ${dateString}`, e);
         }
-      } else {
-        console.log(`[useDeadlines] dateString is empty for risposteTask:`, risposteTask);
       }
-    } else {
-      console.log(`[useDeadlines] No 'checklist_risposte_reparti_entro:' task found in completed_tasks.`);
     }
-  } else {
-    console.log(`[useDeadlines] event.completed_tasks is not an array or is empty for event ${event.title}.`);
   }
 
   return eventDeadlines;
@@ -183,10 +169,26 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
 export const useDeadlines = (events: Event[]) => {
   const deadlines = events.flatMap(calculateDeadlinesForEvent);
   
+  // Normalizza la data odierna per il confronto
+  const todayNormalized = startOfDay(new Date());
+
   return {
     deadlines,
-    upcomingDeadlines: deadlines.filter(d => !d.completed && !isBefore(d.date, new Date()) && !isToday(d.date)),
-    pastDeadlines: deadlines.filter(d => isBefore(d.date, new Date()) && !isToday(d.date)),
-    todayDeadlines: deadlines.filter(d => isToday(d.date))
+    // Upcoming: non completate, non passate, e non oggi
+    upcomingDeadlines: deadlines.filter(d => 
+      !d.completed && 
+      isFuture(d.date) && 
+      !isToday(d.date)
+    ),
+    // Past: non completate e passate (prima di oggi)
+    pastDeadlines: deadlines.filter(d => 
+      !d.completed && 
+      isBefore(d.date, todayNormalized)
+    ),
+    // Today: non completate e oggi
+    todayDeadlines: deadlines.filter(d => 
+      !d.completed && 
+      isToday(d.date)
+    )
   };
 };
