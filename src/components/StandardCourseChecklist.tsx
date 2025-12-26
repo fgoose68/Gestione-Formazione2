@@ -54,8 +54,12 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     safeCompletedTasks.forEach(task => {
       if (typeof task === 'string') {
         if (task.startsWith(`${REPARTI_RISPOSTE_ID}:`)) {
+          // Estrae la data YYYY-MM-DD
           dateValue = task.split(':')[1];
-          initialChecked.add(REPARTI_RISPOSTE_ID);
+          // Aggiunge l'ID della checklist solo se c'è una data valida
+          if (dateValue) {
+             initialChecked.add(REPARTI_RISPOSTE_ID);
+          }
         } else if (CHECKLIST_DEFINITIONS.some(item => item.id === task && item.type === 'checkbox')) {
           initialChecked.add(task);
         }
@@ -73,6 +77,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       const otherTasks = safeCompletedTasks 
         .filter(task => typeof task === 'string')
         .filter(task => {
+          // Filtra via tutti i task definiti nella CHECKLIST_DEFINITIONS per ricostruirli
           const isDefinedChecklistItem = CHECKLIST_DEFINITIONS.some(item => 
             item.id === task || (item.id === REPARTI_RISPOSTE_ID && task.startsWith(`${REPARTI_RISPOSTE_ID}:`))
           );
@@ -88,9 +93,10 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
 
       // Gestisci REPARTI_RISPOSTE_ID specificamente
       if (currentChecked.has(REPARTI_RISPOSTE_ID) && currentDateValue) {
+        // Salva la data solo se la checkbox è spuntata E la data è presente
         newChecklistTasks.push(`${REPARTI_RISPOSTE_ID}:${currentDateValue}`);
       } else if (currentChecked.has(REPARTI_RISPOSTE_ID) && !currentDateValue) {
-        // Se la checkbox è spuntata ma la data è vuota, salva solo l'ID senza data
+        // Se la checkbox è spuntata ma la data è vuota, salva solo l'ID (anche se la logica di handleDateChange/handleCheckChange dovrebbe impedirlo)
         newChecklistTasks.push(REPARTI_RISPOSTE_ID);
       }
 
@@ -121,7 +127,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     }
     setCheckedTasks(newCheckedTasks);
     // Passa lo stato corrente di entrambi per il salvataggio
-    saveChecklist(newCheckedTasks, risposteRepartiDate);
+    saveChecklist(newCheckedTasks, taskId === REPARTI_RISPOSTE_ID && !checked ? '' : risposteRepartiDate);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
