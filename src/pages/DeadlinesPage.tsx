@@ -78,7 +78,7 @@ const DeadlinesPage = () => {
 
   // Filtra le scadenze imminenti per tipo di corso
   const standardUpcomingDeadlines = useMemo(() => {
-    const standardTypes: Deadline['type'][] = ['docente', 'discenti_standard', 'avvio_standard', 'giorno_evento_registri', 'post_evento_feedback', 'post_evento_modello_l'];
+    const standardTypes: Deadline['type'][] = ['docente', 'discenti_standard', 'avvio_standard', 'giorno_evento_registri', 'post_evento_feedback', 'post_evento_modello_l', 'risposte_reparti']; // Aggiunto risposte_reparti
     return sortedUpcomingDeadlines.filter(d => standardTypes.includes(d.type));
   }, [sortedUpcomingDeadlines]);
 
