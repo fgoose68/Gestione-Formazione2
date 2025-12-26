@@ -69,12 +69,9 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     setRisposteRepartiDate(dateValue);
   }, [safeCompletedTasks]);
 
-  const saveChecklist = useCallback(
-    debounce(async (currentChecked: Set<string>, currentDateValue: string) => {
-      setIsSaving(true);
-      
-      // Usa safeCompletedTasks qui, che è garantito essere un array
-      const otherTasks = safeCompletedTasks 
+  // Funzione per ottenere i task non definiti nella checklist (per non perderli)
+  const getOtherTasks = useCallback(() => {
+      return safeCompletedTasks 
         .filter(task => typeof task === 'string')
         .filter(task => {
           // Filtra via tutti i task definiti nella CHECKLIST_DEFINITIONS per ricostruirli
@@ -83,6 +80,14 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
           );
           return !isDefinedChecklistItem;
         });
+  }, [safeCompletedTasks]);
+
+
+  const saveChecklist = useCallback(
+    debounce(async (currentChecked: Set<string>, currentDateValue: string) => {
+      setIsSaving(true);
+      
+      const otherTasks = getOtherTasks();
 
       const newChecklistTasks: string[] = [];
       currentChecked.forEach(taskId => {
@@ -111,11 +116,13 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
       setIsSaving(false);
     }, 1000),
-    [eventId, updateEvent, safeCompletedTasks]
+    [eventId, updateEvent, getOtherTasks] // Rimosso safeCompletedTasks, aggiunto getOtherTasks
   );
 
   const handleCheckChange = (taskId: string, checked: boolean) => {
     const newCheckedTasks = new Set(checkedTasks);
+    let newDateValue = risposteRepartiDate;
+
     if (checked) {
       newCheckedTasks.add(taskId);
     } else {
@@ -123,22 +130,27 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       // Se deselezioni la checkbox della data, resetta anche il campo data
       if (taskId === REPARTI_RISPOSTE_ID) {
         setRisposteRepartiDate('');
+        newDateValue = '';
       }
     }
     setCheckedTasks(newCheckedTasks);
     // Passa lo stato corrente di entrambi per il salvataggio
-    saveChecklist(newCheckedTasks, taskId === REPARTI_RISPOSTE_ID && !checked ? '' : risposteRepartiDate);
+    saveChecklist(newCheckedTasks, newDateValue);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newDate = e.target.value;
     setRisposteRepartiDate(newDate);
     const newCheckedTasks = new Set(checkedTasks);
+    
+    // Se la data è impostata, la checkbox deve essere spuntata
     if (newDate) {
-      newCheckedTasks.add(REPARTI_RISPOSTE_ID); // Assicurati che la checkbox sia spuntata se la data è impostata
+      newCheckedTasks.add(REPARTI_RISPOSTE_ID); 
     } else {
-      newCheckedTasks.delete(REPARTI_RISPOSTE_ID); // Se la data viene svuotata, deseleziona la checkbox
+      // Se la data viene svuotata, deseleziona la checkbox
+      newCheckedTasks.delete(REPARTI_RISPOSTE_ID); 
     }
+    
     setCheckedTasks(newCheckedTasks);
     // Passa lo stato corrente di entrambi per il salvataggio
     saveChecklist(newCheckedTasks, newDate);
