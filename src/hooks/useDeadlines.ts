@@ -141,9 +141,9 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
       const dateString = risposteTask.split(':')[1];
       if (dateString) {
         try {
-          // Usiamo parseISO per interpretare la stringa YYYY-MM-DD come data UTC a mezzanotte,
-          // e poi la normalizziamo a mezzanotte locale con startOfDay.
-          const deadlineDate = startOfDay(parseISO(dateString)); 
+          // CORREZIONE: Usiamo new Date(dateString + 'T00:00:00') per forzare l'interpretazione come data locale a mezzanotte, 
+          // evitando problemi di fuso orario quando si usa parseISO su una stringa YYYY-MM-DD.
+          const deadlineDate = startOfDay(new Date(dateString + 'T00:00:00')); 
           
           // Aggiungiamo la scadenza solo se non è già passata
           if (isFuture(deadlineDate) || isToday(deadlineDate)) {
