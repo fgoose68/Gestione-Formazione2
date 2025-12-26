@@ -143,17 +143,19 @@ const calculateDeadlinesForEvent = (event: Event): Deadline[] => {
         try {
           // Usiamo parseISO per interpretare la stringa YYYY-MM-DD come data UTC a mezzanotte,
           // e poi la normalizziamo a mezzanotte locale con startOfDay.
-          // Questo è più sicuro che usare il costruttore Date con numeri.
           const deadlineDate = startOfDay(parseISO(dateString)); 
           
-          eventDeadlines.push({
-            type: 'risposte_reparti',
-            date: deadlineDate, // Data normalizzata
-            message: `Risposte dei Reparti per "${event.title}"`,
-            eventId: event.id,
-            completed: false, // Questa scadenza è solo una notifica
-            eventTitle: event.title,
-          });
+          // Aggiungiamo la scadenza solo se non è già passata
+          if (isFuture(deadlineDate) || isToday(deadlineDate)) {
+             eventDeadlines.push({
+               type: 'risposte_reparti',
+               date: deadlineDate, // Data normalizzata
+               message: `Risposte dei Reparti per "${event.title}"`,
+               eventId: event.id,
+               completed: false, // Questa scadenza è solo una notifica
+               eventTitle: event.title,
+             });
+          }
         } catch (e) {
           console.error(`[useDeadlines] Formato data non valido per la scadenza della checklist: ${dateString}`, e);
         }
