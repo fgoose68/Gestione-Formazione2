@@ -15,6 +15,7 @@ const staticStandardDeadlines = [
   { type: 'Richiesta Docenti', days: '30 giorni prima', message: 'Redigere richiesta docenti' },
   { type: 'Richiesta Discenti', days: '25 giorni prima', message: 'Creare richiesta discenti' },
   { type: 'Avvio Corso', days: '10 giorni prima', message: 'Preparare Avvio Corso' },
+  { type: 'Risposte dei Reparti', days: 'Data specifica', message: 'Scadenza per le risposte dei reparti (dinamica)' }, // Aggiunto qui
   { type: 'Gestione Registri', days: 'Giorno dell\'evento', message: 'Gestire registri' },
   { type: 'Raccolta Feedback', days: '1 giorno dopo fine', message: 'Raccogliere feedback' },
   { type: 'Generazione Modello L', days: '2 giorni dopo fine', message: 'Generare Modello L' },
@@ -78,7 +79,7 @@ const DeadlinesPage = () => {
 
   // Filtra le scadenze imminenti per tipo di corso
   const standardUpcomingDeadlines = useMemo(() => {
-    const standardTypes: Deadline['type'][] = ['docente', 'discenti_standard', 'avvio_standard', 'giorno_evento_registri', 'post_evento_feedback', 'post_evento_modello_l', 'risposte_reparti']; // Aggiunto risposte_reparti
+    const standardTypes: Deadline['type'][] = ['docente', 'discenti_standard', 'avvio_standard', 'giorno_evento_registri', 'post_evento_feedback', 'post_evento_modello_l', 'risposte_reparti']; // 'risposte_reparti' è qui
     return sortedUpcomingDeadlines.filter(d => standardTypes.includes(d.type));
   }, [sortedUpcomingDeadlines]);
 
