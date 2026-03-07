@@ -48,7 +48,10 @@ const IndexPage = () => {
   // Filtra gli eventi conclusi per anno basandosi sulla data di fine (end_date)
   const filteredConclusi = useMemo(() => {
     if (!selectedYear) return conclusoEvents;
-    return conclusoEvents.filter(e => format(parseISO(e.end_date), "yyyy") === selectedYear);
+    return conclusoEvents.filter(e => {
+      const endDate = parseISO(e.end_date);
+      return endDate.getFullYear() === parseInt(selectedYear);
+    });
   }, [selectedYear, conclusoEvents]);
 
   const handleLogout = async () => {
