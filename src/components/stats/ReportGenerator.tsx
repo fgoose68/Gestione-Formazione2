@@ -9,7 +9,8 @@ import { format } from 'date-fns';
 import { it } from 'date-fns/locale';
 import { toast } from '@/hooks/use-toast';
 import { useReportStats } from '@/hooks/useReportStats';
-import { exportCourseTypeStatsToExcel, exportDepartmentAttendeesToExcel } from '@/utils/excelExport'; // Importa anche exportDepartmentAttendeesToExcel
+import { exportCourseTypeStatsToExcel, exportDepartmentAttendeesToExcel } from '@/utils/excelExport';
+import { exportCourseTypeStatsToPdf, exportDepartmentAttendeesToPdf } from '@/utils/pdfExport';
 import { COURSE_TYPES } from '@/constants/courseTypes';
 
 export const ReportGenerator = () => {
@@ -42,13 +43,39 @@ export const ReportGenerator = () => {
     exportDepartmentAttendeesToExcel(reportDepartmentRankTotals, reportDepartmentRankGrandTotals, dateRangeString);
   };
 
+  const handleDownloadCourseTypeStatsPdf = () => {
+    if (!reportDateRange?.from || !reportDateRange?.to) {
+      toast({
+        title: "Attenzione",
+        description: "Seleziona un intervallo di date valido per il report.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
+    exportCourseTypeStatsToPdf(reportStatsByType, [...COURSE_TYPES, 'Non Specificato'], dateRangeString);
+  };
+
+  const handleDownloadDepartmentAttendeesPdf = () => {
+    if (!reportDateRange?.from || !reportDateRange?.to) {
+      toast({
+        title: "Attenzione",
+        description: "Seleziona un intervallo di date valido per il report.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
+    exportDepartmentAttendeesToPdf(reportDepartmentRankTotals, reportDepartmentRankGrandTotals, dateRangeString);
+  };
+
   return (
     <Card className="shadow-lg mb-8">
       <CardHeader>
         <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
           <Download className="mr-3 h-7 w-7" /> Genera Report per Periodo
         </CardTitle>
-        <CardDescription>Seleziona un intervallo di date per generare un report Excel dei corsi per tipo e del riepilogo discenti.</CardDescription>
+        <CardDescription>Seleziona un intervallo di date per generare un report Excel o PDF dei corsi per tipo e del riepilogo discenti.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
@@ -100,22 +127,50 @@ export const ReportGenerator = () => {
             )}
           </div>
         )}
-        <Button
-          onClick={handleDownloadCourseTypeStatsExcel}
-          disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
-          className="w-full bg-red-600 hover:bg-red-700 text-white"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Scarica Report Corsi per Tipo
-        </Button>
-        <Button
-          onClick={handleDownloadDepartmentAttendeesExcel}
-          disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
-          className="w-full bg-green-600 hover:bg-green-700 text-white"
-        >
-          <Download className="mr-2 h-4 w-4" />
-          Scarica Riepilogo Discenti
-        </Button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Report Corsi per Tipo</h3>
+            <div className="flex space-x-2">
+              <Button
+                onClick={handleDownloadCourseTypeStatsExcel}
+                disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+              <Button
+                onClick={handleDownloadCourseTypeStatsPdf}
+                disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                PDF
+              </Button>
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold mb-2">Riepilogo Discenti</h3>
+            <div className="flex space-x-2">
+              <Button
+                onClick={handleDownloadDepartmentAttendeesExcel}
+                disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Excel
+              </Button>
+              <Button
+                onClick={handleDownloadDepartmentAttendeesPdf}
+                disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                PDF
+              </Button>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
