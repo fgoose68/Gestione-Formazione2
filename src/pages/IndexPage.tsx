@@ -48,7 +48,10 @@ const IndexPage = () => {
   // Filtra gli eventi conclusi per anno basandosi sulla data di fine (end_date)
   const filteredConclusi = useMemo(() => {
     if (!selectedYear) return conclusoEvents;
-    return conclusoEvents.filter(e => format(parseISO(e.end_date), "yyyy") === selectedYear);
+    return conclusoEvents.filter(e => {
+      const endYear = format(parseISO(e.end_date), "yyyy");
+      return endYear === selectedYear;
+    });
   }, [selectedYear, conclusoEvents]);
 
   const handleLogout = async () => {
@@ -255,7 +258,44 @@ const IndexPage = () => {
                 </CardHeader>
                 <CardContent>
                   {filteredConclusi.length > 0 ? (
-                    renderEventTable(filteredConclusi)
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Titolo</TableHead>
+                            <TableHead>Periodo</TableHead>
+                            <TableHead>Luogo</TableHead>
+                            <TableHead>Stato</TableHead>
+                            <TableHead className="text-right">Azioni</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredConclusi.map((event) => (
+                            <TableRow key={event.id}>
+                              <TableCell className="font-medium">{event.title}</TableCell>
+                              <TableCell>{format(parseISO(event.start_date), "PPP", { locale: it })} - {format(parseISO(event.end_date), "PPP", { locale: it })}</TableCell>
+                              <TableCell>{event.location || 'N/D'}</TableCell>
+                              <TableCell>
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold capitalize ${
+                                  event.displayStatus === 'concluso' ? 'bg-blue-700 text-white' :
+                                  event.displayStatus === 'in_programma' ? 'bg-green-600 text-white' :
+                                  event.displayStatus === 'in_corso' ? 'bg-red-600 text-white' :
+                                  'bg-gray-200 text-gray-800'
+                                }`}>
+                                  {event.displayStatus?.replace('_', ' ') || 'N/D'}
+                                  {event.displayStatus === 'in_corso' && isEventEndingSoon(event) && ' (in chiusura)'}
+                                </span>
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <Button variant="outline" size="sm" onClick={() => navigate(`/evento/${event.id}`)}>
+                                  Dettagli
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
                   ) : (
                     <p className="text-center text-gray-600">Nessun evento concluso per l'anno selezionato.</p>
                   )}
