@@ -1,14 +1,14 @@
-import React, { useMemo, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Clock, PlusCircle, CalendarDays, Archive, BarChart2, Info, LogOut, FileText } from 'lucide-react';
-import { useEvents } from '@/hooks';
-import { format, parseISO } from 'date-fns';
-import { it } from 'date-fns/locale';
-import { supabase } from '@/integrations/supabase/client';
-import { isEventEndingSoon } from '@/utils/eventStatus';
+import React, { useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Clock, PlusCircle, CalendarDays, Archive, BarChart2, Info, LogOut, FileText } from "lucide-react";
+import { useEvents } from "@/hooks";
+import { format, parseISO } from "date-fns";
+import { it } from "date-fns/locale";
+import { supabase } from "@/integrations/supabase/client";
+import { isEventEndingSoon } from "@/utils/eventStatus";
 
 const IndexPage = () => {
   const navigate = useNavigate();
@@ -17,6 +17,9 @@ const IndexPage = () => {
   
   // Stato per il filtro selezionato
   const [filter, setFilter] = useState<'all' | 'in_corso' | 'in_programma' | 'concluso'>('all');
+
+  // Stato per l'anno di svolgimento
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
 
   // Filtra gli eventi non archiviati per la dashboard
   const activeEvents = useMemo(() => {
@@ -29,9 +32,7 @@ const IndexPage = () => {
     return activeEvents.filter(event => event.displayStatus === filter);
   }, [activeEvents, filter]);
 
-  // Suddividi gli eventi filtrati per stato di visualizzazione (per le sezioni)
-  // Nota: Quando filter è 'all', queste liste contengono tutti gli eventi attivi.
-  // Quando filter è specifico, solo la lista corrispondente avrà elementi.
+  // Eventi per ciascuno stato di visualizzazione
   const inCorsoEvents = useMemo(() => {
     return activeEvents.filter(event => event.displayStatus === 'in_corso');
   }, [activeEvents]);
@@ -44,22 +45,26 @@ const IndexPage = () => {
     return activeEvents.filter(event => event.displayStatus === 'concluso');
   }, [activeEvents]);
 
+  // Filtra gli eventi conclusi per anno
+  const filteredConclusi = useMemo(() => {
+    if (!selectedYear) return conclusoEvents;
+    return conclusoEvents.filter(e => format(parseISO(e.start_date), "yyyy") === selectedYear);
+  }, [selectedYear, conclusoEvents]);
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error("Errore durante il logout:", error);
-      // Potresti mostrare un toast di errore qui se necessario
     } else {
       console.log("Logout effettuato con successo.");
     }
   };
 
   const renderEventTable = (eventsToRender: typeof activeEvents) => {
-    // Se è attivo un filtro specifico, usiamo filteredEvents, altrimenti usiamo la lista specifica
     const eventsToDisplay = filter === 'all' ? eventsToRender : filteredEvents.filter(e => e.displayStatus === eventsToRender[0]?.displayStatus || filter === e.displayStatus);
     
     if (eventsToDisplay.length === 0) {
-        return <p className="text-center text-gray-600">Nessun evento trovato per questo stato.</p>;
+      return <p className="text-center text-gray-600">Nessun evento trovato per questo stato.</p>;
     }
 
     return (
@@ -132,7 +137,7 @@ const IndexPage = () => {
             <Button onClick={() => navigate('/archivio')} variant="outline">
               <Archive className="mr-2 h-5 w-5" /> Archivio
             </Button>
-            <Button onClick={handleLogout} variant="destructive">
+            <Button onClick={() => navigate('/')} variant="destructive">
               <LogOut className="mr-2 h-5 w-5" /> Log Out
             </Button>
           </div>
@@ -169,6 +174,36 @@ const IndexPage = () => {
             Conclusi
           </Button>
         </div>
+
+        {/* Selezione anno per gli eventi conclusi */}
+        {filter === 'concluso' && (
+          <div className="mb-6 flex flex-wrap gap-2">
+            <Button 
+              variant={selectedYear === '2025' ? "default" : "outline"} 
+              onClick={() => setSelectedYear('2025')}
+            >
+              2025
+            </Button>
+            <Button 
+              variant={selectedYear === '2026' ? "default" : "outline"} 
+              onClick={() => setSelectedYear('2026')}
+            >
+              2026
+            </Button>
+            <Button 
+              variant={selectedYear === '2027' ? "default" : "outline"} 
+              onClick={() => setSelectedYear('2027')}
+            >
+              2027
+            </Button>
+            <Button 
+              variant={selectedYear === '2028' ? "default" : "outline"} 
+              onClick={() => setSelectedYear('2028')}
+            >
+              2028
+            </Button>
+          </div>
+        )}
 
         {eventsLoading ? (
           <p className="text-center text-gray-600 text-xl">Caricamento eventi...</p>
@@ -210,7 +245,7 @@ const IndexPage = () => {
               </Card>
             )}
 
-            {/* Sezione Eventi Conclusi */}
+            {/* Sezione Eventi Conclusi con filtro anno */}
             {(filter === 'all' || filter === 'concluso') && (
               <Card className="shadow-lg">
                 <CardHeader>
@@ -219,10 +254,10 @@ const IndexPage = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {conclusoEvents.length > 0 ? (
-                    renderEventTable(conclusoEvents)
+                  {filteredConclusi.length > 0 ? (
+                    renderEventTable(filteredConclusi)
                   ) : (
-                    <p className="text-center text-gray-600">Nessun evento concluso.</p>
+                    <p className="text-center text-gray-600">Nessun evento concluso per l'anno selezionato.</p>
                   )}
                 </CardContent>
               </Card>
