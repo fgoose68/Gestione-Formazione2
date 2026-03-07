@@ -1,177 +1,105 @@
-import { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Download, CalendarDays } from 'lucide-react';
-import { DateRange } from 'react-day-picker';
-import { format } from 'date-fns';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Event, DepartmentAttendee } from '@/types';
+import { format, parseISO } from 'date-fns';
 import { it } from 'date-fns/locale';
-import { toast } from '@/hooks/use-toast';
-import { useReportStats } from '@/hooks/useReportStats';
-import { exportCourseTypeStatsToExcel, exportDepartmentAttendeesToExcel } from '@/utils/excelExport';
+import { COURSE_TYPES_MAP } from '@/constants/courseTypes';
 import { exportCourseTypeStatsToPdf, exportDepartmentAttendeesToPdf } from '@/utils/pdfExport';
-import { COURSE_TYPES } from '@/constants/courseTypes';
+import { useReportStats } from '@/hooks/useReportStats';
 
-export const ReportGenerator = () => {
-  const [reportDateRange, setReportDateRange] = useState<DateRange | undefined>(undefined);
-  const { reportEvents, reportLoading, reportStatsByType, reportDepartmentRankTotals, reportDepartmentRankGrandTotals, totalReportCourses } = useReportStats(reportDateRange);
+const ReportGenerator = () => {
+  const navigate = useNavigate();
+  const { reportEvents, reportLoading } = useReportStats();
 
-  const handleDownloadCourseTypeStatsExcel = () => {
-    if (!reportDateRange?.from || !reportDateRange?.to) {
-      toast({
-        title: "Attenzione",
-        description: "Seleziona un intervallo di date valido per il report.",
-        variant: "destructive",
-      });
-      return;
+  useEffect(() => {
+    if (reportEvents.length > 0) {
+      const dateRange = reportEvents[0].start_date;
+      const endDate = reportEvents[reportEvents.length - 1].end_date;
+      const monthYear = format(parseISO(dateRange), "MMMM yyyy", { locale: it });
+      document.title = `Statistiche Mensili - ${monthYear}`;
     }
-    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
-    exportCourseTypeStatsToExcel(reportStatsByType, [...COURSE_TYPES, 'Non Specificato'], dateRangeString);
-  };
+  }, [reportEvents]);
 
-  const handleDownloadDepartmentAttendeesExcel = () => {
-    if (!reportDateRange?.from || !reportDateRange?.to) {
-      toast({
-        title: "Attenzione",
-        description: "Seleziona un intervallo di date valido per il report.",
-        variant: "destructive",
-      });
-      return;
-    }
-    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
-    exportDepartmentAttendeesToExcel(reportDepartmentRankTotals, reportDepartmentRankGrandTotals, dateRangeString);
-  };
-
-  const handleDownloadCourseTypeStatsPdf = () => {
-    if (!reportDateRange?.from || !reportDateRange?.to) {
-      toast({
-        title: "Attenzione",
-        description: "Seleziona un intervallo di date valido per il report.",
-        variant: "destructive",
-      });
-      return;
-    }
-    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
-    exportCourseTypeStatsToPdf(reportStatsByType, [...COURSE_TYPES, 'Non Specificato'], dateRangeString);
+  const handleDownloadCourseTypeStats = () => {
+    if (!reportEvents.length) return;
+    const dateRangeString = `${format(reportEvents[0].start_date, "dd-MM-yyyy")} al ${format(reportEvents[reportEvents.length - 1].end_date, "dd-MM-yyyy")}`;
+    exportCourseTypeStatsToPdf(reportEvents, dateRangeString);
   };
 
   const handleDownloadDepartmentAttendeesPdf = () => {
-    if (!reportDateRange?.from || !reportDateRange?.to) {
-      toast({
-        title: "Attenzione",
-        description: "Seleziona un intervallo di date valido per il report.",
-        variant: "destructive",
-      });
-      return;
-    }
-    const dateRangeString = `${format(reportDateRange.from, "dd-MM-yyyy")} al ${format(reportDateRange.to, "dd-MM-yyyy")}`;
-    exportDepartmentAttendeesToPdf(reportDepartmentRankTotals, reportDepartmentRankGrandTotals, dateRangeString);
+    if (!reportEvents.length) return;
+    const dateRangeString = `${format(reportEvents[0].start_date, "dd-MM-yyyy")} al ${format(reportEvents[reportEvents.length - 1].end_date, "dd-MM-yyyy")}`;
+    exportDepartmentAttendeesToPdf(reportEvents, dateRangeString);
   };
 
   return (
-    <Card className="shadow-lg mb-8">
-      <CardHeader>
-        <CardTitle className="text-2xl font-semibold text-blue-700 flex items-center">
-          <Download className="mr-3 h-7 w-7" /> Genera Report per Periodo
-        </CardTitle>
-        <CardDescription>Seleziona un intervallo di date per generare un report Excel o PDF dei corsi per tipo e del riepilogo discenti.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Seleziona Intervallo Date</label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant={"outline"}
-                className={`w-full justify-start text-left font-normal ${!reportDateRange && "text-muted-foreground"}`}
-                disabled={reportLoading}
-              >
-                <CalendarDays className="mr-2 h-4 w-4" />
-                {reportDateRange?.from ? (
-                  reportDateRange.to ? (
-                    <>
-                      {format(reportDateRange.from, "PPP", { locale: it })} -{" "}
-                      {format(reportDateRange.to, "PPP", { locale: it })}
-                    </>
-                  ) : (
-                    format(reportDateRange.from, "PPP", { locale: it })
-                  )
+    <div className="container mx-auto p-6 bg-gray-50 min-h-screen">
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold text-blue-800">Statistiche Mensili</h1>
+        <div className="flex space-x-3">
+          <Button onClick={() => navigate('/')} className="bg-yellow-400 hover:bg-yellow-500 text-black">
+            <Home className="mr-2 h-4 w-4" />
+            Torna alla Dashboard
+          </Button>
+          <Button onClick={() => navigate('/scadenze')} variant="outline" className="bg-gray-300 hover:bg-gray-400 text-gray-800">
+            <CalendarDays className="mr-2 h-4 w-4" />
+            Scadenze
+          </Button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="shadow-lg rounded-lg overflow-hidden">
+          <div className="bg-blue-700 text-white p-6">
+            <h2 className="text-2xl font-semibold">Statistiche per Tipo di Corso</h2>
+          </div>
+          <div className="p-6">
+            <div className="space-y-4">
+              {reportEvents.map((event) => (
+                <div key={event.id} className="border rounded-lg p-4 mb-2 bg-white hover:shadow-lg transition-shadow">
+                  <h3 className="text-lg font-semibold mb-2">{event.title}</h3>
+                  <p className="text-gray-600 mb-2">Tipo: {event.type}</p>
+                  <p className="text-gray-600 mb-2">Data: {format(parseISO(event.start_date), "dd/MM/yyyy", { locale: it })}</p>
+                  <p className="text-gray-600 mb-2">Luogo: {event.location || 'N/D'}</p>
+                  <p className="text-gray-600 mb-2">Descrizione: {event.description || 'N/D'}</p>
+                  <div className="mt-4">
+                    <Button onClick={() => handleDownloadCourseTypeStatsPdf()} className="bg-green-600 hover:bg-green-700 text-white">
+                      <Download className="mr-2 h-4 w-4" />
+                      Excel
+                    </Button>
+                    <Button onClick={() => handleDownloadDepartmentAttendeesPdf()} className="ml-2 bg-red-600 hover:bg-red-700 text-white">
+                      <Download className="mr-2 h-4 w-4" />
+                      PDF
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="shadow-lg rounded-lg overflow-hidden">
+            <div className="bg-gray-50 p-6">
+              <h2 className="text-2xl font-semibold text-blue-800">Riepilogo Discenti per Reparto e Grado</h2>
+              <p className="text-gray-600 mb-4">Dati aggiornati al {format(new Date(), "dd/MM/yyyy", { locale: it })}</p>
+              <div className="space-y-4">
+                {reportEvents.length > 0 ? (
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-semibold mb-2">Totale Eventi:</h3>
+                    <p className="text-gray-600">{reportEvents.length}</p>
+                  </div>
                 ) : (
-                  <span>Seleziona le date</span>
+                  <p className="text-center text-gray-600">Nessun evento trovato.</p>
                 )}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0" align="start">
-              <Calendar
-                initialFocus
-                mode="range"
-                defaultMonth={reportDateRange?.from}
-                selected={reportDateRange}
-                onSelect={setReportDateRange}
-                numberOfMonths={2}
-                locale={it}
-              />
-            </PopoverContent>
-          </Popover>
-        </div>
-        {reportDateRange?.from && reportDateRange?.to && (
-          <div className="text-center text-lg font-medium text-gray-700 space-y-2">
-            {reportLoading ? (
-              <p>Caricamento dati...</p>
-            ) : (
-              <>
-                <p>Trovati <span className="text-blue-600 font-bold">{totalReportCourses}</span> corsi nel periodo selezionato.</p>
-                <p>Totale <span className="text-blue-600 font-bold">{reportDepartmentRankGrandTotals.actualTotal}</span> discenti effettivi nel periodo selezionato.</p>
-              </>
-            )}
-          </div>
-        )}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Report Corsi per Tipo</h3>
-            <div className="flex space-x-2">
-              <Button
-                onClick={handleDownloadCourseTypeStatsExcel}
-                disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
-              <Button
-                onClick={handleDownloadCourseTypeStatsPdf}
-                disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                PDF
-              </Button>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Riepilogo Discenti</h3>
-            <div className="flex space-x-2">
-              <Button
-                onClick={handleDownloadDepartmentAttendeesExcel}
-                disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Excel
-              </Button>
-              <Button
-                onClick={handleDownloadDepartmentAttendeesPdf}
-                disabled={reportLoading || !reportDateRange?.from || !reportDateRange?.to || reportEvents.length === 0}
-                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-              >
-                <Download className="mr-2 h-4 w-4" />
-                PDF
-              </Button>
+              </div>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
+
+export default ReportGenerator;
