@@ -14,7 +14,7 @@ interface StandardCourseChecklistProps {
 // Definizione di tutti gli elementi della checklist, inclusa la data, nell'ordine desiderato
 const CHECKLIST_DEFINITIONS = [
   { id: 'checklist_circolare_indizione', label: 'Circolare indizione', type: 'checkbox' },
-  { id: 'checklist_risposte_reparti_entro', label: 'Risposte dei Reparti entro il', type: 'date' },
+  { id: 'checklist_risposte_reparti_entro', label: 'Risposte dei Reparti', type: 'date' }, // Modified label
   { id: 'checklist_avvio_corso', label: 'Avvio al corso', type: 'checkbox' },
   { id: 'checklist_redazione_vm_mod_l', label: 'Redazione V.M. e Mod "L"', type: 'checkbox' },
   { id: 'checklist_relazione_finale', label: 'Relazione finale', type: 'checkbox' },
@@ -134,8 +134,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
     }
     setCheckedTasks(newCheckedTasks);
-    // Passa lo stato corrente di entrambi per il salvataggio
-    saveChecklist(newCheckedTasks, newDateValue);
+    // Passa lo stato corrente di entrambi per il salvataggio    saveChecklist(newCheckedTasks, newDateValue);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -184,3 +183,5 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     </div>
   );
 };
+
+export default StandardCourseChecklist;
