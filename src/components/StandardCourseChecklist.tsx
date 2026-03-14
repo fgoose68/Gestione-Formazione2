@@ -14,8 +14,6 @@ interface StandardCourseChecklistProps {
 // Definizione di tutti gli elementi della checklist, inclusa la data, nell'ordine desiderato
 const CHECKLIST_DEFINITIONS = [
   { id: 'checklist_circolare_indizione', label: 'Circolare indizione', type: 'checkbox' },
-  // Aggiunto 'Pubblicazione' dopo 'Circolare indizione'
-  { id: 'checklist_pubblicazione', label: 'Pubblicazione', type: 'checkbox' },
   { id: 'checklist_risposte_reparti_entro', label: 'Risposte dei Reparti', type: 'date' },
   { id: 'checklist_avvio_corso', label: 'Avvio al corso', type: 'checkbox' },
   { id: 'checklist_redazione_vm_mod_l', label: 'Redazione V.M. e Mod "L"', type: 'checkbox' },
@@ -77,7 +75,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
         .filter(task => typeof task === 'string')
         .filter(task => {
           // Filtra via tutti i task definiti nella CHECKLIST_DEFINITIONS per ricostruirli
-          const isDefinedChecklistItem = CHECKLIST_NAMES.some(item => 
+          const isDefinedChecklistItem = CHECKLIST_DEFINITIONS.some(item => 
             item.id === task || (item.id === REPARTI_RISPOSTE_ID && task.startsWith(`${REPARTI_RISPOSTE_ID}:`))
           );
           return !isDefinedChecklistItem;
@@ -136,7 +134,8 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
     }
     setCheckedTasks(newCheckedTasks);
-    // Passa lo stato corrente di entrambi per il salvataggio    saveChecklist(newCheckedTasks, newDateValue);
+    // Passa lo stato corrente di entrambi per il salvataggio
+    saveChecklist(newCheckedTasks, newDateValue);
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -185,5 +184,3 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     </div>
   );
 };
-
-export default StandardCourseChecklist;
