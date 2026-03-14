@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,7 +41,10 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     const initialChecked = new Set<string>();
     let dateValue = '';
 
-    initialCompletedTasks.forEach(task => {
+    // Proteggiamo initialCompletedTasks: se non è un array, usiamo un array vuoto
+    const tasks = Array.isArray(initialCompletedTasks) ? initialCompletedTasks : [];
+
+    tasks.forEach(task => {
       if (typeof task === 'string') {
         if (task.startsWith(`${REPARTI_RISPOSTE_ID}:`)) {
           const datePart = task.split(':')[1];
