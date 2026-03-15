@@ -18,7 +18,6 @@ const CHECKLIST_DEFINITIONS = [
   { id: 'checklist_risposte_reparti_entro', label: 'Risposte dei Reparti entro il', type: 'date' },
   { id: 'checklist_avvio_corso', label: 'Avvio al corso', type: 'checkbox' },
   { id: 'checklist_redazione_vm_mod_l', label: 'Redazione V.M. e Mod "L"', type: 'checkbox' },
-  { id: 'checklist_relazione_finale', label: 'Relazione finale', type: 'checkbox' },
   { id: 'checklist_altro', label: 'Altro', type: 'checkbox' },
 ];
 
