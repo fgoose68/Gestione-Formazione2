@@ -14,6 +14,7 @@ interface StandardCourseChecklistProps {
 // Definizione di tutti gli elementi della checklist, inclusa la data, nell'ordine desiderato
 const CHECKLIST_DEFINITIONS = [
   { id: 'checklist_circolare_indizione', label: 'Circolare indizione', type: 'checkbox' },
+  { id: 'checklist_pubblicazione', label: 'Pubblicazione', type: 'checkbox' },
   { id: 'checklist_risposte_reparti_entro', label: 'Risposte dei Reparti entro il', type: 'date' },
   { id: 'checklist_avvio_corso', label: 'Avvio al corso', type: 'checkbox' },
   { id: 'checklist_redazione_vm_mod_l', label: 'Redazione V.M. e Mod "L"', type: 'checkbox' },
@@ -25,7 +26,6 @@ const REPARTI_RISPOSTE_ID = 'checklist_risposte_reparti_entro';
 
 export const StandardCourseChecklist = ({ eventId, completedTasks: initialCompletedTasks }: StandardCourseChecklistProps) => {
   const { updateEvent } = useEvents();
-  // Correzione qui: usa useState per dichiarare checkedTasks
   const [checkedTasks, setCheckedTasks] = useState<Set<string>>(new Set());
   const [risposteRepartiDate, setRisposteRepartiDate] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -101,7 +101,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
         // Salva la data solo se la checkbox è spuntata E la data è presente
         newChecklistTasks.push(`${REPARTI_RISPOSTE_ID}:${currentDateValue}`);
       } else if (currentChecked.has(REPARTI_RISPOSTE_ID) && !currentDateValue) {
-        // Se la checkbox è spuntata ma la data è vuota, salva solo l'ID (anche se la logica di handleDateChange/handleCheckChange dovrebbe impedirlo)
+        // Se la checkbox è spuntata ma la data è vuota, salva solo l'ID
         newChecklistTasks.push(REPARTI_RISPOSTE_ID);
       }
 
@@ -116,7 +116,7 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
       setIsSaving(false);
     }, 1000),
-    [eventId, updateEvent, getOtherTasks] // Rimosso safeCompletedTasks, aggiunto getOtherTasks
+    [eventId, updateEvent, getOtherTasks]
   );
 
   const handleCheckChange = (taskId: string, checked: boolean) => {
@@ -134,7 +134,6 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
       }
     }
     setCheckedTasks(newCheckedTasks);
-    // Passa lo stato corrente di entrambi per il salvataggio
     saveChecklist(newCheckedTasks, newDateValue);
   };
 
@@ -152,7 +151,6 @@ export const StandardCourseChecklist = ({ eventId, completedTasks: initialComple
     }
     
     setCheckedTasks(newCheckedTasks);
-    // Passa lo stato corrente di entrambi per il salvataggio
     saveChecklist(newCheckedTasks, newDate);
   };
 
